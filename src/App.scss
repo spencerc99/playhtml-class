@@ -3,20 +3,26 @@
 @tailwind utilities;
 
 :root {
-  --background-color: #fff;
-  --text-color: #111;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background-color: rgb(20, 20, 20);
-    --text-color: rgb(230, 230, 230);
-  }
+  --red: #e00000;
+  --bg: #f0eded;
 }
 
 body {
-  background-color: var(--background-color);
-  color: var(--text-color);
+  background-color: var(--bg);
+  background-image: url('/shirt-light-texture-dithered-playhtml-class-bg.png');
+  background-size: cover;
+  background-attachment: fixed;
+  color: #222;
   margin: 0;
-  overflow: hidden;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: var(--red);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+a:hover {
+  text-decoration: none;
 }

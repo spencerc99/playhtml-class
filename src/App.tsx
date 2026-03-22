@@ -1,19 +1,21 @@
-// ABOUTME: Main app component displaying the collaborative 3D chair viewer.
-// ABOUTME: Uses playhtml for real-time state syncing between users.
+// ABOUTME: App shell with React Router and persistent nav widget.
+// ABOUTME: All pages share playhtml cursors and the fixed nav.
 
-// import { CanMoveElement } from '@playhtml/react';
-import { ChairViewer } from './ChairViewer';
+import { BrowserRouter, Route, Routes } from 'react-router';
+import Nav from './Nav';
+import Home from './pages/Home';
+import Showcase from './pages/Showcase';
+import Week from './pages/Week';
 
 export default function App() {
   return (
-    <div>
-      <h1>BUIDLING BENCHES FOR THE WEB</h1>
-      <div className="flex flex-row">
-        <img id="chair-1" src="/red-stool.png" can-move="" draggable={false} />
-        <img id="chair-2" src="/red-stool.png" can-move="" draggable={false} />
-        <img id="chair-3" src="/red-stool.png" can-move="" draggable={false} />
-      </div>
-      <ChairViewer />
-    </div>
+    <BrowserRouter>
+      <Nav />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/showcase" element={<Showcase />} />
+        <Route path="/week/:weekNumber" element={<Week />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
