@@ -6,6 +6,7 @@ import Nav from './Nav';
 import Home from './pages/Home';
 import Showcase from './pages/Showcase';
 import Week from './pages/Week';
+import { ThreeDBenchPage } from './ThreeDBenchPage';
 
 export default function App() {
   return (
@@ -13,6 +14,7 @@ export default function App() {
       <Nav />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/3d" element={<ThreeDBenchPage />} />
         <Route path="/showcase" element={<Showcase />} />
         <Route path="/week/:weekNumber" element={<Week />} />
       </Routes>
