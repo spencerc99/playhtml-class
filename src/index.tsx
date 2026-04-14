@@ -2,6 +2,7 @@
 // ABOUTME: collaborative state syncing via playhtml.
 
 import App from './App';
+import 'highlight.js/styles/github.css';
 import './App.scss';
 import { PlayProvider } from '@playhtml/react';
 import { createRoot } from 'react-dom/client';

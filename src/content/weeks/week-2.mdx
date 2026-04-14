@@ -1,0 +1,63 @@
+export const meta = {
+  title: 'Sync — Move, Live Cursors',
+};
+
+## Activities
+
+- Crit and discussion in small groups:
+  - Share communal-space concepts
+  - Discuss readings
+- Demo / lecture:
+  - Synchronous behaviors: move, drag, live cursors, and presence
+- Mini in-class coding challenge
+- Debugging and Q+A
+
+## Assignment / Readings
+
+- Build a small synchronous interaction inspired by your communal space.
+- Read [The web is already multiplayer](https://macwright.com/2025/02/06/the-web-is-already-multiplayer)
+
+## Examples
+
+### Example 1: show how many people are here
+
+```tsx
+import { usePlayContext } from '@playhtml/react';
+
+export function UserCount() {
+  const { cursors } = usePlayContext();
+
+  return <p>People here right now: {cursors.allColors.length}</p>;
+}
+```
+
+### Example 2: shared on/off state
+
+```tsx
+import { withSharedState } from '@playhtml/react';
+
+export const ToggleSquare = withSharedState(
+  {
+    defaultData: { on: false },
+    id: 'toggle-square',
+  },
+  ({ data, setData }) => (
+    <button
+      onClick={() => setData({ on: !data.on })}
+      style={{
+        width: 120,
+        height: 120,
+        background: data.on ? 'green' : 'red',
+      }}
+    />
+  ),
+);
+```
+
+## Submit Your Assignment
+
+Paste your site URL below to submit.
+
+## Live Crit
+
+Submitted projects will appear here for live review.

@@ -1,0 +1,85 @@
+export const meta = {
+  title: 'Async — Guestbooks, Notes',
+};
+
+## Activities
+
+- Crit and discussion in small groups:
+  - Share prototypes
+  - Discuss readings
+- Demo / lecture:
+  - Asynchronous tools: guestbooks, notes, and leaving traces
+- Mini in-class coding challenge
+- Debugging and Q+A
+
+## Assignment / Readings
+
+- Add at least one asynchronous interaction to your site:
+  - Guestbook
+  - Notes
+  - Graffiti
+  - Another trace-based interaction
+- Read: `TKTKTKTKT`
+
+## Examples
+
+### Example 1: a shared guestbook
+
+```tsx
+import { withSharedState } from '@playhtml/react';
+import { useState } from 'react';
+
+interface GuestbookState {
+  messages: string[];
+}
+
+export const Guestbook = withSharedState(
+  {
+    defaultData: { messages: [] } as GuestbookState,
+    id: 'guestbook',
+  },
+  ({ data, setData }) => {
+    const [draft, setDraft] = useState('');
+
+    return (
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!draft.trim()) return;
+          setData({ messages: [...data.messages, draft.trim()] });
+          setDraft('');
+        }}
+      >
+        <input
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+        />
+        <button type="submit">Leave note</button>
+        <ul>
+          {data.messages.map((message, index) => (
+            <li key={`${message}-${index}`}>{message}</li>
+          ))}
+        </ul>
+      </form>
+    );
+  },
+);
+```
+
+### Example 2: start with seeded notes
+
+```tsx
+const starterNotes = [
+  'What makes this place feel welcoming?',
+  'What sounds should live here?',
+  'What should visitors be able to leave behind?',
+];
+```
+
+## Submit Your Assignment
+
+Paste your site URL below to submit.
+
+## Live Crit
+
+Submitted projects will appear here for live review.

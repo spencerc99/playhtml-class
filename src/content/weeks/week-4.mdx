@@ -1,0 +1,69 @@
+export const meta = {
+  title: 'Custom Events',
+};
+
+## Activities
+
+- Crit and discussion in small groups:
+  - Share prototypes
+  - Discuss readings
+- Demo / lecture:
+  - Creating custom events between sites
+  - Cross-site interactions
+- Mini challenge
+- Debugging and Q+A
+
+## Assignment / Readings
+
+- Finalize your site.
+- Optional: implement one custom event or shared behavior that interacts with others' sites.
+- Read: `TKTKTKTKT`
+
+## Examples
+
+### Example 1: trigger a shared custom event
+
+```tsx
+import { PlayContext } from '@playhtml/react';
+import { useContext, useEffect } from 'react';
+
+const ConfettiEventType = 'confetti';
+
+export function useConfetti() {
+  const {
+    dispatchPlayEvent,
+    registerPlayEventListener,
+    removePlayEventListener,
+  } = useContext(PlayContext);
+
+  useEffect(() => {
+    const id = registerPlayEventListener(ConfettiEventType, {
+      onEvent: () => {
+        console.log('confetti for everyone');
+      },
+    });
+
+    return () => removePlayEventListener(ConfettiEventType, id);
+  }, [registerPlayEventListener, removePlayEventListener]);
+
+  return () => dispatchPlayEvent({ type: ConfettiEventType });
+}
+```
+
+### Example 2: connect it to a button
+
+```tsx
+export function CelebrationButton() {
+  const triggerConfetti = useConfetti();
+
+  return <button onClick={triggerConfetti}>Celebrate</button>;
+}
+```
+
+## Submit Your Assignment
+
+Paste your site URL below to submit.
+
+## Live Crit
+
+Submitted projects will appear here for live review.
