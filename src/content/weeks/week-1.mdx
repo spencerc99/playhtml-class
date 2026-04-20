@@ -1,0 +1,73 @@
+export const meta = {
+  title: 'Step Inside / Introduction to PlayHTML',
+};
+
+## Activities
+
+- Introduction
+- Community agreement
+- Discussion: [Third Places: What Are They and Why Are They Important to American Culture?](https://esl.uchicago.edu/2023/11/01/third-places-what-are-they-and-why-are-they-important-to-american-culture/)
+- AI + open source policy
+- Environment setup, HTML, and PlayHTML
+- Launch their site to a live domain:
+  - GitHub Pages
+  - Cloudflare Pages
+  - Another host if they already have one
+  - Get the default website link
+  - Optionally set up a custom domain now or later
+
+## Assignment / Readings
+
+- Identify a physical communal space you want to re-create digitally.
+- Note the attributes, interactions, or elements that define that space.
+- Read [_Alone Together_ (2011), Sherry Turkle. Chapter 8: Always On, p. 151-162](https://www.mediastudies.asia/wp-content/uploads/2017/02/Sherry_Turkle_Alone_Together.pdf)
+
+## Examples
+
+### Example 1: a draggable object
+
+This is the fastest way to make something feel shared and alive:
+
+```tsx
+export default function Room() {
+  return (
+    <main>
+      <img
+        id="stool"
+        src="/red-stool.png"
+        can-move=""
+        draggable={false}
+        style={{ width: 96, position: 'absolute', top: 120, left: 80 }}
+      />
+    </main>
+  );
+}
+```
+
+### Example 2: wrap the app with `PlayProvider`
+
+`PlayProvider` turns on the shared PlayHTML features for the app:
+
+```tsx
+import { PlayProvider } from '@playhtml/react';
+
+export function AppShell({ children }: { children: React.ReactNode }) {
+  return (
+    <PlayProvider
+      initOptions={{
+        cursors: { enabled: true },
+      }}
+    >
+      {children}
+    </PlayProvider>
+  );
+}
+```
+
+## Submit Your Assignment
+
+Paste your site URL below to submit.
+
+## Live Crit
+
+Submitted projects will appear here for live review.

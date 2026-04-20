@@ -1,0 +1,54 @@
+export const meta = {
+  title: 'Party!',
+};
+
+## Activities
+
+- Final crit and discussion
+- Town showcase / celebration
+
+## Showcase
+
+Student projects will appear here as they are submitted throughout the class.
+
+## Examples
+
+### Example 1: add open graph tags before sharing the final project
+
+```html
+<head>
+  <meta property="og:title" content="My Internet Bench" />
+  <meta
+    property="og:description"
+    content="A shared web space for notes, movement, and hanging out."
+  />
+  <meta property="og:image" content="https://example.com/social-card.png" />
+</head>
+```
+
+### Example 2: create a simple project card
+
+```tsx
+interface ProjectCardProps {
+  title: string;
+  url: string;
+  description: string;
+}
+
+export function ProjectCard({ title, url, description }: ProjectCardProps) {
+  return (
+    <a href={url} target="_blank" rel="noreferrer">
+      <h3>{title}</h3>
+      <p>{description}</p>
+    </a>
+  );
+}
+```
+
+## Submit Your Final Project
+
+Paste your site URL below to submit.
+
+## Live Crit
+
+Submitted projects will appear here for live review.

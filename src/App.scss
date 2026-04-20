@@ -26,3 +26,97 @@ a {
 a:hover {
   text-decoration: none;
 }
+
+.week-content {
+  line-height: 1.7;
+  max-width: 48rem;
+}
+
+.week-content > :first-child {
+  margin-top: 0;
+}
+
+.week-content > * + * {
+  margin-top: 1.25rem;
+}
+
+.week-content h2,
+.week-content h3,
+.week-content h4 {
+  color: var(--red);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.week-content h2 {
+  font-size: 1.75rem;
+  margin-top: 2.5rem;
+}
+
+.week-content h3 {
+  font-size: 1.15rem;
+  margin-top: 1.75rem;
+}
+
+.week-content p,
+.week-content li {
+  font-size: 1rem;
+}
+
+.week-content ul,
+.week-content ol {
+  padding-left: 1.5rem;
+}
+
+.week-content ul {
+  list-style: disc;
+}
+
+.week-content ol {
+  list-style: decimal;
+}
+
+.week-content li + li {
+  margin-top: 0.35rem;
+}
+
+.week-content ul ul,
+.week-content ul ol,
+.week-content ol ul,
+.week-content ol ol {
+  margin-top: 0.5rem;
+}
+
+.week-content hr {
+  border: 0;
+  border-top: 1px solid rgba(224, 0, 0, 0.2);
+  margin: 2rem 0;
+}
+
+.week-content blockquote {
+  border-left: 4px solid rgba(224, 0, 0, 0.35);
+  color: #4b4b4b;
+  margin: 1.5rem 0;
+  padding-left: 1rem;
+}
+
+.week-content code {
+  background: rgba(224, 0, 0, 0.08);
+  border-radius: 0.35rem;
+  font-size: 0.95em;
+  padding: 0.15rem 0.35rem;
+}
+
+.week-content pre {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(224, 0, 0, 0.12);
+  border-radius: 0.75rem;
+  overflow-x: auto;
+  padding: 1rem 1.1rem;
+}
+
+.week-content pre code {
+  background: transparent;
+  padding: 0;
+}
