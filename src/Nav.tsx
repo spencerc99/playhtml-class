@@ -72,15 +72,13 @@ export default function Nav() {
           >
             {/* Card body */}
             <div
-              className="flex flex-col items-center rounded-t-lg border-2 px-3 pb-1 pt-2"
+              className="flex flex-col items-center rounded-t-lg px-3 pb-1 pt-2"
               style={{
-                borderColor: isActive ? '#e00000' : 'rgba(224,0,0,0.3)',
-                borderBottom: 'none',
                 background: isActive
                   ? 'rgba(224,0,0,0.06)'
                   : 'rgba(255,255,255,0.85)',
                 backdropFilter: 'blur(10px)',
-                transition: 'border-color 0.2s, background 0.2s',
+                transition: 'background 0.2s',
               }}
             >
               <div className="mb-0.5 h-7 w-7">{item.icon}</div>
