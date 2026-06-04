@@ -2,72 +2,195 @@ export const meta = {
   title: 'Step Inside / Introduction to PlayHTML',
 };
 
-## Activities
+## Agenda
 
 - Introduction
-- Community agreement
-- Discussion: [Third Places: What Are They and Why Are They Important to American Culture?](https://esl.uchicago.edu/2023/11/01/third-places-what-are-they-and-why-are-they-important-to-american-culture/)
+- Community agreement & support
+- Discussion of internet third spaces
 - AI + open source policy
 - Environment setup, HTML, and PlayHTML
-- Launch their site to a live domain:
-  - GitHub Pages
-  - Cloudflare Pages
-  - Another host if they already have one
-  - Get the default website link
-  - Optionally set up a custom domain now or later
+- Co-working Time!
 
-## Assignment / Readings
+## Introduction
 
-- Identify a physical communal space you want to re-create digitally.
-- Note the attributes, interactions, or elements that define that space.
-- Read [_Alone Together_ (2011), Sherry Turkle. Chapter 8: Always On, p. 151-162](https://www.mediastudies.asia/wp-content/uploads/2017/02/Sherry_Turkle_Alone_Together.pdf)
+Hi I'm Munus.
 
-## Examples
+Hi I'm Spencer.
 
-### Example 1: a draggable object
+Now it's your turn!
 
-This is the fastest way to make something feel shared and alive:
+- What's your name? Pronouns?
+- Where are you calling from? Where do you call home?
+- Why did you join this class? Anything you want to get out of?
+- Anything exciting going on? Something you want to share?
 
-```tsx
-export default function Room() {
-  return (
-    <main>
-      <img
-        id="stool"
-        src="/red-stool.png"
-        can-move=""
-        draggable={false}
-        style={{ width: 96, position: 'absolute', top: 120, left: 80 }}
-      />
-    </main>
-  );
+## Community Agreement & Support
+
+Here are resources for SFPC classes:
+
+- the [SFPC Community Agreement](https://orienting.sfpc.study/is-where-we/look-after-each-other/community-agreement.html)
+- [Student Resource Guide](https://docs.google.com/document/d/1Z_UuT-_HsgxydPzk9n9zlsvOUEY-WLx0Y4DG0x6kKMM/edit?tab=t.0)
+
+- We will take attendance in this class. If you need to miss a class, please let us know in advance in discord with a reason if you can, and reach out to us if you need any support.
+- We don't have a dedicated office hours, but you can always reach out to us via email or discord if you need help with your project!
+
+## Discussion of Internet Third Spaces
+
+We hope you've had a chance to read the article ["Why the disappearance of digital third spaces matters" by Nuzhat Tahiya](https://www.thedailystar.net/star-youth/news/why-the-disappearance-digital-third-spaces-matters-4084946)
+
+What are your thoughts on the article?
+
+- Do you have any examples of digital/physical third spaces to you? How are they important to you?
+- Do you think digital third spaces are important? Why or why not?
+- What are some physical third spaces that you would like to see re-created digitally? What are the key attributes, interactions, or elements that define those spaces?
+
+## Short break
+
+## Open Source, AI and Code Use Policy
+
+Copying, pasting, and reusing code is a natural and valuable part of learning technology and programming. Often, the best way to learn is by modifying existing examples, experimenting with libraries, and building on others’ work. This collaborative spirit is at the heart of the open-source philosophy: we stand on the shoulders of giants. That said, there are important guidelines to ensure fairness, learning, and academic integrity:
+
+1. Programming is a collaborative and creative process, and you are encouraged to help each other learn and grow. However, unless otherwise stated, all assignments and projects must represent your own individual work.
+2. Always label borrowed code. If you use code from open-source projects, tutorials, online forums, libraries, or AI tools. Whether you copy it exactly or modify it, you must clearly acknowledge your sources. When in doubt, include comments at the top of your code specifying where the original code came from and how you adapted it.
+3. You should be able to explain how any borrowed or adapted code works, including AI-generated code. This helps us better assess your learning and ensures that you’re actively engaging with the material, not just copying.
+4. Do not submit someone else’s full project as your own. Reusing snippets or functions is allowed with credit, but turning in entire projects created by others is not permitted.
+5. Respect licenses. When using open-source libraries or code, respect the terms of their licenses. Some may require attribution or have restrictions on commercial use.
+6. You are encouraged to use AI tools and and external resources as part of your learning process. However, any AI-generated content included in your submission must be clearly disclosed and credited. You remain responsible for ensuring that the code works correctly and that you understand it fully.
+
+Following these guidelines supports your learning, respects the work of others, and helps maintain a fair and productive classroom environment.
+
+### Environment setup, HTML, and PlayHTML
+
+Let's make sure you're set up with the right tools to build your project.
+
+Here's a checklist:
+
+1. You have a code editor installed (VS Code or another of your choice).
+2. Let's pull down the [PlayHTML template](https://github.com/spencerc99/playhtml/tree/main/templates/html-starter) from GitHub and open it in your local code editor.
+3. Let's make sure you can run the template and see the default page in your browser.
+4. Let's make tiny changes to the template and see how it works.
+
+## playHTML
+
+[playHTML](https://playhtml.fun/), built by Spencer Chang, is an open-source library for designing communal web experiences by enhancing web elements with real-time, collaborative interactivity!
+
+The goal of playHTML is to make it easy for anyone to create interactive web experiences that can be shared and enjoyed together. Here is a list of resources:
+
+- [playHTML documentation](https://playhtml.fun/docs/)
+- [playHTML GitHub repo](https://github.com/spencerc99/playhtml)
+
+### Getting started with playHTML
+
+The simpliest way to use playHTML is to include it in your HTML file via a CDN link (CDN stands for Content Delivery Network, and it's a way to load libraries directly from the web without having to install them on your computer):
+
+```html
+<body>
+  <button id="my-lamp" can-toggle>lamp</button>
+
+  <script type="module">
+    import { playhtml } from 'https://unpkg.com/playhtml';
+
+    playhtml.init();
+  </script>
+</body>
+```
+
+### Quick Crashcourse on HTML/CSS
+
+If you're new to HTML and CSS, here are some resources to get you started:
+
+- [HTML Tutorial](https://www.w3schools.com/html/)
+- [CSS Tutorial](https://www.w3schools.com/css/)
+
+Basically HTML is the structure of your webpage, and CSS is the style. You can add attributes to your HTML elements to give them different properties, and you can use CSS to customize how they look.
+
+HTML is a markup language that uses tags to define elements on a webpage. For example, `<button>` defines a button element, and you can add attributes like `id` or `class` to give it specific properties.
+
+```html
+<button id="my-lamp" class="lamp">lamp</button>
+<img src="lamp.png" alt="lamp image" />
+<div class="bench">This is a bench</div>
+```
+
+Only one thing can be the id of an element, but you can have multiple classes. In this example, we have a button element with an id of "my-lamp" and a class of "lamp".
+
+CSS is a stylesheet language that describes how HTML elements should be displayed. You can use CSS to change the color, size, position, and many other aspects of your HTML elements. For example, you can use the `background` property to change the background color of an element, or the `transform` property to rotate or scale an element.
+
+```css
+.lamp {
+  background: #6cd97e;
+}
+
+#my-lamp {
+  color: white;
 }
 ```
 
-### Example 2: wrap the app with `PlayProvider`
+There are many other properties and attributes you can use in HTML and CSS, and you can combine them in creative ways to make your webpage look and behave the way you want!
 
-`PlayProvider` turns on the shared PlayHTML features for the app:
+### The built-in attributes
 
-```tsx
-import { PlayProvider } from '@playhtml/react';
+Usually if we want to make any element interactive, we would need to write some JavaScript code to add event listeners and update the state of the element. But with playHTML, you can simply add built-in attributes to your HTML elements to make them interactive without writing any JavaScript code!
 
-export function AppShell({ children }: { children: React.ReactNode }) {
-  return (
-    <PlayProvider
-      initOptions={{
-        cursors: { enabled: true },
-      }}
-    >
-      {children}
-    </PlayProvider>
-  );
+Let's look at [the doc here](https://playhtml.fun/docs/capabilities/) to learn about `can-move`, `can-spin`, `can-grow`, and `can-toggle`. You can try adding these attributes to different HTML elements and see how they work!
+
+### CSS for toggle
+
+For `can-toggle`, we can customize the behavior using custom CSS.
+
+```css
+.classname.clicked {
+  background: #6cd97e; /*this part changes the background color when clicked*/
 }
 ```
 
-## Submit Your Assignment
+For instance, when using with [CSS filter](https://www.w3schools.com/tools/tool_css_filter.php), you can create lights that can be turned on and off:
 
-Paste your site URL below to submit.
+```css
+.lamp {
+  filter: brightness(0.5);
+}
 
-## Live Crit
+.lamp.clicked {
+  filter: brightness(1.2) saturate(1.6)
+    drop-shadow(rgba(247, 220, 156, 0.85) 0px 0px 50px); /* this part makes the lamp brighter and adds a glow effect when clicked */
+}
+```
 
-Submitted projects will appear here for live review.
+Or you can combine with [CSS transform](https://www.w3schools.com/cssref/css3_pr_transform.php), and make the element grow, spin, or move when toggled:
+
+```css
+.button {
+  transform: scale(1);
+}
+
+.button.clicked {
+  transform: scale(5);
+}
+```
+
+To create a smooth animation between states, you can add CSS transition:
+
+```css
+.button {
+  transform: scale(1);
+  transition: transform 0.3s ease; /* this part adds a smooth transition effect when the button is toggled */
+}
+```
+
+## Now it's your turn!
+
+Questions? Comments? Thoughts?
+
+Now let's take some time to play around with the template and the built-in attributes, and see what you can create! Don't worry about making something perfect, just have fun experimenting and exploring the possibilities of playHTML!
+
+Think about these prompts when you're building:
+
+- What is a physical communal space you want to re-create digitally? What materials or elements can you use to represent that space? What interactions can you add to make it feel more like that space?
+- How can you use the built-in attributes to create interesting interactions? Can you combine them in creative ways?
+- How can you use CSS to customize the look and feel of your elements? Can you create a unique style for your project?
+- How can you make your project more playful and fun? Can you add animations, sounds, or other interactive elements to make it more engaging?
+
+We will spend the rest of the time to create in our breakout rooms (Spencer and Munus will come around to help you out), and come back at the end to share what we made and reflect on the process!
+
+## Assignment for next week
