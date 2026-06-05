@@ -12,12 +12,40 @@ export const meta = {
 - Mini in-class coding challenge
 - Debugging and Q+A
 
-## Assignment / Readings
+## Crit (30 mins)
 
-- Build a small synchronous interaction inspired by your communal space.
-- Read [The web is already multiplayer](https://macwright.com/2025/02/06/the-web-is-already-multiplayer)
+We will break into smaller groups to share our communal space concepts.
 
-## Examples
+- What is the physical communal space you want to re-create digitally?
+- What are the attributes, interactions, or elements that define that space?
+- How do you envision people interacting with each other in that space?
+- Any inspirations or references you want to share with the class?
+- Anything you are struggling with or want feedback on?
+
+## Reading Discussion (30 mins)
+
+We will discuss the reading [This Is for Everyone by Tim Berners Lee](https://archive.ph/yOoAh) in small groups and come back together to share our thoughts with the class. Here are some questions to guide our discussion:
+
+- What does a "digital bench" actually look like? The original web was built for collaboration, but it turned into a space for algorithmic rage. If we were drafting the blueprint for a digital third space today, what specific features must we build in to encourage community rather than performance or conflict?
+- Does total privacy kill community? Berners-Lee argues that everyone should be a "sovereign citizen" of their own data. But real-world third spaces require a little bit of shared vulnerability and running into people you didn't plan to meet. How do we balance total data control with the messy, accidental interactions that true community requires?
+- Who pays for the benches? Physical park benches are funded by public taxes. If we build digital third spaces that refuse to sell user data or track people for ads, what is the business model? How do we keep these spaces free and public without defaulting to subscriptions that lock people out?
+
+## Inspirations
+
+Here is a list of projects that use playHTML to create communal web experiences. Check them out for inspiration!
+
+## How does the web know who's on the bench?
+
+- The web is built on a request-response model, which means that the server only knows about a user when they make a request (e.g. load a page, click a button, etc.). To create a communal web experience, we need to find ways to share information about who is on the bench and what they are doing in real-time.
+
+[insert image]
+
+- This is done by using WebSockets, which is a protocol that allows for two-way communication between the client and the server. Instead of making a request and waiting for a response, the client and server can send messages to each other at any time after they perform an initial "handshake".
+- With WebSockets, we can send messages from the client to the server and from the server to the client in real-time, which allows us to create interactive and collaborative web experiences.
+
+[insert image]
+
+- Usually 
 
 ### Example 1: show how many people are here
 

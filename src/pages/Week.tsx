@@ -1,7 +1,7 @@
 // ABOUTME: Per-week class page with examples, live crit zone, and assignment
 // ABOUTME: submission area.
 
-import type { ComponentType } from 'react';
+import { useEffect, useRef, type ComponentType } from 'react';
 import { Link, useParams } from 'react-router';
 
 interface WeekContentMeta {
@@ -127,6 +127,7 @@ function WeekNav({ previousWeek, nextWeek }: WeekNavProps) {
 
 export default function Week() {
   const { weekNumber } = useParams<{ weekNumber: string }>();
+  const contentRef = useRef<HTMLElement | null>(null);
   const weekNumberValue = weekNumber ? Number(weekNumber) : null;
   const modulePath = weekNumber
     ? `../content/weeks/week-${weekNumber}.mdx`
@@ -145,12 +146,62 @@ export default function Week() {
   const previousWeek =
     weekNumberValue === null || Number.isNaN(weekNumberValue)
       ? null
-      : AVAILABLE_WEEKS.filter((value) => value < weekNumberValue).at(-1) ??
-        null;
+      : (AVAILABLE_WEEKS.filter((value) => value < weekNumberValue).at(-1) ??
+        null);
   const nextWeek =
     weekNumberValue === null || Number.isNaN(weekNumberValue)
       ? null
-      : AVAILABLE_WEEKS.find((value) => value > weekNumberValue) ?? null;
+      : (AVAILABLE_WEEKS.find((value) => value > weekNumberValue) ?? null);
+
+  useEffect(() => {
+    const root = contentRef.current;
+
+    if (!root) {
+      return;
+    }
+
+    const copyButtonText = {
+      idle: 'Copy code',
+      copied: 'Copied',
+      failed: 'Copy failed',
+    } as const;
+
+    root.querySelectorAll('pre').forEach((pre) => {
+      if (pre.querySelector('.week-copy-button')) {
+        return;
+      }
+
+      const code = pre.querySelector('code');
+      const button = document.createElement('button');
+
+      button.type = 'button';
+      button.className = 'week-copy-button';
+      button.textContent = copyButtonText.idle;
+      button.setAttribute('aria-label', 'Copy code block');
+      button.dataset.copied = 'false';
+
+      button.addEventListener('click', async () => {
+        const codeText = code?.textContent ?? pre.textContent ?? '';
+
+        try {
+          await navigator.clipboard.writeText(codeText);
+          button.textContent = copyButtonText.copied;
+          button.dataset.copied = 'true';
+        } catch {
+          button.textContent = copyButtonText.failed;
+          button.dataset.copied = 'false';
+        }
+
+        window.setTimeout(() => {
+          button.textContent = copyButtonText.idle;
+          button.dataset.copied = 'false';
+        }, 1400);
+      });
+
+      pre.classList.add('week-copy-target');
+      pre.prepend(button);
+    });
+  }, [weekNumber]);
 
   return (
     <div className="min-h-screen pb-12">
@@ -173,7 +224,7 @@ export default function Week() {
       <div className="px-8">
         <div className="mx-auto max-w-4xl">
           {Content ? (
-            <article className="week-content mx-auto">
+            <article ref={contentRef} className="week-content mx-auto">
               <Content />
             </article>
           ) : (

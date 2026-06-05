@@ -92,7 +92,7 @@ export default function Home() {
       </header>
 
       {/* 3D Viewer */}
-      <div className="flex justify-center py-6">
+      <div className="relative z-10 flex justify-center px-4 py-6">
         <ChairViewer />
       </div>
 

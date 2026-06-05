@@ -37,7 +37,7 @@ interface ProjectCardProps {
 
 export function ProjectCard({ title, url, description }: ProjectCardProps) {
   return (
-    <a href={url} target="_blank" rel="noreferrer">
+    <a href={url} target="_blank" rel="noopener noreferrer">
       <h3>{title}</h3>
       <p>{description}</p>
     </a>

@@ -32,11 +32,11 @@ a:hover {
   max-width: 48rem;
 }
 
-.week-content > :first-child {
+.week-content> :first-child {
   margin-top: 0;
 }
 
-.week-content > * + * {
+.week-content>*+* {
   margin-top: 1.25rem;
 }
 
@@ -77,7 +77,7 @@ a:hover {
   list-style: decimal;
 }
 
-.week-content li + li {
+.week-content li+li {
   margin-top: 0.35rem;
 }
 
@@ -112,11 +112,42 @@ a:hover {
   background: rgba(255, 255, 255, 0.8);
   border: 1px solid rgba(224, 0, 0, 0.12);
   border-radius: 0.75rem;
+  padding: 2.75rem 1.1rem 1rem;
   overflow-x: auto;
-  padding: 1rem 1.1rem;
+  position: relative;
 }
 
 .week-content pre code {
   background: transparent;
   padding: 0;
+}
+
+.week-copy-button {
+  align-items: center;
+  background: rgba(255, 248, 248, 0.95);
+  border: 1px solid rgba(224, 0, 0, 0.16);
+  border-radius: 999px;
+  color: var(--red);
+  cursor: copy;
+  display: inline-flex;
+  font-size: 0.72rem;
+  font-weight: 800;
+  gap: 0.35rem;
+  justify-content: center;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  min-height: 2.1rem;
+  padding: 0.55rem 0.8rem;
+  position: absolute;
+  right: 0.75rem;
+  top: 0.75rem;
+  z-index: 1;
+}
+
+.week-copy-button:hover {
+  background: rgba(255, 240, 240, 1);
+}
+
+.week-copy-button[data-copied='true'] {
+  background: rgba(224, 0, 0, 0.08);
 }
