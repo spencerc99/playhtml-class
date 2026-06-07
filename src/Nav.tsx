@@ -30,7 +30,7 @@ const NAV_ITEMS: NavItem[] = [
   },
 ];
 
-const NAV_GAP_CLASS = 'gap-5 md:gap-8';
+const NAV_GAP_CLASS = 'gap-2 md:gap-3';
 const NAV_TEXT_STYLE = {
   fontFamily: 'var(--font-display)',
   fontFeatureSettings:
@@ -42,7 +42,7 @@ export default function Nav() {
 
   return (
     <nav
-      className={`fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center whitespace-nowrap ${NAV_GAP_CLASS}`}
+      className={`fixed bottom-0 left-1/2 z-50 flex -translate-x-1/2 translate-y-3 items-center whitespace-nowrap ${NAV_GAP_CLASS} transition-transform duration-200 hover:translate-y-0`}
       style={{
         ...NAV_TEXT_STYLE,
         filter: 'drop-shadow(0 4px 14px rgba(0,0,0,0.08))',

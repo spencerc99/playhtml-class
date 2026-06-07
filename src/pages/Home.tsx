@@ -94,7 +94,9 @@ export default function Home() {
       ))}
 
       {/* Header — poster layout */}
-      <header className={`relative z-20 pointer-events-none ${HOME_SECTION_SPACING}`}>
+      <header
+        className={`pointer-events-none relative z-20 ${HOME_SECTION_SPACING}`}
+      >
         <div
           className={`${HOME_SECTION_FRAME} flex flex-col gap-10 md:flex-row md:items-start md:justify-between`}
         >
@@ -122,7 +124,7 @@ export default function Home() {
 
       {/* Bottom credits row */}
       <div
-        className={`relative z-20 pointer-events-none ${HOME_SECTION_FRAME} ${HOME_SECTION_SPACING} flex items-end justify-between gap-4`}
+        className={`pointer-events-none relative z-20 ${HOME_SECTION_FRAME} ${HOME_SECTION_SPACING} flex items-end justify-between gap-4`}
       >
         <p className="text-xl font-bold uppercase leading-tight text-white md:text-2xl">
           Spencer
@@ -140,7 +142,9 @@ export default function Home() {
       </div>
 
       {/* Weekly route links */}
-      <section className={`relative z-20 pointer-events-none ${HOME_SECTION_SPACING}`}>
+      <section
+        className={`pointer-events-none relative z-20 ${HOME_SECTION_SPACING}`}
+      >
         <div className={`pointer-events-auto ${HOME_SECTION_FRAME}`}>
           <h2 className={`${HOME_SECTION_HEADING} mb-6`}>Weekly View</h2>
           <div className="w-full divide-y-2 divide-white/55">
@@ -163,7 +167,7 @@ export default function Home() {
       </section>
 
       <section
-        className={`colophon bg-white/72 relative z-20 pointer-events-none w-full ${HOME_SECTION_SPACING} text-sm leading-relaxed text-sky-950`}
+        className={`colophon bg-white/72 pointer-events-none relative z-20 w-full ${HOME_SECTION_SPACING} text-sm leading-relaxed text-sky-950`}
       >
         <div className={`pointer-events-auto ${HOME_SECTION_FRAME}`}>
           <h2 className={HOME_SECTION_HEADING}>Colophon</h2>
