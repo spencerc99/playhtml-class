@@ -1,89 +1,118 @@
 // ABOUTME: Homepage — poster-style header, 3D chair viewer, syllabus, and
-// ABOUTME: draggable stools on the margins.
+// ABOUTME: floating stools on the page.
 
+import type { CSSProperties } from 'react';
 import { Link } from 'react-router';
-import { ChairViewer } from '../ChairViewer';
 
-const WEEK_LINKS = [
-  { number: 0, title: 'Welcome Letter' },
-  { number: 1, title: 'Step Inside / Intro to PlayHTML' },
-  { number: 2, title: 'Sync — Move, Live Cursors' },
-  { number: 3, title: 'Async — Guestbooks, Notes' },
-  { number: 4, title: 'Custom Events' },
-  { number: 5, title: 'Party!' },
+interface WeekContentMeta {
+  title?: string;
+}
+
+interface WeekContentModule {
+  meta?: WeekContentMeta;
+}
+
+interface FloatingChairProps {
+  id: string;
+  className: string;
+  canSpin?: boolean;
+}
+
+const WEEK_CONTENT = import.meta.glob<WeekContentModule>(
+  '../content/weeks/week-*.mdx',
+  {
+    eager: true,
+  },
+);
+
+const FLOATING_CHAIR_SIZE = 'w-32 md:w-36';
+const HOME_SECTION_FRAME = 'mx-auto w-full max-w-6xl px-6 md:px-8';
+const HOME_SECTION_SPACING = 'py-12 md:py-14';
+const HOME_SECTION_HEADING =
+  'text-5xl font-extrabold uppercase leading-[0.9] text-white md:text-6xl';
+const HOME_HERO_HEADING =
+  'text-center text-[6.5rem] font-extrabold uppercase leading-[0.82] text-white md:text-[10rem]';
+const HOME_TEXTURE_STYLE = {
+  '--home-texture-opacity': 0.8,
+} as CSSProperties;
+
+const WEEK_LINKS = Object.entries(WEEK_CONTENT)
+  .map(([path, module]) => {
+    const match = path.match(/week-(\d+)\.mdx$/);
+    const number = match ? Number(match[1]) : null;
+
+    if (number === null) {
+      return null;
+    }
+
+    return {
+      number,
+      title: module.meta?.title ?? `Week ${number}`,
+    };
+  })
+  .filter((week): week is { number: number; title: string } => week !== null)
+  .sort((a, b) => a.number - b.number);
+
+const FLOATING_CHAIRS: FloatingChairProps[] = [
+  { id: 'chair-1', className: 'left-[2%] top-10', canSpin: true },
+  { id: 'chair-2', className: 'right-[7%] top-20' },
+  { id: 'chair-3', className: 'left-[10%] top-[18rem]' },
+  { id: 'chair-4', className: 'right-[18%] top-[24rem]', canSpin: true },
+  { id: 'chair-5', className: 'left-[4%] top-[34rem]' },
+  { id: 'chair-6', className: 'right-[3%] top-[40rem]' },
+  { id: 'chair-7', className: 'left-[14%] bottom-[34rem]', canSpin: true },
+  { id: 'chair-8', className: 'right-[11%] bottom-[29rem]' },
+  { id: 'chair-9', className: 'left-[6%] bottom-[18rem]' },
+  { id: 'chair-10', className: 'right-[5%] bottom-[13rem]', canSpin: true },
+  { id: 'chair-11', className: 'left-[20%] bottom-12' },
+  { id: 'chair-12', className: 'right-[22%] bottom-8' },
 ];
+
+function FloatingChair({ id, className, canSpin = false }: FloatingChairProps) {
+  return (
+    <img
+      id={id}
+      src="/red-stool.png"
+      can-move=""
+      {...(canSpin ? { 'can-spin': '' } : {})}
+      can-move-bounds="home-stage"
+      draggable={false}
+      className={`absolute z-10 cursor-move opacity-95 ${FLOATING_CHAIR_SIZE} ${className}`}
+    />
+  );
+}
 
 export default function Home() {
   return (
-    <div className="relative min-h-screen">
-      {/* Draggable stools scattered on margins */}
-      <img
-        id="chair-1"
-        src="/red-stool.png"
-        can-move=""
-        draggable={false}
-        className="absolute w-20"
-        style={{ top: '60px', left: '20px' }}
-      />
-      <img
-        id="chair-2"
-        src="/red-stool.png"
-        can-move=""
-        draggable={false}
-        className="absolute w-20"
-        style={{ top: '400px', right: '30px' }}
-      />
-      <img
-        id="chair-3"
-        src="/red-stool.png"
-        can-move=""
-        draggable={false}
-        className="absolute w-20"
-        style={{ top: '800px', left: '40px' }}
-      />
-      <img
-        id="chair-4"
-        src="/red-stool.png"
-        can-move=""
-        draggable={false}
-        className="absolute w-20"
-        style={{ top: '1200px', right: '50px' }}
-      />
-      <img
-        id="chair-5"
-        src="/red-stool.png"
-        can-move=""
-        draggable={false}
-        className="absolute w-20"
-        style={{ top: '1600px', left: '25px' }}
-      />
-      <img
-        id="chair-6"
-        src="/red-stool.png"
-        can-move=""
-        draggable={false}
-        className="absolute w-20"
-        style={{ top: '2000px', right: '35px' }}
-      />
+    <div
+      id="home-stage"
+      className="home-page relative min-h-screen overflow-hidden"
+      style={HOME_TEXTURE_STYLE}
+    >
+      {FLOATING_CHAIRS.map((chair) => (
+        <FloatingChair key={chair.id} {...chair} />
+      ))}
 
       {/* Header — poster layout */}
-      <header className="px-8 pb-4 pt-10">
-        <div className="flex items-start justify-between">
-          <p className="text-lg font-bold uppercase leading-tight text-[#e00000]">
+      <header className={`relative z-20 pointer-events-none ${HOME_SECTION_SPACING}`}>
+        <div
+          className={`${HOME_SECTION_FRAME} flex flex-col gap-10 md:flex-row md:items-start md:justify-between`}
+        >
+          <p className="text-xl font-bold uppercase leading-tight text-white md:text-2xl">
             School
             <br />
             for Poetic
             <br />
             Computation
           </p>
-          <h1 className="text-center text-5xl font-extrabold uppercase leading-none text-[#e00000] md:text-6xl">
+          <h1 className={HOME_HERO_HEADING}>
             Building
             <br />
             Benches
             <br />
-            for the Web
+            for the Internet
           </h1>
-          <p className="text-right text-lg font-bold uppercase leading-tight text-[#e00000]">
+          <p className="text-right text-xl font-bold uppercase leading-tight text-white md:text-2xl">
             Summer
             <br />
             2026
@@ -91,22 +120,19 @@ export default function Home() {
         </div>
       </header>
 
-      {/* 3D Viewer */}
-      <div className="relative z-10 flex justify-center px-4 py-6">
-        <ChairViewer />
-      </div>
-
       {/* Bottom credits row */}
-      <div className="flex items-end justify-between px-8 pb-6">
-        <p className="text-lg font-bold uppercase leading-tight text-[#e00000]">
+      <div
+        className={`relative z-20 pointer-events-none ${HOME_SECTION_FRAME} ${HOME_SECTION_SPACING} flex items-end justify-between gap-4`}
+      >
+        <p className="text-xl font-bold uppercase leading-tight text-white md:text-2xl">
           Spencer
           <br />
           Chang
         </p>
-        <p className="text-center text-lg font-bold uppercase text-[#e00000]">
+        <p className="text-center text-xl font-bold uppercase text-white md:text-2xl">
           class.playhtml.fun
         </p>
-        <p className="text-right text-lg font-bold uppercase leading-tight text-[#e00000]">
+        <p className="text-right text-xl font-bold uppercase leading-tight text-white md:text-2xl">
           Munus
           <br />
           Shih
@@ -114,27 +140,59 @@ export default function Home() {
       </div>
 
       {/* Weekly route links */}
-      <div className="mx-auto max-w-2xl px-8 pb-10">
-        <h2 className="mb-5 text-3xl font-extrabold uppercase text-[#e00000]">
-          Weekly View
-        </h2>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {WEEK_LINKS.map((week) => (
-            <Link
-              key={week.number}
-              to={`/week/${week.number}`}
-              className="rounded-xl bg-white/70 px-4 py-3 no-underline transition hover:bg-white hover:no-underline"
-            >
-              <p className="text-xs font-bold uppercase tracking-wide text-[#e00000]/80">
-                Week {week.number}
-              </p>
-              <p className="text-base font-bold uppercase leading-tight text-[#e00000]">
-                {week.title}
-              </p>
-            </Link>
-          ))}
+      <section className={`relative z-20 pointer-events-none ${HOME_SECTION_SPACING}`}>
+        <div className={`pointer-events-auto ${HOME_SECTION_FRAME}`}>
+          <h2 className={`${HOME_SECTION_HEADING} mb-6`}>Weekly View</h2>
+          <div className="w-full divide-y-2 divide-white/55">
+            {WEEK_LINKS.map((week) => (
+              <Link
+                key={week.number}
+                to={`/week/${week.number}`}
+                className="hover:bg-white/12 group flex w-full items-end justify-between gap-6 px-0 py-5 no-underline transition duration-200 hover:px-3 hover:no-underline"
+              >
+                <p className="shrink-0 text-2xl font-bold uppercase leading-tight text-white transition duration-200 group-hover:text-white md:text-4xl">
+                  Week {week.number}
+                </p>
+                <p className="text-right text-2xl font-bold uppercase leading-tight text-white transition duration-200 group-hover:translate-x-[-0.35rem] md:text-4xl">
+                  {week.title}
+                </p>
+              </Link>
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
+
+      <section
+        className={`colophon bg-white/72 relative z-20 pointer-events-none w-full ${HOME_SECTION_SPACING} text-sm leading-relaxed text-sky-950`}
+      >
+        <div className={`pointer-events-auto ${HOME_SECTION_FRAME}`}>
+          <h2 className={HOME_SECTION_HEADING}>Colophon</h2>
+          <p className="mt-4 max-w-2xl text-base leading-relaxed text-sky-950">
+            The Home page uses Healing the Web A by Rainbow Unicorn Studio and
+            Jakub Kanior.
+          </p>
+          <p className="mt-3 text-base text-sky-950">
+            Source:{' '}
+            <a
+              href="https://github.com/rainbowunicornstudio/healtheweb-typeface"
+              target="_blank"
+              rel="noreferrer"
+            >
+              rainbowunicornstudio/healtheweb-typeface
+            </a>
+          </p>
+          <p className="mt-2 text-base text-sky-950">
+            License:{' '}
+            <a
+              href="https://www.mozilla.org/en-US/MPL/2.0/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              MPL-2.0
+            </a>
+          </p>
+        </div>
+      </section>
     </div>
   );
 }

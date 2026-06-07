@@ -5,6 +5,17 @@
 :root {
   --red: #e00000;
   --bg: #f0eded;
+  --font-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-display: 'Healing the Web A', 'Helvetica Neue', Helvetica, Arial,
+    sans-serif;
+}
+
+@font-face {
+  font-family: 'Healing the Web A';
+  src: url('/fonts/HealTheWebA-Regular.otf') format('opentype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
 }
 
 body {
@@ -14,7 +25,18 @@ body {
   background-attachment: fixed;
   color: #222;
   margin: 0;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: var(--font-sans);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  font-feature-settings: 'liga' 1, 'ss01' 1, 'ss02' 1, 'ss03' 1, 'ss04' 1,
+    'ss05' 1, 'ss06' 1;
 }
 
 a {
@@ -150,4 +172,49 @@ a:hover {
 
 .week-copy-button[data-copied='true'] {
   background: rgba(224, 0, 0, 0.08);
+}
+
+.colophon {
+  margin-top: 4rem;
+  padding-top: 1.5rem;
+}
+
+.colophon h2 {
+  margin: 0;
+}
+
+.colophon p {
+  margin: 0.65rem 0 0;
+}
+
+.home-page {
+  --home-texture-opacity: 0.3;
+  background-color: #2ccaff;
+  background-image: linear-gradient(180deg, #2ccaff 0%, #2ccaff 90%, #fff 100%);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: center;
+  font-family: var(--font-display);
+  font-feature-settings: 'liga' 1, 'ss01' 1, 'ss02' 1, 'ss03' 1, 'ss04' 1,
+    'ss05' 1, 'ss06' 1;
+  isolation: isolate;
+}
+
+.home-page::before {
+  background-image: url('/shirt-light-texture-dithered-playhtml-class-bg.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: center;
+  content: '';
+  inset: 0;
+  opacity: var(--home-texture-opacity);
+  pointer-events: none;
+  position: absolute;
+  z-index: 0;
+}
+
+.home-page a {
+  color: inherit;
 }
