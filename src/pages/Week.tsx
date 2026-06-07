@@ -95,32 +95,24 @@ interface WeekNavProps {
 
 function WeekNav({ previousWeek, nextWeek }: WeekNavProps) {
   return (
-    <nav className="mt-8 flex flex-wrap items-center gap-3">
+    <nav className="mb-8 flex items-center text-base font-bold uppercase tracking-wide text-white md:text-lg">
       {previousWeek !== null ? (
         <Link
           to={`/week/${previousWeek}`}
-          className="rounded-md px-3 py-2 text-sm font-bold uppercase tracking-wide text-[#e00000] no-underline hover:underline"
+          className="inline-block text-white no-underline transition duration-200 hover:-translate-y-0.5 hover:no-underline"
         >
           ← Previous Week
         </Link>
-      ) : (
-        <span className="rounded-md px-3 py-2 text-sm font-bold uppercase tracking-wide text-[#e00000]/30">
-          ← Previous Week
-        </span>
-      )}
+      ) : null}
 
       {nextWeek !== null ? (
         <Link
           to={`/week/${nextWeek}`}
-          className="rounded-md px-3 py-2 text-sm font-bold uppercase tracking-wide text-[#e00000] no-underline hover:underline"
+          className="ml-auto inline-block text-white no-underline transition duration-200 hover:-translate-y-0.5 hover:no-underline"
         >
           Next Week →
         </Link>
-      ) : (
-        <span className="rounded-md px-3 py-2 text-sm font-bold uppercase tracking-wide text-[#e00000]/30">
-          Next Week →
-        </span>
-      )}
+      ) : null}
     </nav>
   );
 }
@@ -204,31 +196,35 @@ export default function Week() {
   }, [weekNumber]);
 
   return (
-    <div className="min-h-screen pb-12">
-      <header className="px-8 pb-5 pt-8">
-        <div className="mx-auto max-w-4xl">
-          <section className="py-6">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#e00000]/80">
+    <div className="week-page min-h-screen pb-16">
+      <header className="px-6 pb-6 pt-10 md:px-8 md:pb-8 md:pt-14">
+        <div className="mx-auto max-w-6xl">
+          <section className="py-6 md:py-8">
+            <WeekNav previousWeek={previousWeek} nextWeek={nextWeek} />
+            <p className="text-2xl font-bold uppercase tracking-[0.12em] text-white md:text-4xl">
               Week {weekNumber}
             </p>
-            <h1 className="mt-2 text-3xl font-extrabold uppercase leading-tight text-[#e00000] md:text-4xl">
+            <h1 className="mt-4 text-5xl font-extrabold uppercase leading-[0.9] text-white md:text-6xl">
               {title}
             </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-neutral-700 md:text-base">
+            <p className="mt-5 max-w-3xl text-base leading-relaxed text-white/88 md:text-xl">
               {summary}
             </p>
           </section>
         </div>
       </header>
 
-      <div className="px-8">
-        <div className="mx-auto max-w-4xl">
+      <div className="px-6 md:px-8">
+        <div className="mx-auto max-w-6xl">
           {Content ? (
-            <article ref={contentRef} className="week-content mx-auto">
+            <article
+              ref={contentRef}
+              className="week-content mx-auto bg-white/82 px-6 py-8 text-sky-950 backdrop-blur-sm md:px-10 md:py-10"
+            >
               <Content />
             </article>
           ) : (
-            <section className="mx-auto max-w-3xl p-6">
+            <section className="mx-auto max-w-3xl bg-white/82 p-6 text-sky-950 backdrop-blur-sm">
               <h2 className="mb-3 text-2xl font-bold text-[#e00000]">
                 Not Published Yet
               </h2>
@@ -241,7 +237,6 @@ export default function Week() {
               </p>
             </section>
           )}
-          <WeekNav previousWeek={previousWeek} nextWeek={nextWeek} />
         </div>
       </div>
     </div>
