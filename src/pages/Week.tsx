@@ -207,7 +207,7 @@ export default function Week() {
             <h1 className="mt-4 text-5xl font-extrabold uppercase leading-[0.9] text-white md:text-6xl">
               {title}
             </h1>
-            <p className="mt-5 max-w-3xl text-base leading-relaxed text-white/88 md:text-xl">
+            <p className="text-white/88 mt-5 max-w-3xl text-base leading-relaxed md:text-xl">
               {summary}
             </p>
           </section>
@@ -219,12 +219,12 @@ export default function Week() {
           {Content ? (
             <article
               ref={contentRef}
-              className="week-content mx-auto bg-white/82 px-6 py-8 text-sky-950 backdrop-blur-sm md:px-10 md:py-10"
+              className="week-content bg-white/82 mx-auto px-6 py-8 text-sky-950 backdrop-blur-sm md:px-10 md:py-10"
             >
               <Content />
             </article>
           ) : (
-            <section className="mx-auto max-w-3xl bg-white/82 p-6 text-sky-950 backdrop-blur-sm">
+            <section className="bg-white/82 mx-auto max-w-3xl p-6 text-sky-950 backdrop-blur-sm">
               <h2 className="mb-3 text-2xl font-bold text-[#e00000]">
                 Not Published Yet
               </h2>

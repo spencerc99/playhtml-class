@@ -4,3 +4,4 @@
 coverage/
 dist/
 tsconfig.tsbuildinfo
+.claude/launch.json

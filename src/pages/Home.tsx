@@ -3,6 +3,11 @@
 
 import type { CSSProperties } from 'react';
 import { Link } from 'react-router';
+import {
+  formatUnlockDate,
+  isWeekUnlocked,
+  weekUnlockDate,
+} from '../weekSchedule';
 
 interface WeekContentMeta {
   title?: string;
@@ -148,20 +153,42 @@ export default function Home() {
         <div className={`pointer-events-auto ${HOME_SECTION_FRAME}`}>
           <h2 className={`${HOME_SECTION_HEADING} mb-6`}>Weekly View</h2>
           <div className="w-full divide-y-2 divide-white/55">
-            {WEEK_LINKS.map((week) => (
-              <Link
-                key={week.number}
-                to={`/week/${week.number}`}
-                className="hover:bg-white/12 group flex w-full items-end justify-between gap-6 px-0 py-5 no-underline transition duration-200 hover:px-3 hover:no-underline"
-              >
-                <p className="shrink-0 text-2xl font-bold uppercase leading-tight text-white transition duration-200 group-hover:text-white md:text-4xl">
-                  Week {week.number}
-                </p>
-                <p className="text-right text-2xl font-bold uppercase leading-tight text-white transition duration-200 group-hover:translate-x-[-0.35rem] md:text-4xl">
-                  {week.title}
-                </p>
-              </Link>
-            ))}
+            {WEEK_LINKS.map((week) => {
+              const unlocked = isWeekUnlocked(week.number);
+              const unlockDate = weekUnlockDate(week.number);
+
+              if (!unlocked) {
+                return (
+                  <div
+                    key={week.number}
+                    className="flex w-full items-end justify-between gap-6 px-0 py-5 text-white/40"
+                  >
+                    <p className="shrink-0 text-2xl font-bold uppercase leading-tight md:text-4xl">
+                      Week {week.number}
+                    </p>
+                    <p className="text-right text-2xl font-bold uppercase leading-tight md:text-4xl">
+                      🔒 Unlocks{' '}
+                      {unlockDate ? formatUnlockDate(unlockDate) : ''}
+                    </p>
+                  </div>
+                );
+              }
+
+              return (
+                <Link
+                  key={week.number}
+                  to={`/week/${week.number}`}
+                  className="hover:bg-white/12 group flex w-full items-end justify-between gap-6 px-0 py-5 no-underline transition duration-200 hover:px-3 hover:no-underline"
+                >
+                  <p className="shrink-0 text-2xl font-bold uppercase leading-tight text-white transition duration-200 group-hover:text-white md:text-4xl">
+                    Week {week.number}
+                  </p>
+                  <p className="text-right text-2xl font-bold uppercase leading-tight text-white transition duration-200 group-hover:translate-x-[-0.35rem] md:text-4xl">
+                    {week.title}
+                  </p>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>

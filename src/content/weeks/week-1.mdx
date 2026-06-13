@@ -2,6 +2,14 @@ export const meta = {
   title: 'Step Inside / Introduction to PlayHTML',
 };
 
+import { CodeDemo } from '../../components/CodeDemo';
+import {
+  ColorToggleDemo,
+  GlowToggleDemo,
+  LampDemo,
+  ScaleToggleDemo,
+} from '../../components/WeekOneDemos';
+
 ## Agenda
 
 - Syllabus
@@ -25,7 +33,7 @@ Intro to the class!
 
 Hi I'm [Munus Shih (they/them)](https://munusshih.com). I'm a Taiwanese Minnan-Hakka designer and developer based in New York, but I'm currently teaching from Taiwan! I teach full time at the Graduate Communication Design program at Pratt Institute. My research focuses on the ecosystem of open source, design softwares and solidarity economy.
 
-Hi I'm Spencer.
+Hi I'm [Spencer Chang](https://spencer.place) (they/them). I'm an artist, enginer, and toymaker based in San Francisco and like to say I make "software you can touch." I care about creating environments and infrastructure that enable us to find new ways to play, create, and care for each other.
 
 Now it's your turn!
 
@@ -44,9 +52,24 @@ Here are resources for SFPC classes:
 - We will take attendance in this class. If you need to miss a class, please let us know in advance in discord with a reason if you can, and reach out to us if you need any support.
 - We don't have a dedicated office hours, but you can always reach out to us via email or discord if you need help with your project!
 
-## Discussion of Internet Third Spaces
+## Our goal
 
-We hope you've had a chance to read the article ["Why the disappearance of digital third spaces matters" by Nuzhat Tahiya](https://www.thedailystar.net/star-youth/news/why-the-disappearance-digital-third-spaces-matters-4084946)
+What the web felt like:
+![](https://www.are.na/block/22162960)
+
+What the web turned into:
+
+visions for a web where you can hang out
+
+- image of metaverse
+- image of personal websites with expression (geocities)
+
+Where are we going?
+(rather than re-creating the physical world in the digital world, what are the uniquely digital things that we can enable)
+
+## Discussion of Internet Third Spaces & Contamination
+
+We hope you've had a chance to read the article ["Why the disappearance of digital third spaces matters" by Nuzhat Tahiya](https://www.thedailystar.net/star-youth/news/why-the-disappearance-digital-third-spaces-matters-4084946) and ["On Contamination" by Kim Kleinert](https://www.are.na/editorial/on-contamination)!
 
 What are your thoughts on the article?
 
@@ -67,7 +90,26 @@ Copying, pasting, and reusing code is a natural and valuable part of learning te
 5. Respect licenses. When using open-source libraries or code, respect the terms of their licenses. Some may require attribution or have restrictions on commercial use.
 6. You are encouraged to use AI tools and and external resources as part of your learning process. However, any AI-generated content included in your submission must be clearly disclosed and credited. You remain responsible for ensuring that the code works correctly and that you understand it fully.
 
-Following these guidelines supports your learning, respects the work of others, and helps maintain a fair and productive classroom environment.
+The ultimate goal is to create something that evokes a feeling in other people! The things that best do this have a core handmade nature to them that expresses care and love towards the people you are designing for. AI-generated code can a really useful tool for overcoming technical inaccessibility and testing out ideas, but don't let it become a crutch for making something that matters.
+
+A short guideline: if you are still coming up with the idea, try it out by hand, make the most lo-fi version you can, get a feel for what feels right. if you are running into difficult bugs, hard technical challenges that you don't understand, try asking AI for help and seeing how it can unblock your understanding and get you further towards the feeling you are chasing.
+
+## The infrastructure we're using (playhtml)
+
+We will be building our internet spaces on top of [playhtml](https://playhtml.fun/), an [open-source library](https://github.com/spencerc99/playhtml/) for making communal web experiences by enhancing web elements with real-time, collaborative interactivity!
+
+**Expectation Setting:** playhtml is an indie, passion project. This means that you may encounter bugs, missing features, etc. Please report them to me as you find them! We'll be building this communal software together and ultimately, building the internet we want together :)
+
+The focus of this class will be using the library to create your own collective space, but I welcome contributions to the core library and happy to discuss that as well if you feel inclined and inspired to do so.
+
+At a high level, the library provides an open infrastructure (that Spencer hosts) that facilitates real-time state syncing and data persistence and a simple programming interface for managing data (which is core to making social interactions). What this means is that you can make things that save and accumulate over time (guestbooks, canvases, etc.), and have actions happen instantly for everyone on the page (live cursors, chat, etc.).
+
+The goal of playHTML is to provide the infrastructure so that we can make a million tiny internets flourish to fill in the gap between huge social media platforms optimized for audience growth and expressive personal websites that have limited community space.
+
+- [documentation](https://playhtml.fun/docs/)
+- [examples](https://www.are.na/spencer-chang/playhtml-sites)
+- [the poems we found together](https://playhtml.fun/fridge)
+- [cursor handholding](https://playhtml.fun/experiments/7)
 
 ### Environment setup, HTML, and PlayHTML
 
@@ -80,22 +122,16 @@ Here's a checklist:
 3. Let's make sure you can run the template and see the default page in your browser.
 4. Let's make tiny changes to the template and see how it works.
 
-## playHTML
-
-[playHTML](https://playhtml.fun/), built by Spencer Chang, is an open-source library for designing communal web experiences by enhancing web elements with real-time, collaborative interactivity!
-
-The goal of playHTML is to make it easy for anyone to create interactive web experiences that can be shared and enjoyed together. Here is a list of resources:
-
-- [playHTML documentation](https://playhtml.fun/docs/)
-- [playHTML GitHub repo](https://github.com/spencerc99/playhtml)
-
 ### Getting started with playHTML
 
-The simpliest way to use playHTML is to include it in your HTML file via a CDN link (CDN stands for Content Delivery Network, and it's a way to load libraries directly from the web without having to install them on your computer):
+The simplest way to use playHTML is to include it in your HTML file via a CDN link (CDN stands for Content Delivery Network, and it's a way to load libraries directly from the web without having to install them on your computer):
+
+<CodeDemo demo={<LampDemo />}>
 
 ```html
 <body>
-  <button id="my-lamp" can-toggle>lamp</button>
+  <div class="bench">PUBLIC BENCH</div>
+  <img id="my-lamp" can-toggle src="lamp.png" alt="lamp image" />
 
   <script type="module">
     import { playhtml } from 'https://unpkg.com/playhtml';
@@ -104,6 +140,8 @@ The simpliest way to use playHTML is to include it in your HTML file via a CDN l
   </script>
 </body>
 ```
+
+</CodeDemo>
 
 ### Quick Crashcourse on HTML/CSS
 
@@ -117,9 +155,8 @@ Basically HTML is the structure of your webpage, and CSS is the style. You can a
 HTML is a markup language that uses tags to define elements on a webpage. For example, `<button>` defines a button element, and you can add attributes like `id` or `class` to give it specific properties.
 
 ```html
-<button id="my-lamp" class="lamp">lamp</button>
-<img src="lamp.png" alt="lamp image" />
-<div class="bench">This is a bench</div>
+<img id="my-lamp" can-toggle src="lamp.png" alt="lamp image" />
+<div class="bench">PUBLIC BENCH</div>
 ```
 
 Only one thing can be the id of an element, but you can have multiple classes. In this example, we have a button element with an id of "my-lamp" and a class of "lamp".
@@ -148,36 +185,48 @@ Let's look at [the doc here](https://playhtml.fun/docs/capabilities/) to learn a
 
 For `can-toggle`, we can customize the behavior using custom CSS.
 
+<CodeDemo demo={<ColorToggleDemo />}>
+
 ```css
-.classname.clicked {
+.classname.toggled {
   background: #6cd97e; /*this part changes the background color when clicked*/
 }
 ```
 
+</CodeDemo>
+
 For instance, when using with [CSS filter](https://www.w3schools.com/tools/tool_css_filter.php), you can create lights that can be turned on and off:
+
+<CodeDemo demo={<GlowToggleDemo />}>
 
 ```css
 .lamp {
   filter: brightness(0.5);
 }
 
-.lamp.clicked {
+.lamp.toggled {
   filter: brightness(1.2) saturate(1.6)
     drop-shadow(rgba(247, 220, 156, 0.85) 0px 0px 50px); /* this part makes the lamp brighter and adds a glow effect when clicked */
 }
 ```
 
+</CodeDemo>
+
 Or you can combine with [CSS transform](https://www.w3schools.com/cssref/css3_pr_transform.php), and make the element grow, spin, or move when toggled:
+
+<CodeDemo demo={<ScaleToggleDemo />}>
 
 ```css
 .button {
   transform: scale(1);
 }
 
-.button.clicked {
+.button.toggled {
   transform: scale(5);
 }
 ```
+
+</CodeDemo>
 
 To create a smooth animation between states, you can add CSS transition:
 
@@ -213,3 +262,5 @@ Github, currently controlled by Microsoft, is a platform for hosting and collabo
 
 - Continue working on your site using the built-in features
 - Read A book review of [This Is for Everyone by Tim Berners Lee](https://archive.ph/yOoAh) (the inventor of HTML and World Wide Web). Think about how the web has evolved since its invention, and what you think the future of the web will look like. We will discuss this in the next class!
+- Read [Against the Dark Forest by Erin Kissage](https://www.wrecka.ge/against-the-dark-forest/?__readwiseLocation=)
+- What Screens Want? by Frank Chimero

@@ -6,8 +6,9 @@
   --red: #e00000;
   --bg: #f0eded;
   --font-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --font-display: 'Healing the Web A', 'Helvetica Neue', Helvetica, Arial,
-    sans-serif;
+  --font-body: 'Public Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-display:
+    'Healing the Web A', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
 @font-face {
@@ -35,8 +36,14 @@ h4,
 h5,
 h6 {
   font-family: var(--font-display);
-  font-feature-settings: 'liga' 1, 'ss01' 1, 'ss02' 1, 'ss03' 1, 'ss04' 1,
-    'ss05' 1, 'ss06' 1;
+  font-feature-settings:
+    'liga' 1,
+    'ss01' 1,
+    'ss02' 1,
+    'ss03' 1,
+    'ss04' 1,
+    'ss05' 1,
+    'ss06' 1;
 }
 
 a {
@@ -50,15 +57,16 @@ a:hover {
 }
 
 .week-content {
+  font-family: var(--font-body);
   line-height: 1.7;
   max-width: 48rem;
 }
 
-.week-content> :first-child {
+.week-content > :first-child {
   margin-top: 0;
 }
 
-.week-content>*+* {
+.week-content > * + * {
   margin-top: 1.25rem;
 }
 
@@ -83,8 +91,8 @@ a:hover {
 
 .week-content p,
 .week-content li {
-  font-size: 1.4rem;
-  line-height: 1.95;
+  font-size: 1.2rem;
+  line-height: 1.8;
 }
 
 .week-content ul,
@@ -100,7 +108,7 @@ a:hover {
   list-style: decimal;
 }
 
-.week-content li+li {
+.week-content li + li {
   margin-top: 0.35rem;
 }
 
@@ -175,6 +183,67 @@ a:hover {
   background: rgba(224, 0, 0, 0.08);
 }
 
+.code-demo {
+  position: relative;
+}
+
+.code-demo__live {
+  margin-top: 1rem;
+}
+
+/* On wide screens, break the live demo out of the content column and float it
+   into the right margin, aligned to the top of its own code block. */
+@media (min-width: 1180px) {
+  .code-demo__live {
+    position: absolute;
+    top: 0;
+    left: calc(100% + 1.5rem);
+    width: max-content;
+    margin-top: 0;
+  }
+}
+
+.week-demo__lamp {
+  cursor: pointer;
+  display: block;
+  height: 6rem;
+  transition: filter 0.3s ease;
+  width: 6rem;
+  object-fit: contain;
+}
+
+.week-demo__box {
+  align-items: center;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 0.6rem;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  font-family: var(--font-body);
+  font-size: 1.1rem;
+  font-weight: 700;
+  height: 4.5rem;
+  justify-content: center;
+  transition:
+    background 0.3s ease,
+    filter 0.3s ease,
+    transform 0.3s ease;
+  width: 4.5rem;
+}
+
+.week-demo__box--lamp {
+  background: #fff4d6;
+  border-color: rgba(247, 220, 156, 0.6);
+  font-size: 2rem;
+}
+
+.week-demo__box--scale {
+  background: #d7ecff;
+  border-color: rgba(44, 202, 255, 0.5);
+  color: #1a6fa3;
+  font-size: 1.6rem;
+}
+
 .colophon {
   margin-top: 4rem;
   padding-top: 1.5rem;
@@ -197,8 +266,14 @@ a:hover {
   background-attachment: fixed;
   background-position: center;
   font-family: var(--font-display);
-  font-feature-settings: 'liga' 1, 'ss01' 1, 'ss02' 1, 'ss03' 1, 'ss04' 1,
-    'ss05' 1, 'ss06' 1;
+  font-feature-settings:
+    'liga' 1,
+    'ss01' 1,
+    'ss02' 1,
+    'ss03' 1,
+    'ss04' 1,
+    'ss05' 1,
+    'ss06' 1;
   isolation: isolate;
 }
 
@@ -228,8 +303,14 @@ a:hover {
   background-attachment: fixed;
   background-position: center;
   font-family: var(--font-display);
-  font-feature-settings: 'liga' 1, 'ss01' 1, 'ss02' 1, 'ss03' 1, 'ss04' 1,
-    'ss05' 1, 'ss06' 1;
+  font-feature-settings:
+    'liga' 1,
+    'ss01' 1,
+    'ss02' 1,
+    'ss03' 1,
+    'ss04' 1,
+    'ss05' 1,
+    'ss06' 1;
   isolation: isolate;
   position: relative;
 }
