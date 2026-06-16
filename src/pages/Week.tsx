@@ -95,24 +95,35 @@ interface WeekNavProps {
 
 function WeekNav({ previousWeek, nextWeek }: WeekNavProps) {
   return (
-    <nav className="mb-8 flex items-center text-base font-bold uppercase tracking-wide text-white md:text-lg">
-      {previousWeek !== null ? (
-        <Link
-          to={`/week/${previousWeek}`}
-          className="inline-block text-white no-underline transition duration-200 hover:-translate-y-0.5 hover:no-underline"
-        >
-          ← Previous Week
-        </Link>
-      ) : null}
+    <nav className="mb-8 flex items-center justify-between gap-4 text-base font-bold uppercase tracking-wide text-white md:text-lg">
+      <div className="flex-1">
+        {previousWeek !== null ? (
+          <Link
+            to={`/week/${previousWeek}`}
+            className="inline-block text-white no-underline transition duration-200 hover:-translate-y-0.5 hover:no-underline"
+          >
+            ← Previous Week
+          </Link>
+        ) : null}
+      </div>
 
-      {nextWeek !== null ? (
-        <Link
-          to={`/week/${nextWeek}`}
-          className="ml-auto inline-block text-white no-underline transition duration-200 hover:-translate-y-0.5 hover:no-underline"
-        >
-          Next Week →
-        </Link>
-      ) : null}
+      <Link
+        to="/"
+        className="inline-block text-white no-underline transition duration-200 hover:-translate-y-0.5 hover:no-underline"
+      >
+        Home
+      </Link>
+
+      <div className="flex flex-1 justify-end">
+        {nextWeek !== null ? (
+          <Link
+            to={`/week/${nextWeek}`}
+            className="inline-block text-white no-underline transition duration-200 hover:-translate-y-0.5 hover:no-underline"
+          >
+            Next Week →
+          </Link>
+        ) : null}
+      </div>
     </nav>
   );
 }

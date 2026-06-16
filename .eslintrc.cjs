@@ -1,3 +1,6 @@
+// ABOUTME: ESLint configuration for React, TypeScript, and project-specific
+// ABOUTME: JSX attributes used by playhtml and React Three Fiber.
+
 module.exports = {
   env: {
     browser: true,
@@ -66,6 +69,43 @@ module.exports = {
     'prefer-arrow-callback': 2,
     'prefer-const': 2,
     'react-hooks/exhaustive-deps': 2,
+    'react/no-unknown-property': [
+      2,
+      {
+        ignore: [
+          'args',
+          'bumpMap',
+          'bumpScale',
+          'can-move',
+          'can-move-bounds',
+          'can-spin',
+          'castShadow',
+          'clearcoat',
+          'clearcoatRoughness',
+          'envMapIntensity',
+          'intensity',
+          'map',
+          'metalness',
+          'object',
+          'position',
+          'receiveShadow',
+          'rotation',
+          'roughness',
+          'roughnessMap',
+          'shadow-bias',
+          'shadow-camera-bottom',
+          'shadow-camera-far',
+          'shadow-camera-left',
+          'shadow-camera-near',
+          'shadow-camera-right',
+          'shadow-camera-top',
+          'shadow-mapSize-height',
+          'shadow-mapSize-width',
+          'shadow-radius',
+          'transparent',
+        ],
+      },
+    ],
     'react/prop-types': 0,
     'react/react-in-jsx-scope': 0,
     semi: [2, 'always'],

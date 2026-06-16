@@ -11,7 +11,10 @@ export default defineConfig({
       remarkPlugins: [remarkGfm],
       rehypePlugins: [
         rehypeHighlight,
-        [rehypeExternalLinks, { target: '_blank', rel: ['noopener', 'noreferrer'] }],
+        [
+          rehypeExternalLinks,
+          { target: '_blank', rel: ['noopener', 'noreferrer'] },
+        ],
       ],
     }),
     react(),

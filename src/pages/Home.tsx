@@ -131,19 +131,29 @@ export default function Home() {
       <div
         className={`pointer-events-none relative z-20 ${HOME_SECTION_FRAME} ${HOME_SECTION_SPACING} flex items-end justify-between gap-4`}
       >
-        <p className="text-xl font-bold uppercase leading-tight text-white md:text-2xl">
+        <a
+          href="https://spencer.place"
+          target="_blank"
+          rel="noreferrer"
+          className="pointer-events-auto text-xl font-bold uppercase leading-tight text-white no-underline transition duration-200 hover:-translate-y-0.5 hover:no-underline md:text-2xl"
+        >
           Spencer
           <br />
           Chang
-        </p>
+        </a>
         <p className="text-center text-xl font-bold uppercase text-white md:text-2xl">
           class.playhtml.fun
         </p>
-        <p className="text-right text-xl font-bold uppercase leading-tight text-white md:text-2xl">
+        <a
+          href="https://www.munusshih.com/"
+          target="_blank"
+          rel="noreferrer"
+          className="pointer-events-auto text-right text-xl font-bold uppercase leading-tight text-white no-underline transition duration-200 hover:-translate-y-0.5 hover:no-underline md:text-2xl"
+        >
           Munus
           <br />
           Shih
-        </p>
+        </a>
       </div>
 
       {/* Weekly route links */}

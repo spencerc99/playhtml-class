@@ -5,7 +5,7 @@ import { withSharedState } from '@playhtml/react';
 import { Center, Environment, OrbitControls, useGLTF } from '@react-three/drei';
 import { Canvas, useThree } from '@react-three/fiber';
 import { Suspense, useCallback, useEffect, useRef } from 'react';
-import * as THREE from 'three';
+import { Vector3 } from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 
 interface CameraState {
@@ -39,12 +39,14 @@ function Scene({
     if (!controls || isLocalDrag.current) return;
 
     const distance = camera.position.length();
-    const x = distance * Math.sin(data.polarAngle) * Math.sin(data.azimuthalAngle);
+    const x =
+      distance * Math.sin(data.polarAngle) * Math.sin(data.azimuthalAngle);
     const y = distance * Math.cos(data.polarAngle);
-    const z = distance * Math.sin(data.polarAngle) * Math.cos(data.azimuthalAngle);
+    const z =
+      distance * Math.sin(data.polarAngle) * Math.cos(data.azimuthalAngle);
 
     camera.position.set(x, y, z);
-    camera.lookAt(new THREE.Vector3(0, 0, 0));
+    camera.lookAt(new Vector3(0, 0, 0));
     controls.update();
   }, [data.azimuthalAngle, data.polarAngle, camera]);
 

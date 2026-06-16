@@ -9,12 +9,19 @@ import {
   useGLTF,
 } from '@react-three/drei';
 import { Canvas, useThree } from '@react-three/fiber';
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import type { ChangeEvent, ReactNode } from 'react';
 import {
   ACESFilmicToneMapping,
-  Color,
   CanvasTexture,
+  Color,
   PCFSoftShadowMap,
   RepeatWrapping,
   SRGBColorSpace,
@@ -146,13 +153,22 @@ function mergeStoredControls(raw: unknown): SceneControls {
   }
 
   const stored = raw as Record<string, unknown>;
-  const merged = { ...DEFAULT_CONTROLS } as Record<keyof SceneControls, number | string>;
+  const merged = { ...DEFAULT_CONTROLS } as Record<
+    keyof SceneControls,
+    number | string
+  >;
 
-  for (const key of Object.keys(DEFAULT_CONTROLS) as Array<keyof SceneControls>) {
+  for (const key of Object.keys(DEFAULT_CONTROLS) as Array<
+    keyof SceneControls
+  >) {
     const fallback = DEFAULT_CONTROLS[key];
     const next = stored[key as string];
 
-    if (typeof fallback === 'number' && typeof next === 'number' && Number.isFinite(next)) {
+    if (
+      typeof fallback === 'number' &&
+      typeof next === 'number' &&
+      Number.isFinite(next)
+    ) {
       merged[key] = next;
       continue;
     }
@@ -188,8 +204,8 @@ function loadStoredControls(): SceneControls {
 function createSeededRandom(seed: number) {
   let state = seed >>> 0;
   return () => {
-    state = (1664525 * state + 1013904223) >>> 0;
-    return state / 0x100000000;
+    state = (1_664_525 * state + 1_013_904_223) >>> 0;
+    return state / 0x1_00_00_00_00;
   };
 }
 
@@ -284,7 +300,7 @@ function buildPanelLinks({
     return [] as PanelLink[];
   }
 
-  const random = createSeededRandom((seed ^ 0x9e3779b9) >>> 0);
+  const random = createSeededRandom((seed ^ 0x9e_37_79_b9) >>> 0);
   const maxEdges = (chairCount * (chairCount - 1)) / 2;
   const desiredEdges = Math.min(maxEdges, Math.max(1, Math.round(panelCount)));
   const links: PanelLink[] = [];
@@ -322,7 +338,9 @@ function createWoodCanvas(kind: 'albedo' | 'bump' | 'roughness') {
     return canvas;
   }
 
-  const random = createSeededRandom(kind === 'albedo' ? 1337 : kind === 'roughness' ? 7901 : 2024);
+  const random = createSeededRandom(
+    kind === 'albedo' ? 1337 : kind === 'roughness' ? 7901 : 2024,
+  );
   const { height, width } = canvas;
 
   if (kind === 'albedo') {
@@ -350,7 +368,15 @@ function createWoodCanvas(kind: 'albedo' | 'bump' | 'roughness') {
       const radiusY = 2 + random() * 6;
       context.fillStyle = `rgba(48, 27, 15, ${0.08 + random() * 0.14})`;
       context.beginPath();
-      context.ellipse(x, y, radiusX, radiusY, random() * Math.PI, 0, Math.PI * 2);
+      context.ellipse(
+        x,
+        y,
+        radiusX,
+        radiusY,
+        random() * Math.PI,
+        0,
+        Math.PI * 2,
+      );
       context.fill();
     }
 
@@ -363,7 +389,10 @@ function createWoodCanvas(kind: 'albedo' | 'bump' | 'roughness') {
 
   for (let y = 0; y < height; y += 1) {
     const sine = Math.sin(y * 0.13 + random() * 0.9);
-    const value = Math.max(0, Math.min(255, Math.round(baseTone + sine * 45 + random() * 35)));
+    const value = Math.max(
+      0,
+      Math.min(255, Math.round(baseTone + sine * 45 + random() * 35)),
+    );
     context.fillStyle = `rgb(${value}, ${value}, ${value})`;
     context.fillRect(0, y, width, 1);
   }
@@ -436,7 +465,9 @@ function TintedChair({
       if (!('isMesh' in child) || !child.isMesh) return;
 
       const mesh = child as Mesh;
-      const sourceMaterials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      const sourceMaterials = Array.isArray(mesh.material)
+        ? mesh.material
+        : [mesh.material];
       const tintedMaterials = sourceMaterials.map((source) => {
         const tinted = source.clone();
         if ('color' in tinted && tinted.color instanceof Color) {
@@ -452,7 +483,9 @@ function TintedChair({
         return tinted;
       });
 
-      mesh.material = Array.isArray(mesh.material) ? tintedMaterials : tintedMaterials[0];
+      mesh.material = Array.isArray(mesh.material)
+        ? tintedMaterials
+        : tintedMaterials[0];
       mesh.castShadow = true;
       mesh.receiveShadow = true;
     });
@@ -466,7 +499,9 @@ function TintedChair({
         if (!('isMesh' in child) || !child.isMesh) return;
 
         const mesh = child as Mesh;
-        const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        const materials = Array.isArray(mesh.material)
+          ? mesh.material
+          : [mesh.material];
         materials.forEach((material) => (material as Material).dispose());
       });
     };
@@ -496,15 +531,24 @@ function ChairPair({
   return (
     <>
       {placements.map((placement, index) => {
-        const tintShift = (placement.rotationY * 2 - 1) * controls.chairColorVariance;
+        const tintShift =
+          (placement.rotationY * 2 - 1) * controls.chairColorVariance;
         return (
           <group
             key={`chair-${index}`}
-            position={[controls.chairOffsetX + placement.x, 0, controls.chairOffsetZ + placement.z]}
+            position={[
+              controls.chairOffsetX + placement.x,
+              0,
+              controls.chairOffsetZ + placement.z,
+            ]}
             rotation={[0, placement.rotationY * controls.chairMisalignment, 0]}
           >
             <group position={[0, controls.chairOffsetY, 0]}>
-              <TintedChair scale={chairScale} scene={scene} tintShift={tintShift} />
+              <TintedChair
+                scale={chairScale}
+                scene={scene}
+                tintShift={tintShift}
+              />
             </group>
           </group>
         );
@@ -551,11 +595,17 @@ function BenchTopPanels({
         if (distance < 0.001) return null;
 
         const panelLength = Math.max(panelWidth, distance + controls.panelGap);
-        const panelThickness = Math.max(0.01, controls.panelThickness + link.thicknessOffset);
-        const midX = (from.x + to.x) / 2 + controls.chairOffsetX + controls.panelOffsetX;
-        const midZ = (from.z + to.z) / 2 + controls.chairOffsetZ + controls.panelOffsetZ;
+        const panelThickness = Math.max(
+          0.01,
+          controls.panelThickness + link.thicknessOffset,
+        );
+        const midX =
+          (from.x + to.x) / 2 + controls.chairOffsetX + controls.panelOffsetX;
+        const midZ =
+          (from.z + to.z) / 2 + controls.chairOffsetZ + controls.panelOffsetZ;
         const rotationY = Math.atan2(dx, dz);
-        const panelY = controls.panelHeight + controls.panelOffsetY + link.yOffset;
+        const panelY =
+          controls.panelHeight + controls.panelOffsetY + link.yOffset;
 
         return (
           <group
@@ -564,13 +614,19 @@ function BenchTopPanels({
             rotation={[0, rotationY, 0]}
           >
             <mesh castShadow receiveShadow>
-              <boxGeometry args={[controls.panelDepth, panelThickness, panelLength]} />
+              <boxGeometry
+                args={[controls.panelDepth, panelThickness, panelLength]}
+              />
               <meshPhysicalMaterial
                 bumpMap={textures.bump}
                 bumpScale={controls.panelBumpScale}
                 clearcoat={controls.panelClearcoat}
                 clearcoatRoughness={controls.panelClearcoatRoughness}
-                color={panelIndex % 2 === 0 ? controls.panelColorA : controls.panelColorB}
+                color={
+                  panelIndex % 2 === 0
+                    ? controls.panelColorA
+                    : controls.panelColorB
+                }
                 envMapIntensity={1.1}
                 map={textures.albedo}
                 metalness={controls.panelMetalness}
@@ -640,13 +696,22 @@ function BenchScene({ controls }: { controls: SceneControls }) {
   const shadowFrustumHalfSize = Math.max(
     6,
     shadowCoverage * 0.6 +
-      Math.max(Math.abs(controls.chairOffsetX), Math.abs(controls.panelOffsetX)) +
-      Math.max(Math.abs(controls.chairOffsetZ), Math.abs(controls.panelOffsetZ)),
+      Math.max(
+        Math.abs(controls.chairOffsetX),
+        Math.abs(controls.panelOffsetX),
+      ) +
+      Math.max(
+        Math.abs(controls.chairOffsetZ),
+        Math.abs(controls.panelOffsetZ),
+      ),
   );
   const shadowCameraFar = Math.max(
     24,
     shadowFrustumHalfSize * 4 +
-      Math.abs(controls.panelHeight + controls.panelOffsetY - controls.shadowPlaneY) * 2,
+      Math.abs(
+        controls.panelHeight + controls.panelOffsetY - controls.shadowPlaneY,
+      ) *
+        2,
   );
   const shadowPlaneSize = Math.max(20, shadowCoverage * 3);
 
@@ -669,7 +734,10 @@ function BenchScene({ controls }: { controls: SceneControls }) {
         shadow-mapSize-width={controls.shadowMapSize}
         shadow-radius={controls.shadowRadius}
       />
-      <directionalLight intensity={controls.fillLightIntensity} position={[-4, 3, -5]} />
+      <directionalLight
+        intensity={controls.fillLightIntensity}
+        position={[-4, 3, -5]}
+      />
       <Environment
         blur={controls.envBlur}
         environmentIntensity={controls.envIntensity}
@@ -678,7 +746,11 @@ function BenchScene({ controls }: { controls: SceneControls }) {
       <Suspense fallback={null}>
         <group position={[0, -0.2, 0]}>
           <ChairPair controls={controls} placements={placements} />
-          <BenchTopPanels controls={controls} links={panelLinks} placements={placements} />
+          <BenchTopPanels
+            controls={controls}
+            links={panelLinks}
+            placements={placements}
+          />
         </group>
       </Suspense>
       <ContactShadows
@@ -697,7 +769,11 @@ function BenchScene({ controls }: { controls: SceneControls }) {
         resolution={1024}
         scale={shadowCoverage}
       />
-      <mesh position={[0, controls.shadowPlaneY, 0]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh
+        position={[0, controls.shadowPlaneY, 0]}
+        receiveShadow
+        rotation={[-Math.PI / 2, 0, 0]}
+      >
         <planeGeometry args={[shadowPlaneSize, shadowPlaneSize]} />
         <shadowMaterial opacity={controls.shadowOpacity * 0.5} transparent />
       </mesh>
@@ -706,7 +782,13 @@ function BenchScene({ controls }: { controls: SceneControls }) {
   );
 }
 
-function FieldGroup({ children, title }: { children: ReactNode; title: string }) {
+function FieldGroup({
+  children,
+  title,
+}: {
+  children: ReactNode;
+  title: string;
+}) {
   return (
     <fieldset
       style={{
@@ -716,7 +798,9 @@ function FieldGroup({ children, title }: { children: ReactNode; title: string })
         padding: '8px',
       }}
     >
-      <legend style={{ fontSize: '12px', fontWeight: 700, padding: '0 4px' }}>{title}</legend>
+      <legend style={{ fontSize: '12px', fontWeight: 700, padding: '0 4px' }}>
+        {title}
+      </legend>
       <div style={{ display: 'grid', gap: '8px' }}>{children}</div>
     </fieldset>
   );
@@ -738,7 +822,8 @@ function NumberControl({
   value: number;
 }) {
   const updateFromRange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => onChange(Number(event.target.value)),
+    (event: ChangeEvent<HTMLInputElement>) =>
+      onChange(Number(event.target.value)),
     [onChange],
   );
 
@@ -779,7 +864,14 @@ function ColorControl({
   value: string;
 }) {
   return (
-    <label style={{ alignItems: 'center', display: 'flex', gap: '8px', justifyContent: 'space-between' }}>
+    <label
+      style={{
+        alignItems: 'center',
+        display: 'flex',
+        gap: '8px',
+        justifyContent: 'space-between',
+      }}
+    >
       <span style={{ fontSize: '12px', fontWeight: 600 }}>{label}</span>
       <div style={{ alignItems: 'center', display: 'flex', gap: '8px' }}>
         <input
@@ -833,7 +925,9 @@ function SelectControl({
 
 export function ThreeDBenchPage() {
   const canvasContainerRef = useRef<HTMLDivElement>(null);
-  const [controls, setControls] = useState<SceneControls>(() => loadStoredControls());
+  const [controls, setControls] = useState<SceneControls>(() =>
+    loadStoredControls(),
+  );
 
   useEffect(() => {
     try {
@@ -877,7 +971,9 @@ export function ThreeDBenchPage() {
   );
 
   const setLayoutPreset = useCallback((presetId: string) => {
-    const preset = LAYOUT_PRESETS.find((candidate) => candidate.id === presetId);
+    const preset = LAYOUT_PRESETS.find(
+      (candidate) => candidate.id === presetId,
+    );
     if (!preset) return;
 
     setControls((previous) => ({
@@ -885,14 +981,17 @@ export function ThreeDBenchPage() {
       chairCount: preset.chairCount,
       layoutPreset: preset.id,
       panelCount: preset.panelCount,
-      scatterRadius: Math.max(previous.scatterRadius, 1.8 + preset.chairCount * 0.75),
+      scatterRadius: Math.max(
+        previous.scatterRadius,
+        1.8 + preset.chairCount * 0.75,
+      ),
     }));
   }, []);
 
   const randomizeScatter = useCallback(() => {
     setControls((previous) => ({
       ...previous,
-      scatterSeed: Math.floor(Math.random() * 2147483647),
+      scatterSeed: Math.floor(Math.random() * 2_147_483_647),
     }));
   }, []);
 
@@ -919,12 +1018,18 @@ export function ThreeDBenchPage() {
       const context = resizedCanvas.getContext('2d');
       if (!context) return;
       context.imageSmoothingEnabled = true;
-      context.drawImage(canvas, 0, 0, resizedCanvas.width, resizedCanvas.height);
+      context.drawImage(
+        canvas,
+        0,
+        0,
+        resizedCanvas.width,
+        resizedCanvas.height,
+      );
       exportCanvas = resizedCanvas;
     }
 
     const link = document.createElement('a');
-    link.download = `bench-transparent-${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
+    link.download = `bench-transparent-${new Date().toISOString().replaceAll(/[.:]/g, '-')}.png`;
     link.href = exportCanvas.toDataURL('image/png');
     link.click();
   }, [controls.exportScale]);
@@ -1063,7 +1168,9 @@ export function ThreeDBenchPage() {
             label="Panel links"
             max={24}
             min={1}
-            onChange={(value) => setNumericControl('panelCount', Math.max(1, Math.round(value)))}
+            onChange={(value) =>
+              setNumericControl('panelCount', Math.max(1, Math.round(value)))
+            }
             step={1}
             value={controls.panelCount}
           />
@@ -1095,7 +1202,9 @@ export function ThreeDBenchPage() {
             label="Thickness range"
             max={0.15}
             min={0}
-            onChange={(value) => setNumericControl('panelThicknessVariance', value)}
+            onChange={(value) =>
+              setNumericControl('panelThicknessVariance', value)
+            }
             step={0.001}
             value={controls.panelThicknessVariance}
           />
@@ -1183,7 +1292,9 @@ export function ThreeDBenchPage() {
             label="Clearcoat roughness"
             max={1}
             min={0}
-            onChange={(value) => setNumericControl('panelClearcoatRoughness', value)}
+            onChange={(value) =>
+              setNumericControl('panelClearcoatRoughness', value)
+            }
             step={0.01}
             value={controls.panelClearcoatRoughness}
           />
@@ -1317,7 +1428,9 @@ export function ThreeDBenchPage() {
             label="Shadow map size"
             max={4096}
             min={256}
-            onChange={(value) => setNumericControl('shadowMapSize', Math.round(value))}
+            onChange={(value) =>
+              setNumericControl('shadowMapSize', Math.round(value))
+            }
             step={256}
             value={controls.shadowMapSize}
           />
