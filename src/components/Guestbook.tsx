@@ -33,7 +33,10 @@ function formatRelativeTime(fromMs: number, nowMs: number): string {
 export const Guestbook = withSharedState(
   { defaultData: { entries: [] as GuestbookEntry[] }, id: 'week0-guestbook' },
   ({ data, setData, ref }) => {
-    const { cursors } = usePlayContext();
+    // hasSynced flips true once playhtml loads shared state from the server.
+    // Reading it here re-renders the component when a cold load's entries
+    // arrive after mount, so existing notes show without needing a local edit.
+    const { cursors, hasSynced } = usePlayContext();
     const [draft, setDraft] = useState('');
     const [now, setNow] = useState(() => Date.now());
 
@@ -104,7 +107,9 @@ export const Guestbook = withSharedState(
         <ul className="guestbook__entries">
           {entriesNewestFirst.length === 0 ? (
             <li className="guestbook__empty">
-              No notes yet — be the first to sign!
+              {hasSynced
+                ? 'No notes yet — be the first to sign!'
+                : 'Loading notes…'}
             </li>
           ) : (
             entriesNewestFirst.map((entry) => (

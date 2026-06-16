@@ -6,6 +6,9 @@ import remarkGfm from 'remark-gfm';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+  server: {
+    port: process.env.PORT ? Number(process.env.PORT) : undefined,
+  },
   plugins: [
     mdx({
       remarkPlugins: [remarkGfm],
