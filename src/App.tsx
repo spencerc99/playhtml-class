@@ -18,7 +18,7 @@ interface WeekContentModule {
   meta?: WeekContentMeta;
 }
 
-const APP_TITLE = 'Building Benches for the Internet';
+const APP_TITLE = 'Building Benches for the Web';
 
 const WEEK_CONTENT = import.meta.glob<WeekContentModule>(
   './content/weeks/week-*.mdx',

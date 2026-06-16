@@ -105,19 +105,22 @@ export default function Home() {
         <div
           className={`${HOME_SECTION_FRAME} flex flex-col gap-10 md:flex-row md:items-start md:justify-between`}
         >
-          <p className="text-xl font-bold uppercase leading-tight text-white md:text-2xl">
+          <a
+            href="https://sfpc.io"
+            className="pointer-events-auto text-xl font-bold uppercase leading-tight text-white no-underline transition duration-200 hover:-translate-y-0.5 hover:no-underline md:text-2xl"
+          >
             School
             <br />
             for Poetic
             <br />
             Computation
-          </p>
+          </a>
           <h1 className={HOME_HERO_HEADING}>
             Building
             <br />
             Benches
             <br />
-            for the Internet
+            for the Web
           </h1>
           <p className="text-right text-xl font-bold uppercase leading-tight text-white md:text-2xl">
             Summer
