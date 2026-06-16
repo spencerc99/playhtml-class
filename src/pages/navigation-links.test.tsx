@@ -51,4 +51,14 @@ describe('page navigation links', () => {
     expect(markup).toContain('href="https://spencer.place"');
     expect(markup).toContain('href="https://www.munusshih.com/"');
   });
+
+  test('home page week links do not change row spacing on hover', () => {
+    const markup = renderToStaticMarkup(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>,
+    );
+
+    expect(markup).not.toContain('hover:px-');
+  });
 });

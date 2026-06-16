@@ -188,7 +188,7 @@ export default function Home() {
                 <Link
                   key={week.number}
                   to={`/week/${week.number}`}
-                  className="hover:bg-white/12 group flex w-full items-end justify-between gap-6 px-0 py-5 no-underline transition duration-200 hover:px-3 hover:no-underline"
+                  className="hover:bg-white/12 group flex w-full items-end justify-between gap-6 px-0 py-5 no-underline transition duration-200 hover:no-underline"
                 >
                   <p className="shrink-0 text-2xl font-bold uppercase leading-tight text-white transition duration-200 group-hover:text-white md:text-4xl">
                     Week {week.number}
