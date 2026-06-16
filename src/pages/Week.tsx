@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, type ComponentType } from 'react';
 import { Link, useParams } from 'react-router';
+import { isWeekUnlocked } from '../weekSchedule';
 
 interface WeekContentMeta {
   title?: string;
@@ -155,6 +156,8 @@ export default function Week() {
     weekNumberValue === null || Number.isNaN(weekNumberValue)
       ? null
       : (AVAILABLE_WEEKS.find((value) => value > weekNumberValue) ?? null);
+  const visibleNextWeek =
+    nextWeek !== null && isWeekUnlocked(nextWeek) ? nextWeek : null;
 
   useEffect(() => {
     const root = contentRef.current;
@@ -211,7 +214,7 @@ export default function Week() {
       <header className="px-6 pb-6 pt-10 md:px-8 md:pb-8 md:pt-14">
         <div className="mx-auto max-w-6xl">
           <section className="py-6 md:py-8">
-            <WeekNav previousWeek={previousWeek} nextWeek={nextWeek} />
+            <WeekNav previousWeek={previousWeek} nextWeek={visibleNextWeek} />
             <p className="text-2xl font-bold uppercase tracking-[0.12em] text-white md:text-4xl">
               Week {weekNumber}
             </p>
