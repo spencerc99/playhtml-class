@@ -52,13 +52,16 @@ describe('page navigation links', () => {
     expect(markup).toContain('href="https://www.munusshih.com/"');
   });
 
-  test('home page week links do not change row spacing on hover', () => {
+  test('home page week links pop on hover without changing row spacing', () => {
     const markup = renderToStaticMarkup(
       <MemoryRouter>
         <Home />
       </MemoryRouter>,
     );
 
+    expect(markup).toContain('hover:shadow-');
     expect(markup).not.toContain('hover:px-');
+    expect(markup).not.toContain('hover:scale');
+    expect(markup).not.toContain('group-hover:translate');
   });
 });
