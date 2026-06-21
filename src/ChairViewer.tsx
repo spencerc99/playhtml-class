@@ -54,7 +54,7 @@ function Scene({
     isLocalDrag.current = true;
   }, []);
 
-  const handleEnd = useCallback(() => {
+  const emitOrbitState = useCallback(() => {
     const controls = controlsRef.current;
     if (!controls) return;
 
@@ -62,8 +62,16 @@ function Scene({
       azimuthalAngle: controls.getAzimuthalAngle(),
       polarAngle: controls.getPolarAngle(),
     });
-    isLocalDrag.current = false;
   }, [onOrbitEnd]);
+
+  const handleChange = useCallback(() => {
+    emitOrbitState();
+  }, [emitOrbitState]);
+
+  const handleEnd = useCallback(() => {
+    emitOrbitState();
+    isLocalDrag.current = false;
+  }, [emitOrbitState]);
 
   return (
     <>
@@ -77,7 +85,7 @@ function Scene({
       <OrbitControls
         ref={controlsRef}
         onStart={handleStart}
-        onChange={handleEnd}
+        onChange={handleChange}
         onEnd={handleEnd}
         enableDamping
         enableZoom={false}
