@@ -212,49 +212,45 @@ export const Attendance = withSharedState(
           </div>
         ) : null}
 
-        <div
-          className={
-            'attendance__wall-panel' +
-            (expanded ? '' : ' attendance__wall-panel--collapsed')
-          }
-          aria-hidden={!expanded}
-        >
-          <div className="attendance__wall-head">
-            <span className="attendance__wall-count">
-              {hasSynced ? `${count} here` : 'loading…'}
-            </span>
-            <button
-              type="button"
-              className="attendance__copy"
-              onClick={copyAll}
-              disabled={count === 0}
-            >
-              <CopyIcon />
-              {copied ? 'copied' : 'copy all'}
-            </button>
-          </div>
-
-          {count === 0 ? (
-            <p className="attendance__empty">
-              {hasSynced ? 'no one yet — be the first' : 'loading…'}
-            </p>
-          ) : (
-            <div className="attendance__wall">
-              {attendees.map((a) => (
-                <span
-                  key={a.pid}
-                  className="attendance__name"
-                  style={{
-                    color: a.color,
-                    transform: `rotate(${tiltFor(a.pid)}deg)`,
-                  }}
-                >
-                  {a.name}
-                </span>
-              ))}
+        {expanded ? (
+          <div className="attendance__wall-panel">
+            <div className="attendance__wall-head">
+              <span className="attendance__wall-count">
+                {hasSynced ? `${count} here` : 'loading…'}
+              </span>
+              <button
+                type="button"
+                className="attendance__copy"
+                onClick={copyAll}
+                disabled={count === 0}
+              >
+                <CopyIcon />
+                {copied ? 'copied' : 'copy all'}
+              </button>
             </div>
-          )}
-        </div>
+
+            {count === 0 ? (
+              <p className="attendance__empty">
+                {hasSynced ? 'no one yet — be the first' : 'loading…'}
+              </p>
+            ) : (
+              <div className="attendance__wall">
+                {attendees.map((a) => (
+                  <span
+                    key={a.pid}
+                    className="attendance__name"
+                    style={{
+                      color: a.color,
+                      transform: `rotate(${tiltFor(a.pid)}deg)`,
+                    }}
+                  >
+                    {a.name}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : null}
       </section>
     );
   },

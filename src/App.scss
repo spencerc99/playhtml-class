@@ -463,6 +463,7 @@ a:hover {
 /* Per-week attendance wall. */
 .attendance {
   margin-bottom: 1.5rem;
+  position: relative;
 }
 
 .attendance__bar {
@@ -553,18 +554,21 @@ a:hover {
   padding: 0.4rem 1.1rem;
 }
 
+/* Floats over the content below the bar so expanding never reflows the page
+   (which would shift other people's cursor positions) and collapsed leaves no
+   empty space behind. */
 .attendance__wall-panel {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(224, 0, 0, 0.12);
   border-radius: var(--border-radius-lg, 0.9rem);
-  margin-top: 0.85rem;
+  box-shadow: 0 16px 40px -20px rgba(20, 40, 80, 0.55);
+  left: 0;
+  margin-top: 0.5rem;
   padding: 0.85rem 1rem 1rem;
-}
-
-/* Collapsed keeps the same footprint so toggling never reflows the page (which
-   would shift other people's cursor positions); only the contents hide. */
-.attendance__wall-panel--collapsed > * {
-  opacity: 0;
-  visibility: hidden;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 30;
 }
 
 .attendance__wall-head {
