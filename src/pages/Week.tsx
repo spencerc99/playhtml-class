@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, type ComponentType } from 'react';
 import { Link, useParams } from 'react-router';
+import { Attendance } from '../components/Attendance';
 import { isWeekUnlocked } from '../weekSchedule';
 
 interface WeekContentMeta {
@@ -224,6 +225,13 @@ export default function Week() {
             <p className="text-white/88 mt-5 max-w-3xl text-base leading-relaxed md:text-xl">
               {summary}
             </p>
+            {weekNumberValue !== null &&
+            !Number.isNaN(weekNumberValue) &&
+            weekNumberValue > 0 ? (
+              <div className="mt-6">
+                <Attendance />
+              </div>
+            ) : null}
           </section>
         </div>
       </header>
