@@ -2,6 +2,7 @@
 // ABOUTME: Uses the site's display typeface and an adjustable gap between items.
 
 import { Link, useLocation } from 'react-router';
+import { ProfilePill } from './components/ProfilePill';
 
 interface NavItem {
   to: string;
@@ -85,6 +86,8 @@ export default function Nav() {
           </Link>
         );
       })}
+
+      <ProfilePill />
     </nav>
   );
 }
