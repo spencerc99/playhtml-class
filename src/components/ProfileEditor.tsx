@@ -16,6 +16,33 @@ function getCursorGlobal(): CursorGlobal | undefined {
   return (window as unknown as { cursors?: CursorGlobal }).cursors;
 }
 
+// <input type="color"> only accepts #rrggbb, but a cursor color may be any CSS
+// color string — hsl() for the auto-generated anon identity, hex from the
+// extension. Resolve whatever it is to hex via the browser's own color parser so
+// the picker always reflects the visitor's actual current color.
+function toHex(color: string): string | null {
+  if (/^#[0-9a-fA-F]{6}$/.test(color)) {
+    return color.toLowerCase();
+  }
+  const ctx = document.createElement('canvas').getContext('2d');
+  if (!ctx) {
+    return null;
+  }
+  // Probe with two sentinels: an invalid color leaves fillStyle unchanged, so if
+  // both probes yield the same result the input was genuinely parsed (not stuck
+  // on a sentinel).
+  ctx.fillStyle = '#000000';
+  ctx.fillStyle = color;
+  const first = ctx.fillStyle;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = color;
+  const second = ctx.fillStyle;
+  if (first !== second) {
+    return null;
+  }
+  return /^#[0-9a-f]{6}$/.test(first) ? first : null;
+}
+
 interface ProfileEditorProps {
   nameLabel?: string;
   autoFocusName?: boolean;
@@ -32,11 +59,9 @@ export function ProfileEditor({
   }
 
   const name = cursors.name ?? '';
-  // <input type="color"> only understands #rrggbb. playhtml's auto-generated
-  // identity color is hsl(), which the input can't display — fall back to the
-  // default hex until the visitor picks a real color.
-  const isHex = /^#[0-9a-fA-F]{6}$/.test(cursors.color ?? '');
-  const color = isHex ? cursors.color : DEFAULT_COLOR;
+  // Show the visitor's actual current color (extension hex or anon hsl default),
+  // converted to hex for the picker; only fall back if it can't be parsed.
+  const color = (cursors.color && toHex(cursors.color)) || DEFAULT_COLOR;
 
   const setName = (next: string) => {
     const global = getCursorGlobal();
