@@ -31,24 +31,27 @@ export function ColorToggleDemo() {
     <HtmlDemo
       html={`
 <style>
-  #demo-color { background: #f3efe9; transition: background 0.3s ease; }
-  #demo-color.clicked { background: #6cd97e; }
+  #demo-color { background: #f3efe9; transition: background 0.3s ease; content: "off"; }
+  #demo-color.clicked { background: #6cd97e; content: "on"; } 
+  #demo-color::before { content: "off"; }
+  #demo-color.clicked::before { content: "on"; }
 </style>
-<button id="demo-color" class="week-demo__box" type="button" can-toggle>off</button>
+<button id="demo-color" class="week-demo__box" type="button" can-toggle>
+</button>
 `}
     />
   );
 }
 
-export function GlowToggleDemo() {
+export function CatOrDogToggleDemo() {
   return (
     <HtmlDemo
       html={`
 <style>
-  #demo-glow { filter: brightness(0.5); transition: filter 0.3s ease; }
-  #demo-glow.clicked { filter: ${LAMP_GLOW}; }
+  #demo-cat-or-dog { width: 10rem; cursor: pointer; }
+  #demo-cat-or-dog.clicked { content: url("/demo/dog.png"); }
 </style>
-<button id="demo-glow" class="week-demo__box week-demo__box--lamp" type="button" can-toggle>💡</button>
+<img id="demo-cat-or-dog" class="week-demo__cat-or-dog" can-toggle can-move src="/demo/cat.jpg" alt="Cat or dog" />
 `}
     />
   );

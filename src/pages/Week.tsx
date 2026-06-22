@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, type ComponentType } from 'react';
 import { Link, useParams } from 'react-router';
+import { Attendance } from '../components/Attendance';
 import { isWeekUnlocked } from '../weekSchedule';
 
 interface WeekContentMeta {
@@ -224,6 +225,13 @@ export default function Week() {
             <p className="text-white/88 mt-5 max-w-3xl text-base leading-relaxed md:text-xl">
               {summary}
             </p>
+            {weekNumberValue !== null &&
+            !Number.isNaN(weekNumberValue) &&
+            weekNumberValue > 0 ? (
+              <div className="mt-6">
+                <Attendance />
+              </div>
+            ) : null}
           </section>
         </div>
       </header>
@@ -233,12 +241,12 @@ export default function Week() {
           {Content ? (
             <article
               ref={contentRef}
-              className="week-content bg-white/82 mx-auto px-6 py-8 text-sky-950 backdrop-blur-sm md:px-10 md:py-10"
+              className="week-content bg-white/82 mx-auto px-6 py-8 text-sky-950 md:px-10 md:py-10"
             >
               <Content />
             </article>
           ) : (
-            <section className="bg-white/82 mx-auto max-w-3xl p-6 text-sky-950 backdrop-blur-sm">
+            <section className="bg-white/82 mx-auto max-w-3xl p-6 text-sky-950">
               <h2 className="mb-3 text-2xl font-bold text-[#e00000]">
                 Not Published Yet
               </h2>

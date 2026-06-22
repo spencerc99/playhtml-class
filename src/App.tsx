@@ -2,7 +2,7 @@
 // ABOUTME: All pages share playhtml cursors and the fixed nav.
 
 import { useEffect, type ComponentType } from 'react';
-import { BrowserRouter, Route, Routes, useLocation } from 'react-router';
+import { Route, Routes, useLocation } from 'react-router';
 import Nav from './Nav';
 import Home from './pages/Home';
 import Showcase from './pages/Showcase';
@@ -63,7 +63,7 @@ function ScrollToTop() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <>
       <DocumentTitle />
       <ScrollToTop />
       <Nav />
@@ -73,6 +73,6 @@ export default function App() {
         <Route path="/showcase" element={<Showcase />} />
         <Route path="/week/:weekNumber" element={<Week />} />
       </Routes>
-    </BrowserRouter>
+    </>
   );
 }

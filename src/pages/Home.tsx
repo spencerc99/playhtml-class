@@ -3,6 +3,7 @@
 
 import type { CSSProperties } from 'react';
 import { Link } from 'react-router';
+import { FloatingChair, FloatingChairProps } from '../components/FloatingChair';
 import {
   formatUnlockDate,
   isWeekUnlocked,
@@ -17,12 +18,6 @@ interface WeekContentModule {
   meta?: WeekContentMeta;
 }
 
-interface FloatingChairProps {
-  id: string;
-  className: string;
-  canSpin?: boolean;
-}
-
 const WEEK_CONTENT = import.meta.glob<WeekContentModule>(
   '../content/weeks/week-*.mdx',
   {
@@ -30,7 +25,6 @@ const WEEK_CONTENT = import.meta.glob<WeekContentModule>(
   },
 );
 
-const FLOATING_CHAIR_SIZE = 'w-32 md:w-36';
 const HOME_SECTION_FRAME = 'mx-auto w-full max-w-6xl px-6 md:px-8';
 const HOME_SECTION_SPACING = 'py-12 md:py-14';
 const HOME_SECTION_HEADING =
@@ -72,20 +66,6 @@ const FLOATING_CHAIRS: FloatingChairProps[] = [
   { id: 'chair-11', className: 'left-[20%] bottom-12' },
   { id: 'chair-12', className: 'right-[22%] bottom-8' },
 ];
-
-function FloatingChair({ id, className, canSpin = false }: FloatingChairProps) {
-  return (
-    <img
-      id={id}
-      src="/red-stool.png"
-      can-move=""
-      {...(canSpin ? { 'can-spin': '' } : {})}
-      can-move-bounds="home-stage"
-      draggable={false}
-      className={`absolute z-10 cursor-move opacity-95 ${FLOATING_CHAIR_SIZE} ${className}`}
-    />
-  );
-}
 
 export default function Home() {
   return (
