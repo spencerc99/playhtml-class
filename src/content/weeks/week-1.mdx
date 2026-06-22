@@ -4,8 +4,8 @@ export const meta = {
 
 import { CodeDemo } from '../../components/CodeDemo';
 import {
+  CatOrDogToggleDemo,
   ColorToggleDemo,
-  GlowToggleDemo,
   LampDemo,
   ScaleToggleDemo,
 } from '../../components/WeekOneDemos';
@@ -130,8 +130,20 @@ The simplest way to use playHTML is to include it in your HTML file via a CDN li
 
 ```html
 <body>
-  <div class="bench">PUBLIC BENCH</div>
-  <img id="my-lamp" can-toggle src="lamp.png" alt="lamp image" />
+  <style>
+    #my-lamp {
+      /* width & other styles */
+      filter: brightness(0.55);
+      transition: filter 0.3s ease;
+    }
+
+    #my-lamp.clicked {
+      filter: brightness(1.2) saturate(1.6)
+        drop-shadow(0px 0px 50px rgba(247, 220, 156, 0.85));
+    }
+  </style>
+
+  <img id="my-lamp" can-toggle src="lamp.png" />
 
   <script type="module">
     import { playhtml } from 'https://unpkg.com/playhtml';
@@ -156,7 +168,6 @@ HTML is a markup language that uses tags to define elements on a webpage. For ex
 
 ```html
 <img id="my-lamp" can-toggle src="lamp.png" alt="lamp image" />
-<div class="bench">PUBLIC BENCH</div>
 ```
 
 Only one thing can be the id of an element, but you can have multiple classes. In this example, we have a button element with an id of "my-lamp" and a class of "lamp".
@@ -187,54 +198,81 @@ For `can-toggle`, we can customize the behavior using custom CSS.
 
 <CodeDemo demo={<ColorToggleDemo />}>
 
-```css
-.classname.toggled {
-  background: #6cd97e; /*this part changes the background color when clicked*/
-}
+```html
+<style>
+  #demo-color {
+    background: #f3efe9;
+    transition: background 0.3s ease;
+  }
+  #demo-color.clicked {
+    background: #6cd97e;
+  }
+  #demo-color::before {
+    content: 'off';
+  }
+  #demo-color.clicked::before {
+    content: 'on';
+  }
+</style>
+<button id="demo-color" can-toggle></button>
 ```
 
 </CodeDemo>
 
-For instance, when using with [CSS filter](https://www.w3schools.com/tools/tool_css_filter.php), you can create lights that can be turned on and off:
+For instance, you can swap between two images when toggled — like the [html starter template](https://github.com/spencerc99/playhtml/tree/main/templates/html-starter) does with a cat and dog. You can also combine these with other playhtml attributes.
 
-<CodeDemo demo={<GlowToggleDemo />}>
+<CodeDemo demo={<CatOrDogToggleDemo />}>
 
-```css
-.lamp {
-  filter: brightness(0.5);
-}
+```html
+<img id="catOrDog" src="images/cat.jpg" can-toggle can-move />
+<style>
+  #catOrDog {
+    width: 200px;
+  }
 
-.lamp.toggled {
-  filter: brightness(1.2) saturate(1.6)
-    drop-shadow(rgba(247, 220, 156, 0.85) 0px 0px 50px); /* this part makes the lamp brighter and adds a glow effect when clicked */
-}
+  #catOrDog.clicked {
+    content: url('images/dog.png'); /* swaps to the dog image when clicked */
+  }
+</style>
 ```
 
 </CodeDemo>
 
-Or you can combine with [CSS transform](https://www.w3schools.com/cssref/css3_pr_transform.php), and make the element grow, spin, or move when toggled:
+Or you can combine with [CSS transform](https://www.w3schools.com/cssref/css3_pr_transform.php), and make the element grow, spin, or move when toggled.
 
 <CodeDemo demo={<ScaleToggleDemo />}>
 
-```css
-.button {
-  transform: scale(1);
-}
+```html
+<button id="demo-scale" can-toggle>click me</button>
 
-.button.toggled {
-  transform: scale(5);
-}
+<style>
+  #demo-scale {
+    transform: scale(1);
+  }
+
+  #demo-scale.clicked {
+    transform: scale(5);
+  }
+</style>
 ```
 
 </CodeDemo>
 
 To create a smooth animation between states, you can add CSS transition:
 
-```css
-.button {
-  transform: scale(1);
-  transition: transform 0.3s ease; /* this part adds a smooth transition effect when the button is toggled */
-}
+```html
+<button id="demo-scale" can-toggle>click me</button>
+
+<style>
+  #demo-scale {
+    transform: scale(1);
+    transition: transform 0.3s ease; /* this part adds a smooth transition effect when the button is toggled */
+  }
+
+  #demo-scale.clicked {
+    transform: scale(5);
+  }
+</style>
 ```
 
 ## Now it's your turn!
