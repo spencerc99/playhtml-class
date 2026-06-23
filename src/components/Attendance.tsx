@@ -117,7 +117,16 @@ export const Attendance = withSharedState(
     const [promptingName, setPromptingName] = useState(false);
     const [copied, setCopied] = useState(false);
 
-    const attendees = data.attendees as Attendee[];
+    // Dedupe by pid on render so a rare concurrent same-person double-push never
+    // shows twice (the array can't fully prevent it at write time).
+    const seenPids = new Set<string>();
+    const attendees = (data.attendees as Attendee[]).filter((a) => {
+      if (seenPids.has(a.pid)) {
+        return false;
+      }
+      seenPids.add(a.pid);
+      return true;
+    });
     const myPid = getMyPlayerIdentity()?.publicKey ?? getSessionFallbackId();
     const checkedIn = attendees.some((a) => a.pid === myPid);
 
@@ -129,16 +138,17 @@ export const Attendance = withSharedState(
       }
       setPromptingName(false);
       const color = cursors.color || '#e00000';
-      // Yjs draft only syncs push/splice, not in-place property assignment, so
-      // replace an existing entry by splicing rather than mutating its fields.
+      // Push-only: never splice/replace by index. A positional splice computed
+      // from a local snapshot can delete a *different* person's entry when edits
+      // merge concurrently (Y.Array indices shift), so we only append, and only
+      // if this person isn't already checked in. Trade-off: re-check-in does not
+      // refresh name/color, and we don't fight a rare same-pid double-push here
+      // (deduped on render below).
       setData((draft: { attendees: Attendee[] }) => {
-        const index = draft.attendees.findIndex((a) => a.pid === myPid);
-        const entry: Attendee = { pid: myPid, name, color, at: Date.now() };
-        if (index >= 0) {
-          draft.attendees.splice(index, 1, entry);
-        } else {
-          draft.attendees.push(entry);
+        if (draft.attendees.some((a) => a.pid === myPid)) {
+          return;
         }
+        draft.attendees.push({ pid: myPid, name, color, at: Date.now() });
       });
     };
 
