@@ -2,7 +2,7 @@ export const meta = {
   title: 'Sync — Move, Live Cursors',
 };
 
-## Activities
+## Agenda
 
 - Crit and discussion in small groups:
   - Share communal-space concepts
@@ -14,7 +14,7 @@ export const meta = {
 
 ## Crit (30 mins)
 
-We will break into smaller groups to share our communal space concepts.
+We will break into smaller groups to share what we've been working on. Here are some questions to guide your discussion:
 
 - What is the physical communal space you want to re-create digitally?
 - What are the attributes, interactions, or elements that define that space?
@@ -24,68 +24,133 @@ We will break into smaller groups to share our communal space concepts.
 
 ## Reading Discussion (30 mins)
 
-We will discuss the reading [This Is for Everyone by Tim Berners Lee](https://archive.ph/yOoAh) in small groups and come back together to share our thoughts with the class. Here are some questions to guide our discussion:
+We will discuss the reading [Against the Dark Forest by Erin Kissane](https://www.wrecka.ge/against-the-dark-forest/) in small groups and come back together to share our thoughts with the class.
 
-- What does a "digital bench" actually look like? The original web was built for collaboration, but it turned into a space for algorithmic rage. If we were drafting the blueprint for a digital third space today, what specific features must we build in to encourage community rather than performance or conflict?
-- Does total privacy kill community? Berners-Lee argues that everyone should be a "sovereign citizen" of their own data. But real-world third spaces require a little bit of shared vulnerability and running into people you didn't plan to meet. How do we balance total data control with the messy, accidental interactions that true community requires?
-- Who pays for the benches? Physical park benches are funded by public taxes. If we build digital third spaces that refuse to sell user data or track people for ads, what is the business model? How do we keep these spaces free and public without defaulting to subscriptions that lock people out?
+Originally popularized by Kickstarter co-founder Yancey Strickler (drawing from Liu Cixin’s sci-fi novel The Three-Body Problem), the Dark Forest theory suggests that the mainstream, public internet has become a toxic, predatory wasteland.
 
-## Inspirations
-
-Here is a list of projects that use playHTML to create communal web experiences. Check them out for inspiration!
+- From Kissane's standpoint, what is wrong with the theory of the "dark forest"? Why does she argue that it is a flawed metaphor for understanding the problems of the modern internet?
+- Yancey Strickler’s original concept suggested that the safest strategy is to hide and retreat into private digital spaces. Why does Kissane argue that this approach is flawed, and who does she think gets left behind when we abandon the public square?
+- What are some of the ways Kissane suggests we can look past the "dark forest" to build a safer, more communal, and welcoming internet? How do her ideas intersect with the design values and work we are exploring in this class?
 
 ## How does the web know who's on the bench?
 
-- The web is built on a request-response model, which means that the server only knows about a user when they make a request (e.g. load a page, click a button, etc.). To create a communal web experience, we need to find ways to share information about who is on the bench and what they are doing in real-time.
+- The internet is a network of computers communicating through a shared set of rules, or protocols. Despite its ethereal reputation, the internet is technicalky physical. It relies heavily on an underwater and underground telecommunications infrastructure originally laid down in the 20th century, deeply rooted in the geopolitical history of colonialism and the Cold War.
 
-[insert image]
+![1901 Eastern Telegraph cables](/images/1901_Eastern_Telegraph_cables.png)
+[Eastern Telegraph Company Undersea Cables (1901)](https://commons.wikimedia.org/wiki/File:1901_Eastern_Telegraph_cables.png)
 
-- This is done by using WebSockets, which is a protocol that allows for two-way communication between the client and the server. Instead of making a request and waiting for a response, the client and server can send messages to each other at any time after they perform an initial "handshake".
-- With WebSockets, we can send messages from the client to the server and from the server to the client in real-time, which allows us to create interactive and collaborative web experiences.
+It can be very fragile sometimes (for instance, when an underwater cable is damaged, it can disrupt communication across the globe). When we build real-time digital spaces today, our software code runs directly on top of these historical, physical pathways.
 
-[insert image]
+![Shark Eating Undersea Cable](/images/sddefault.jpg)
+[Sharks are Attacking the Internet! - Youtube](https://www.youtube.com/watch?v=o0mxdCljXwA)
 
-- Usually
+The web is built on a request-response model, which means that computers (clients) send requests to other computers (servers) and wait for a response. A server is basically a computer that stores and serves content to other computers. When you visit a website, your computer sends a request to the server where the website is hosted, and the server responds by sending back the requested content.
 
-### Example 1: show how many people are here
+![An image showing a computer that has a sticky note on it that says "this machine is a server, do not power down!!"](/images/do-not-turn-off.jpg)
+[This computer is a server. DO NOT SHUT IT DOWN!!](https://blog.perguth.de/posts/2024-12-16-this-computer-is-a-server-do-not-shut-it-down/)
 
-```tsx
-import { usePlayContext } from '@playhtml/react';
+For instance, when we visit a site like [playhtml.com](https://playhtml.com), our computer sends a request to the server where the site is hosted, and the server responds by sending back the HTML, CSS, and JavaScript files that make up the site.
 
-export function UserCount() {
-  const { cursors } = usePlayContext();
+![A technical flowchart of the standard HTTP architecture. An square on the left represents the HTTP Client, which sends a top curved arrow labeled 'HTTP Request (GET)' pointing to a cylinder on the right labeled 'HTTP Server'. Above them is the example URL 'http://somewhere.com/resource'. A bottom curved arrow labeled 'HTTP Response' points back to the client. Below the response loop, the text reads 'Status Code + Data', showing a document icon containing basic HTML tags like doctype html and html.](/images/request-response-pattern.png)
+[Request and Response](https://textbooks.cs.ksu.edu/cc410/iii-web/16-data-driven-websites/10-request-response/index.html)
 
-  return <p>People here right now: {cursors.allColors.length}</p>;
+## Publish this site
+
+We will be using GitHub Pages to publish our sites. Here is a [step-by-step guide on how to publish your site on GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-github-pages-site).
+
+Github, currently controlled by Microsoft, is a platform for hosting and collaborating on code. It allows you to create repositories to store your code, track changes, and collaborate with others. GitHub Pages is a feature of GitHub that allows you to publish static websites directly from a GitHub repository. By pushing your code to a GitHub repository and enabling GitHub Pages, you can easily share your project with others by providing them with a URL to access your site.
+
+## Real-Time Communication
+
+This model (called the request-response model) works perfectly for loading static pages, but it has a major limitation for creating communal spaces: the server only knows about you the exact second you ask for something. Once it sends back those files, it completely hangs up and forgets you are there. It has no idea you are still sitting on the website looking at the screen.
+
+To create a shared web experience where you can see other people in real-time, this one-way, request-response model breaks down. If the web only updates when you pull data via a request, how does your browser know when someone else has just sat down on the bench next to you?
+
+To solve this, we have to change to a completely different protocol, Web Sockets, which allows for two-way communication between the client and the server. Instead of making a request and waiting for a response, the client and server can send messages to each other at any time after they perform an initial "handshake". The server can push updates to the client without the client having to ask for them, and the client can send messages to the server without waiting for a response. This allows for real-time communication and collaboration, which is essential for creating communal spaces on the web.
+
+![Web Socket Protocol Diagram](/images/Websocket_connection.png)
+
+But setting up a Web Socket server is a bit more complicated than just hosting a static website. You cannot just use [GitHub Pages](https://pages.github.com/) or [Netlify](https://www.netlify.com/) to host a Web Socket server, because they are designed for static sites. Instead, you need to use a hosting service that supports Web Sockets, such as [Heroku](https://www.heroku.com/), [AWS](https://aws.amazon.com/), or [DigitalOcean](https://www.digitalocean.com/). You also need to write server-side code to handle the Web Socket connections and manage the state of the communal space.
+
+This is why using a library like playHTML is so helpful. The library directly hosts a Web Socket server for you, so you don't have to worry about setting up your own. It also provides a simple API for managing the state of the communal space and synchronizing it across all connected clients.
+
+Under the hood, playhtml currently relies on [Cloudflare](https://www.cloudflare.com/), a massive global network infrastructure. Instead of spending weeks configuring backend servers and WebSocket protocols, you just drop a small script into your HTML file. The infrastructure handles the heavy lifting, turning your static webpage into a multiplayer space instantly.
+
+## Short break
+
+## Custom Behaviors
+
+Last week, we learned how to use the built-in attributes like `can-move`, `can-spin`, `can-grow`, and `can-toggle` to create communal spaces. This week, we will learn how to create more custom behaviors using `can-duplicate`, `can-mirror` and `can-play` to create more complex interactions and experiences.
+
+We will have to write some JavaScript code to create these custom behaviors. Javascript is a programming language that allows you to add interactivity and dynamic behavior to your web pages. Unlike HTML and CSS, which are [declarative languages](https://en.wikipedia.org/wiki/Declarative_programming) that describe the structure and style of a web page, JavaScript is an [imperative language](https://en.wikipedia.org/wiki/Imperative_programming) that allows you to write instructions for the browser to execute.
+
+```html
+<button id="my-button">Click me</button>
+```
+
+```css
+#my-button {
+  background-color: blue;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
 }
 ```
 
-### Example 2: shared on/off state
-
-```tsx
-import { withSharedState } from '@playhtml/react';
-
-export const ToggleSquare = withSharedState(
-  {
-    defaultData: { on: false },
-    id: 'toggle-square',
-  },
-  ({ data, setData }) => (
-    <button
-      onClick={() => setData({ on: !data.on })}
-      style={{
-        width: 120,
-        height: 120,
-        background: data.on ? 'green' : 'red',
-      }}
-    />
-  ),
-);
+```javascript
+const button = document.getElementById('my-button');
+button.addEventListener('click', () => {
+  alert('Button clicked!');
+});
 ```
 
-## Submit Your Assignment
+This means that you can use JavaScript to manipulate the DOM (Document Object Model) of your web page, respond to user events, and communicate with the server, but also Javascript is not as forgiving as HTML and CSS. It doesn't interpret your code if you make a mistake, and it will throw an error instead. This means that you have to be very careful with your syntax and logic when writing JavaScript code, and you may have to debug your code with the console if it doesn't work as expected.
 
-Paste your site URL below to submit.
+### Can-duplicate
 
-## Live Crit
+If we wanted to create multiple copies of an element last week, we had to manually create each copy in the HTML with a unique ID. This week, we will learn how to use the `can-duplicate` attribute to create multiple copies of an element with a single line of code.
+
+THIS IS NOT WORKING.
+
+```html
+<h1 id="bunny-template" src="/pixel-bunny.png" alt="">Bunny</h1>
+<button can-duplicate="bunny-template" id="clone-btn">clone a bunny</button>
+```
+
+### Can-mirror
+
+The `can-mirror` attribute allows you to sync the state of an element across clients. It auto-syncs every attribute of the original element, including position, rotation, scale, and color.
+
+```html
+<textarea can-mirror id="text-area" rows="4"></textarea>
+```
+
+This can be useful for creating shared text areas, collaborative drawing spaces, or any other element that you want to keep in sync across clients.
+
+```html
+<ul can-mirror id="guestbook">
+  <li>first</li>
+</ul>
+<button id="add-entry">add entry</button>
+```
+
+```javascript
+const guestbook = document.getElementById('guestbook');
+const addEntryButton = document.getElementById('add-entry');
+addEntryButton.onclick = function () {
+  const newEntry = document.createElement('li');
+  newEntry.textContent = 'new entry';
+  newEntry.id = 'entry-' + (guestbook.children.length + 1);
+  guestbook.appendChild(newEntry);
+};
+```
+
+## Submit Your Assignment Paste your site URL below to submit. ## Live Crit
 
 Submitted projects will appear here for live review.
+
+```
+
+```
