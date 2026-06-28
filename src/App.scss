@@ -192,6 +192,10 @@ a:hover {
   margin-top: 1rem;
 }
 
+.live-html-demo {
+  width: 100%;
+}
+
 /* On wide screens, break the live demo out of the content column and float it
    into the right margin, aligned to the top of its own code block. */
 @media (min-width: 1180px) {
@@ -201,6 +205,12 @@ a:hover {
     left: calc(100% + 1.5rem);
     width: max-content;
     margin-top: 0;
+  }
+
+  .code-demo--inline .code-demo__live {
+    position: static;
+    width: 100%;
+    margin-top: 1rem;
   }
 }
 

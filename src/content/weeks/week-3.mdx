@@ -9,6 +9,7 @@ export const meta = {
   - Discuss readings
 - Demo / lecture:
   - Asynchronous tools: guestbooks, notes, and leaving traces
+  - Synchronous tools: live cursors, presence, awareness
 - Mini in-class coding challenge
 - Debugging and Q+A
 
@@ -25,56 +26,74 @@ export const meta = {
 
 ### Example 1: a shared guestbook
 
-```tsx
-import { withSharedState } from '@playhtml/react';
-import { useState } from 'react';
+A guestbook is a list of messages that everyone adds to and that sticks around between visits. That's exactly the "render a list from data you own" case from last week, so we reach for `can-play` with a `view`:
 
-interface GuestbookState {
-  messages: string[];
-}
+```html
+<div can-play id="guestbook"></div>
+<script type="module">
+  import { html, playhtml, repeat } from 'https://unpkg.com/playhtml';
 
-export const Guestbook = withSharedState(
-  {
-    defaultData: { messages: [] } as GuestbookState,
-    id: 'guestbook',
-  },
-  ({ data, setData }) => {
-    const [draft, setDraft] = useState('');
+  playhtml.init();
 
-    return (
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (!draft.trim()) return;
-          setData({ messages: [...data.messages, draft.trim()] });
-          setDraft('');
-        }}
-      >
-        <input
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-        />
-        <button type="submit">Leave note</button>
+  playhtml.register('guestbook', {
+    defaultData: { messages: [] },
+    view: ({ data, setData }) => {
+      const leaveNote = (event) => {
+        event.preventDefault();
+        const input = event.target.querySelector('input');
+        const message = input.value.trim();
+        if (!message) return;
+        setData((draft) => {
+          draft.messages.push(message);
+        });
+        input.value = '';
+      };
+
+      return html`
+        <form @submit=${leaveNote}>
+          <input placeholder="leave a note..." />
+          <button type="submit">Leave note</button>
+        </form>
         <ul>
-          {data.messages.map((message, index) => (
-            <li key={`${message}-${index}`}>{message}</li>
-          ))}
+          ${repeat(
+            data.messages,
+            (message, index) => index,
+            (message) => html`<li>${message}</li>`,
+          )}
         </ul>
-      </form>
-    );
-  },
-);
+      `;
+    },
+  });
+</script>
 ```
+
+`defaultData` is the data the guestbook starts with (an empty list of messages), `setData` adds to it, and the `view` re-renders the list for everyone whenever a note is left. Because the messages are persisted, the guestbook fills up over time instead of resetting on refresh.
 
 ### Example 2: start with seeded notes
 
-```tsx
-const starterNotes = [
-  'What makes this place feel welcoming?',
-  'What sounds should live here?',
-  'What should visitors be able to leave behind?',
-];
+An empty guestbook can feel intimidating — nobody wants to be first. You can seed it with a few prompts by making them the starting value in `defaultData`:
+
+```html
+<div can-play id="guestbook"></div>
+<script type="module">
+  import { playhtml } from 'https://unpkg.com/playhtml';
+
+  playhtml.init();
+
+  const starterNotes = [
+    'What makes this place feel welcoming?',
+    'What sounds should live here?',
+    'What should visitors be able to leave behind?',
+  ];
+
+  playhtml.register('guestbook', {
+    defaultData: { messages: starterNotes },
+    // ...same view as above
+  });
+</script>
 ```
+
+{/* TODO: Show poll / guestbook example with something different for the current user */}
 
 ## Submit Your Assignment
 

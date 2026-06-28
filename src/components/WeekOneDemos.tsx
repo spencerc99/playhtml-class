@@ -1,8 +1,7 @@
 // ABOUTME: Live week 1 demos built from real HTML + vanilla playhtml, run via
 // ABOUTME: setupPlayElement and isolated so one broken demo can't break the page.
 
-import { playhtml } from '@playhtml/react';
-import { Component, useEffect, useRef, type ReactNode } from 'react';
+import { LiveHtmlDemo } from './LiveHtmlDemo';
 
 const LAMP_GLOW =
   'brightness(1.2) saturate(1.6) drop-shadow(0px 0px 50px rgba(247, 220, 156, 0.85))';
@@ -14,7 +13,7 @@ const LAMP_SRC =
 // The id makes collaborative state sync; keep it unique per demo.
 export function LampDemo() {
   return (
-    <HtmlDemo
+    <LiveHtmlDemo
       html={`
 <style>
   #demo-lamp { width: 6rem; height: 6rem; object-fit: contain; cursor: pointer; filter: brightness(0.55); transition: filter 0.3s ease; }
@@ -28,7 +27,7 @@ export function LampDemo() {
 
 export function ColorToggleDemo() {
   return (
-    <HtmlDemo
+    <LiveHtmlDemo
       html={`
 <style>
   #demo-color { background: #f3efe9; transition: background 0.3s ease; content: "off"; }
@@ -45,7 +44,7 @@ export function ColorToggleDemo() {
 
 export function CatOrDogToggleDemo() {
   return (
-    <HtmlDemo
+    <LiveHtmlDemo
       html={`
 <style>
   #demo-cat-or-dog { width: 10rem; cursor: pointer; }
@@ -59,7 +58,7 @@ export function CatOrDogToggleDemo() {
 
 export function ScaleToggleDemo() {
   return (
-    <HtmlDemo
+    <LiveHtmlDemo
       html={`
 <style>
   #demo-scale { transform: scale(1); transition: transform 0.3s ease; }
@@ -69,82 +68,4 @@ export function ScaleToggleDemo() {
 `}
     />
   );
-}
-
-interface HtmlDemoProps {
-  html: string;
-}
-
-// Renders a raw HTML snippet and wires up its playhtml elements live. Isolated
-// behind an error boundary so a failing demo shows a fallback, not a blank page.
-function HtmlDemo({ html }: HtmlDemoProps) {
-  return (
-    <DemoBoundary>
-      <HtmlDemoRunner html={html} />
-    </DemoBoundary>
-  );
-}
-
-function HtmlDemoRunner({ html }: HtmlDemoProps) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const container = containerRef.current;
-
-    if (!container) {
-      return;
-    }
-
-    container.innerHTML = html;
-    const playElements = Array.from(
-      container.querySelectorAll<HTMLElement>(
-        '[can-toggle], [can-move], [can-spin], [can-grow]',
-      ),
-    );
-
-    playElements.forEach((element) => {
-      try {
-        void playhtml.setupPlayElement(element);
-      } catch (error) {
-        console.error('Failed to set up playhtml demo element', error);
-      }
-    });
-
-    return () => {
-      playElements.forEach((element) => {
-        try {
-          playhtml.removePlayElement(element);
-        } catch {
-          // Element may already be torn down; ignore.
-        }
-      });
-      container.innerHTML = '';
-    };
-  }, [html]);
-
-  return <div ref={containerRef} />;
-}
-
-interface DemoBoundaryProps {
-  children: ReactNode;
-}
-
-class DemoBoundary extends Component<DemoBoundaryProps, { failed: boolean }> {
-  state = { failed: false };
-
-  static getDerivedStateFromError() {
-    return { failed: true };
-  }
-
-  componentDidCatch(error: unknown) {
-    console.error('Live demo crashed', error);
-  }
-
-  render() {
-    if (this.state.failed) {
-      return <div className="week-demo__error">demo unavailable</div>;
-    }
-
-    return this.props.children;
-  }
 }

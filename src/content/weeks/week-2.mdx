@@ -2,6 +2,14 @@ export const meta = {
   title: 'Sync — Move, Live Cursors',
 };
 
+import { CodeDemo } from '../../components/CodeDemo';
+import {
+  BunnyDuplicateDemo,
+  ButtonClickDemo,
+  MirrorGuestbookDemo,
+  MirrorTextareaDemo,
+} from '../../components/WeekTwoDemos';
+
 ## Agenda
 
 - Crit and discussion in small groups:
@@ -34,7 +42,7 @@ Originally popularized by Kickstarter co-founder Yancey Strickler (drawing from 
 
 ## How does the web know who's on the bench?
 
-- The internet is a network of computers communicating through a shared set of rules, or protocols. Despite its ethereal reputation, the internet is technicalky physical. It relies heavily on an underwater and underground telecommunications infrastructure originally laid down in the 20th century, deeply rooted in the geopolitical history of colonialism and the Cold War.
+- The internet is a network of computers communicating through a shared set of rules, or protocols. Despite its ethereal reputation, the internet is technically physical. It relies heavily on an underwater and underground telecommunications infrastructure originally laid down in the 20th century, deeply rooted in the geopolitical history of colonialism and the Cold War.
 
 ![1901 Eastern Telegraph cables](/images/1901_Eastern_Telegraph_cables.png)
 [Eastern Telegraph Company Undersea Cables (1901)](https://commons.wikimedia.org/wiki/File:1901_Eastern_Telegraph_cables.png)
@@ -49,7 +57,7 @@ The web is built on a request-response model, which means that computers (client
 ![An image showing a computer that has a sticky note on it that says "this machine is a server, do not power down!!"](/images/do-not-turn-off.jpg)
 [This computer is a server. DO NOT SHUT IT DOWN!!](https://blog.perguth.de/posts/2024-12-16-this-computer-is-a-server-do-not-shut-it-down/)
 
-For instance, when we visit a site like [playhtml.com](https://playhtml.com), our computer sends a request to the server where the site is hosted, and the server responds by sending back the HTML, CSS, and JavaScript files that make up the site.
+For instance, when we visit a site like [playhtml.fun](https://playhtml.fun), our computer sends a request to the server where the site is hosted, and the server responds by sending back the HTML, CSS, and JavaScript files that make up the site.
 
 ![A technical flowchart of the standard HTTP architecture. An square on the left represents the HTTP Client, which sends a top curved arrow labeled 'HTTP Request (GET)' pointing to a cylinder on the right labeled 'HTTP Server'. Above them is the example URL 'http://somewhere.com/resource'. A bottom curved arrow labeled 'HTTP Response' points back to the client. Below the response loop, the text reads 'Status Code + Data', showing a document icon containing basic HTML tags like doctype html and html.](/images/request-response-pattern.png)
 [Request and Response](https://textbooks.cs.ksu.edu/cc410/iii-web/16-data-driven-websites/10-request-response/index.html)
@@ -60,21 +68,23 @@ We will be using GitHub Pages to publish our sites. Here is a [step-by-step guid
 
 Github, currently controlled by Microsoft, is a platform for hosting and collaborating on code. It allows you to create repositories to store your code, track changes, and collaborate with others. GitHub Pages is a feature of GitHub that allows you to publish static websites directly from a GitHub repository. By pushing your code to a GitHub repository and enabling GitHub Pages, you can easily share your project with others by providing them with a URL to access your site.
 
-## Real-Time Communication
+## Real-Time Communication & Persistence
 
 This model (called the request-response model) works perfectly for loading static pages, but it has a major limitation for creating communal spaces: the server only knows about you the exact second you ask for something. Once it sends back those files, it completely hangs up and forgets you are there. It has no idea you are still sitting on the website looking at the screen.
 
 To create a shared web experience where you can see other people in real-time, this one-way, request-response model breaks down. If the web only updates when you pull data via a request, how does your browser know when someone else has just sat down on the bench next to you?
 
-To solve this, we have to change to a completely different protocol, Web Sockets, which allows for two-way communication between the client and the server. Instead of making a request and waiting for a response, the client and server can send messages to each other at any time after they perform an initial "handshake". The server can push updates to the client without the client having to ask for them, and the client can send messages to the server without waiting for a response. This allows for real-time communication and collaboration, which is essential for creating communal spaces on the web.
+To solve this, we have to change to a completely different protocol, Web Sockets, which allows for two-way communication between the client and the server. Instead of making a request and waiting for a response, the client and server can send messages to each other at any time after they perform an initial "handshake". The server can push updates to the client without the client having to ask for them, and the client can send messages to the server without waiting for a response. This allows for real-time communication and collaboration, which is essential for creating spaces on the web that feel inhabited by other people live.
 
 ![Web Socket Protocol Diagram](/images/Websocket_connection.png)
 
-But setting up a Web Socket server is a bit more complicated than just hosting a static website. You cannot just use [GitHub Pages](https://pages.github.com/) or [Netlify](https://www.netlify.com/) to host a Web Socket server, because they are designed for static sites. Instead, you need to use a hosting service that supports Web Sockets, such as [Heroku](https://www.heroku.com/), [AWS](https://aws.amazon.com/), or [DigitalOcean](https://www.digitalocean.com/). You also need to write server-side code to handle the Web Socket connections and manage the state of the communal space.
+And to get your actions to stick around even after you refresh the page, we need to "persist" that state and data somewhere that it can be retrieved, which requires a database. This is a secure location that saves the data and allows you to retrieve it later. These are often relational or key-value stores that allow you to store and retrieve data quickly and efficiently.
 
-This is why using a library like playHTML is so helpful. The library directly hosts a Web Socket server for you, so you don't have to worry about setting up your own. It also provides a simple API for managing the state of the communal space and synchronizing it across all connected clients.
+Setting up these systems is more complicated than hosting a static website. You cannot just use [GitHub Pages](https://pages.github.com/) or [Netlify](https://www.netlify.com/) to host a Web Socket server, because they are designed for static sites. Instead, you need to use a hosting service that supports Web Sockets, such as [Heroku](https://www.heroku.com/), [AWS](https://aws.amazon.com/), or [DigitalOcean](https://www.digitalocean.com/). You also need to write server-side code to handle the Web Socket connections and manage the state of the communal space.
 
-Under the hood, playhtml currently relies on [Cloudflare](https://www.cloudflare.com/), a massive global network infrastructure. Instead of spending weeks configuring backend servers and WebSocket protocols, you just drop a small script into your HTML file. The infrastructure handles the heavy lifting, turning your static webpage into a multiplayer space instantly.
+This is why using a library like playhtml is so helpful. The library hosts the infrastructure for you, so you don't have to worry about setting up your own. It also provides a simple API for managing the state of the communal space and synchronizing it across all connected clients.
+
+Under the hood, playhtml relies on [Cloudflare](https://www.cloudflare.com/), a massive global network infrastructure. Instead of spending weeks configuring backend servers and WebSocket protocols, you just drop a small script into your HTML file. The infrastructure handles the heavy lifting, turning your static webpage into a multiplayer space instantly.
 
 ## Short break
 
@@ -83,6 +93,8 @@ Under the hood, playhtml currently relies on [Cloudflare](https://www.cloudflare
 Last week, we learned how to use the built-in attributes like `can-move`, `can-spin`, `can-grow`, and `can-toggle` to create communal spaces. This week, we will learn how to create more custom behaviors using `can-duplicate`, `can-mirror` and `can-play` to create more complex interactions and experiences.
 
 We will have to write some JavaScript code to create these custom behaviors. Javascript is a programming language that allows you to add interactivity and dynamic behavior to your web pages. Unlike HTML and CSS, which are [declarative languages](https://en.wikipedia.org/wiki/Declarative_programming) that describe the structure and style of a web page, JavaScript is an [imperative language](https://en.wikipedia.org/wiki/Imperative_programming) that allows you to write instructions for the browser to execute.
+
+<CodeDemo demo={<ButtonClickDemo />}>
 
 ```html
 <button id="my-button">Click me</button>
@@ -106,28 +118,49 @@ button.addEventListener('click', () => {
 });
 ```
 
+</CodeDemo>
+
 This means that you can use JavaScript to manipulate the DOM (Document Object Model) of your web page, respond to user events, and communicate with the server, but also Javascript is not as forgiving as HTML and CSS. It doesn't interpret your code if you make a mistake, and it will throw an error instead. This means that you have to be very careful with your syntax and logic when writing JavaScript code, and you may have to debug your code with the console if it doesn't work as expected.
 
 ### Can-duplicate
 
 If we wanted to create multiple copies of an element last week, we had to manually create each copy in the HTML with a unique ID. This week, we will learn how to use the `can-duplicate` attribute to create multiple copies of an element with a single line of code.
 
-THIS IS NOT WORKING.
+<CodeDemo demo={<BunnyDuplicateDemo />} inline>
 
 ```html
-<h1 id="bunny-template" src="/pixel-bunny.png" alt="">Bunny</h1>
+<img id="bunny-template" src="/pixel-bunny.png" alt="" />
 <button can-duplicate="bunny-template" id="clone-btn">clone a bunny</button>
+<button id="reset-btn">reset</button>
 ```
+
+```javascript
+// Clones get an id of the form "bunny-template-<random>", so match on that prefix.
+document.getElementById('reset-btn').addEventListener('click', () => {
+  document.querySelectorAll("[id^='bunny-template-']").forEach((el) => {
+    playhtml.deleteElementData('can-duplicate', el.id);
+    el.remove();
+  });
+});
+```
+
+</CodeDemo>
 
 ### Can-mirror
 
-The `can-mirror` attribute allows you to sync the state of an element across clients. It auto-syncs every attribute of the original element, including position, rotation, scale, and color.
+The `can-mirror` attribute is the easiest way to make a custom element collaborative, because you don't model any data yourself: it mirrors the element's own state. It automatically syncs every attribute of the original element (position, rotation, scale, color) and the internal state of form elements (text areas, inputs, etc.), so whatever is on your screen shows up on everyone else's.
+
+<CodeDemo demo={<MirrorTextareaDemo />}>
 
 ```html
 <textarea can-mirror id="text-area" rows="4"></textarea>
 ```
 
+</CodeDemo>
+
 This can be useful for creating shared text areas, collaborative drawing spaces, or any other element that you want to keep in sync across clients.
+
+<CodeDemo demo={<MirrorGuestbookDemo />}>
 
 ```html
 <ul can-mirror id="guestbook">
@@ -147,10 +180,238 @@ addEntryButton.onclick = function () {
 };
 ```
 
-## Submit Your Assignment Paste your site URL below to submit. ## Live Crit
+</CodeDemo>
 
-Submitted projects will appear here for live review.
+Check out the full playground for can-mirror [here](https://playhtml.fun/docs/advanced/mirror-playground/).
 
+`can-mirror` is the right tool when the DOM _is_ the shared state: whatever's on your screen should be on everyone's screen, with no logic in between. But what if you want to _compute_ something from that shared state (like what % of people did X?)? For that, we model the data ourselves with `can-play`.
+
+### can-play
+
+The `can-play` attribute allows you to define custom data that each element stores and use that data to update how the element behaves and shows up. This is the most customizable and expressive attribute, but it requires you to think about the data you need up front based on how you want someone to interact with it, and then describe how that data turns into what people see.
+
+#### Start simple: a visit counter
+
+We can start with something simple, like a visit counter. Think about the interaction and what is actually changing. For a visit counter, one number changes: the count starts at `0` and goes up as people arrive.
+
+```html
+<div can-play id="visit-counter">0</div>
+<script>
+  // you can also do window.getElementById('visit-counter')
+  const visitCounter = document.getElementById('visit-counter');
+
+  // 1. the data this element stores, and what it starts as
+  visitCounter.defaultData = { visits: 0 };
+
+  // 2. how that data turns into what people see
+  visitCounter.updateElement = ({ element, data }) => {
+    element.textContent = data.visits;
+  };
+
+  // 3. count this visitor once, when their page loads
+  visitCounter.onMount = ({ getData, setData }) => {
+    setData((visits) => visits + 1);
+  };
+</script>
 ```
 
+`updateElement` runs every time the data changes for everyone on the page, so the number stays in sync for everyone. For a single value like this, hand-writing that one line (`element.textContent = data.visits`) is simple and completely fine.
+
+Now let's make this more complex. A counter tells you _how many_ people showed up, but you don't have any more information about each person. So now let's ask each visitor a question and show their answers.
+
+#### When the UI is a list, or computed from the data
+
+A poll like this is really just the visit counter scaled up: instead of one number, we keep a tally for each option, and we show each option's share of the total as a bar. That small step changes two things:
+
+- the bar widths are **computed** from the votes (each option's share of the total), and
+- the options are a **list** that we render, one row each.
+
+```html
+<div can-play id="room-poll">
+  <button data-id="plants">
+    <span class="bar"></span>
+    <span class="label">more plants</span>
+    <span class="count">0</span>
+  </button>
+  <button data-id="jukebox">
+    <span class="bar"></span>
+    <span class="label">a jukebox</span>
+    <span class="count">0</span>
+  </button>
+  <p class="total">0 votes</p>
+</div>
+<script>
+  const poll = document.getElementById('room-poll');
+
+  poll.defaultData = {
+    options: [
+      { id: 'plants', label: 'more plants', votes: 0 },
+      { id: 'jukebox', label: 'a jukebox', votes: 0 },
+    ],
+  };
+
+  poll.updateElement = ({ element, data }) => {
+    const total = data.options.reduce((sum, o) => sum + o.votes, 0);
+    data.options.forEach((option) => {
+      const row = element.querySelector(`[data-id="${option.id}"]`);
+      const percent = total ? (option.votes / total) * 100 : 0;
+      row.querySelector('.bar').style.width = percent + '%';
+      row.querySelector('.count').textContent = option.votes;
+    });
+    element.querySelector('.total').textContent = total + ' votes';
+  };
+
+  poll.onClick = (event, { setData }) => {
+    const row = event.target.closest('[data-id]');
+    if (!row) return;
+    setData((draft) => {
+      draft.options.find((o) => o.id === row.dataset.id).votes += 1;
+    });
+  };
+</script>
 ```
+
+(Next week we'll show you how to do something based on _your answer_ vs others)
+
+It works, but the logic starts to get tricky because we have HTML code that defines the start, and separate Javacript code modifying the HTML every time the data changes. It's hard to know what is actually showing up in the DOM from the code itself.
+
+#### The reactive `view` API
+
+There is an alternative API for this case to make this clearer to express, but it will be more complex / new for those used to plain HTML. Instead of _patching_ the DOM step by step, you write one function that describes what the markup _should be_ for any given state, and playhtml re-renders it for you whenever the data changes:
+
+```html
+<div can-play id="room-poll"></div>
+<script type="module">
+  import { html, playhtml, repeat, styleMap } from 'https://unpkg.com/playhtml';
+
+  playhtml.init();
+
+  playhtml.register('room-poll', {
+    defaultData: {
+      options: [
+        { id: 'plants', label: 'more plants', votes: 0 },
+        { id: 'jukebox', label: 'a jukebox', votes: 0 },
+      ],
+    },
+    view: ({ data, setData }) => {
+      const total = data.options.reduce((sum, o) => sum + o.votes, 0);
+      const vote = (id) =>
+        setData((draft) => {
+          draft.options.find((o) => o.id === id).votes += 1;
+        });
+
+      return html`
+        ${repeat(
+          data.options,
+          (option) => option.id,
+          (option) => {
+            const percent = total ? (option.votes / total) * 100 : 0;
+            return html`
+              <button @click=${() => vote(option.id)}>
+                <span
+                  class="bar"
+                  style=${styleMap({ width: percent + '%' })}
+                ></span>
+                <span class="label">${option.label}</span>
+                <span class="count">${option.votes}</span>
+              </button>
+            `;
+          },
+        )}
+        <p>${total} votes</p>
+      `;
+    },
+  });
+</script>
+```
+
+This may look strange, but it's mostly the same HTML with some new syntax that allows you to interpolate the live data as it is changing. Each time the data changes, we "re-render" this HTML using the new data. We encourage you to try playing around with both! If you are more comfortable the the first version, you can definitely do everything using that API as well, but it might just get a bit confusing.
+
+#### A Guestbook!
+
+Earlier, the `can-mirror` guestbook just copied `<li>` elements between screens. This works but can get confusing as the guestbook logic grows. Here's a more complex example for comparison.
+
+The first thing to figure out is the _shape_ of our data. Unlike the counter's single number, each guestbook entry is an object: the message someone left, when they left it, and an `id` so we can track it as the list changes.
+
+```js
+{ id: 'k3f9z', message: 'hi from the bench :)', at: 1719560400000 }
+```
+
+The guestbook itself is just a growing list of these. It starts empty (`entries: []`), so we write the shape down as a comment to remember what goes in it:
+
+```html
+<div can-play id="guestbook"></div>
+<script type="module">
+  import { html, playhtml, repeat } from 'https://unpkg.com/playhtml';
+
+  playhtml.init();
+
+  playhtml.register('guestbook', {
+    // a growing list of entries, each: { id, message, at }
+    defaultData: { entries: [] },
+    view: ({ data, setData }) => {
+      const sign = (event) => {
+        event.preventDefault();
+        const input = event.target.querySelector('input');
+        const message = input.value.trim();
+        if (!message) return;
+        setData((draft) => {
+          draft.entries.push({
+            id: crypto.randomUUID(),
+            message,
+            at: Date.now(),
+          });
+        });
+        input.value = '';
+      };
+
+      return html`
+        <p>${data.entries.length} notes left</p>
+        <form @submit=${sign}>
+          <input placeholder="leave a note..." />
+          <button type="submit">sign</button>
+        </form>
+        <ul>
+          ${repeat(
+            [...data.entries].reverse(),
+            (entry) => entry.id,
+            (entry) => html`
+              <li>
+                ${entry.message}
+                <small>${new Date(entry.at).toLocaleTimeString()}</small>
+              </li>
+            `,
+          )}
+        </ul>
+      `;
+    },
+  });
+</script>
+```
+
+#### Which one should I use?
+
+- **`can-mirror`** — the shared thing is literally the DOM (a textarea, a list you append to), with no logic in between.
+- **`can-play` with `updateElement`** — you're tracking one or two values and updating them by hand is trivial, like the visit counter.
+- **`can-play` with `view`** — the UI is a list, or anything **computed** or **conditional** on shared state. Describe the result once and let it re-render.
+
+{/* TODO: live demos for the can-play poll + guestbook once the playhtml view API (#190) ships */}
+
+## Now it's your turn!
+
+Think about these prompts when you're building:
+
+- What kind of space do you want to make?
+- When will people visit your site?
+- Who will visit your site?
+- How do you want them to connect with other people?
+- What are meaningful physical interactions that you can translate to digital space?
+
+Let's cowork and we'll share a bit at the end what we've done!
+
+## Assignment for next week
+
+- Use these attributes to create your own collective space! Feel free to build on top of your existing site.
+  1. What will make
+- Read [Reimagining Privacy Online Through a Spectrum of Intimacy](https://www.are.na/editorial/reimagining-privacy-online-through-gradients-of-intimacy)
+- Install we were online

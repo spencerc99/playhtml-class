@@ -21,44 +21,43 @@ export const meta = {
 
 ## Examples
 
-### Example 1: trigger a shared custom event
+### Example 1: listen for a shared custom event
 
-```tsx
-import { PlayContext } from '@playhtml/react';
-import { useContext, useEffect } from 'react';
+So far our data has lived _on_ an element. Sometimes you instead want a one-shot signal that fires for everyone on the page at once — confetti, a sound, a flash — without storing anything. That's a custom event. You register a listener for an event type, and playhtml runs your `onEvent` whenever _anyone_ dispatches it:
 
-const ConfettiEventType = 'confetti';
+```html
+<script type="module">
+  import { playhtml } from 'https://unpkg.com/playhtml';
 
-export function useConfetti() {
-  const {
-    dispatchPlayEvent,
-    registerPlayEventListener,
-    removePlayEventListener,
-  } = useContext(PlayContext);
+  playhtml.init();
 
-  useEffect(() => {
-    const id = registerPlayEventListener(ConfettiEventType, {
-      onEvent: () => {
-        console.log('confetti for everyone');
-      },
-    });
-
-    return () => removePlayEventListener(ConfettiEventType, id);
-  }, [registerPlayEventListener, removePlayEventListener]);
-
-  return () => dispatchPlayEvent({ type: ConfettiEventType });
-}
+  playhtml.registerPlayEventListener('confetti', {
+    onEvent: () => {
+      console.log('confetti for everyone');
+      // ...drop confetti, play a sound, flash the screen, etc.
+    },
+  });
+</script>
 ```
 
 ### Example 2: connect it to a button
 
-```tsx
-export function CelebrationButton() {
-  const triggerConfetti = useConfetti();
+Dispatching the event is what triggers everyone's listener. Here we fire it when this visitor clicks a button:
 
-  return <button onClick={triggerConfetti}>Celebrate</button>;
-}
+```html
+<button id="celebrate-btn">Celebrate</button>
+<script type="module">
+  import { playhtml } from 'https://unpkg.com/playhtml';
+
+  playhtml.init();
+
+  document.getElementById('celebrate-btn').addEventListener('click', () => {
+    playhtml.dispatchPlayEvent({ type: 'confetti' });
+  });
+</script>
 ```
+
+The click happens on one person's screen, but because `dispatchPlayEvent` sends the event through playhtml's shared infrastructure, the `confetti` listener from Example 1 runs on _every_ connected page. You can also pass data along with the event (`dispatchPlayEvent({ type: 'confetti', eventPayload: { color: 'gold' } })`) and read it in `onEvent`.
 
 ## Submit Your Assignment
 
