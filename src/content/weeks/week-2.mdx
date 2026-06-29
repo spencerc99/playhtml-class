@@ -12,15 +12,15 @@ import {
 
 ## Agenda
 
-- Crit and discussion in small groups:
+- Sharing and discussion in small groups:
   - Share communal-space concepts
   - Discuss readings
-- Demo / lecture:
-  - Synchronous behaviors: move, drag, live cursors, and presence
+- Demo / lecture
+- Live Coding
 - Mini in-class coding challenge
 - Debugging and Q+A
 
-## Crit (30 mins)
+## Sharing (30 mins)
 
 We will break into smaller groups to share what we've been working on. Here are some questions to guide your discussion:
 
@@ -36,13 +36,13 @@ We will discuss the reading [Against the Dark Forest by Erin Kissane](https://ww
 
 Originally popularized by Kickstarter co-founder Yancey Strickler (drawing from Liu Cixin’s sci-fi novel The Three-Body Problem), the Dark Forest theory suggests that the mainstream, public internet has become a toxic, predatory wasteland.
 
-- From Kissane's standpoint, what is wrong with the theory of the "dark forest"? Why does she argue that it is a flawed metaphor for understanding the problems of the modern internet?
-- Yancey Strickler’s original concept suggested that the safest strategy is to hide and retreat into private digital spaces. Why does Kissane argue that this approach is flawed, and who does she think gets left behind when we abandon the public square?
-- What are some of the ways Kissane suggests we can look past the "dark forest" to build a safer, more communal, and welcoming internet? How do her ideas intersect with the design values and work we are exploring in this class?
+- From Erin's standpoint, what is wrong with the theory of the "dark forest"? Why does she argue that it is a flawed metaphor for understanding the problems of the modern internet?
+- Yancey Strickler’s original concept suggested that the safest strategy is to hide and retreat into private digital spaces. Why does Erin argue that this approach is flawed, and who does she think gets left behind when we abandon the public square?
+- What are some of the ways Erin suggests we can look past the "dark forest" to build a safer, more communal, and welcoming internet? How do her ideas intersect with the design values and work we are exploring in this class?
 
 ## How does the web know who's on the bench?
 
-- The internet is a network of computers communicating through a shared set of rules, or protocols. Despite its ethereal reputation, the internet is technically physical. It relies heavily on an underwater and underground telecommunications infrastructure originally laid down in the 20th century, deeply rooted in the geopolitical history of colonialism and the Cold War.
+The internet is a network of computers communicating through a shared set of rules, or protocols. Despite its ethereal reputation, the internet is technically physical. It relies heavily on an underwater and underground telecommunications infrastructure originally laid down in the 20th century, deeply rooted in the geopolitical history of colonialism and the Cold War.
 
 ![1901 Eastern Telegraph cables](/images/1901_Eastern_Telegraph_cables.png)
 [Eastern Telegraph Company Undersea Cables (1901)](https://commons.wikimedia.org/wiki/File:1901_Eastern_Telegraph_cables.png)
@@ -66,6 +66,11 @@ For instance, when we visit a site like [playhtml.fun](https://playhtml.fun), ou
 
 We will be using GitHub Pages to publish our sites. Here is a [step-by-step guide on how to publish your site on GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-github-pages-site).
 
+Here are two tutorials on how to use GitHub Pages to host your site:
+
+- [How to upload files and folders to GitHub: GitHub for Beginners](https://www.youtube.com/watch?v=tlu5e0TxSzo)
+- [Getting started with GitHub Pages for beginners | Tutorial](https://www.youtube.com/watch?v=b2r9Cdvssi0)
+
 Github, currently controlled by Microsoft, is a platform for hosting and collaborating on code. It allows you to create repositories to store your code, track changes, and collaborate with others. GitHub Pages is a feature of GitHub that allows you to publish static websites directly from a GitHub repository. By pushing your code to a GitHub repository and enabling GitHub Pages, you can easily share your project with others by providing them with a URL to access your site.
 
 ## Real-Time Communication & Persistence
@@ -78,13 +83,29 @@ To solve this, we have to change to a completely different protocol, Web Sockets
 
 ![Web Socket Protocol Diagram](/images/Websocket_connection.png)
 
-And to get your actions to stick around even after you refresh the page, we need to "persist" that state and data somewhere that it can be retrieved, which requires a database. This is a secure location that saves the data and allows you to retrieve it later. These are often relational or key-value stores that allow you to store and retrieve data quickly and efficiently.
+And to get your actions to stick around even after you refresh the page, we need to "persist" that state and data somewhere that it can be retrieved, which requires a **database**. This is a secure location that saves the data and allows you to retrieve it later. These are often relational or key-value stores that allow you to store and retrieve data quickly and efficiently.
 
-Setting up these systems is more complicated than hosting a static website. You cannot just use [GitHub Pages](https://pages.github.com/) or [Netlify](https://www.netlify.com/) to host a Web Socket server, because they are designed for static sites. Instead, you need to use a hosting service that supports Web Sockets, such as [Heroku](https://www.heroku.com/), [AWS](https://aws.amazon.com/), or [DigitalOcean](https://www.digitalocean.com/). You also need to write server-side code to handle the Web Socket connections and manage the state of the communal space.
+Setting up these systems is more complicated than hosting a static website. You cannot just use [GitHub Pages](https://pages.github.com/) or [Netlify](https://www.netlify.com/) to host a Web Socket server, because they are designed for static sites. Instead, you need to use a hosting service that supports Web Sockets with a database, such as [Heroku](https://www.heroku.com/), [AWS](https://aws.amazon.com/), or [DigitalOcean](https://www.digitalocean.com/). You also need to write server-side code to handle the Web Socket connections and manage the state of the communal space.
 
 This is why using a library like playhtml is so helpful. The library hosts the infrastructure for you, so you don't have to worry about setting up your own. It also provides a simple API for managing the state of the communal space and synchronizing it across all connected clients.
 
 Under the hood, playhtml relies on [Cloudflare](https://www.cloudflare.com/), a massive global network infrastructure. Instead of spending weeks configuring backend servers and WebSocket protocols, you just drop a small script into your HTML file. The infrastructure handles the heavy lifting, turning your static webpage into a multiplayer space instantly.
+
+## Live Cursor
+
+The first thing we can do to make our communal space feel more alive is to show where other people are on the page. This ["live cursor" feature](https://playhtml.fun/docs/data/presence/cursors/) is already built-in the library and will allow you to see where other people are looking, clicking, and interacting with the page in real-time.
+
+```html
+<script type="module">
+  import { playhtml } from 'https://unpkg.com/playhtml';
+
+  playhtml.init({
+    cursors: {
+      enabled: true,
+    },
+  });
+</script>
+```
 
 ## Short break
 
@@ -113,14 +134,14 @@ We will have to write some JavaScript code to create these custom behaviors. Jav
 
 ```javascript
 const button = document.getElementById('my-button');
-button.addEventListener('click', () => {
+button.onclick = function () {
   alert('Button clicked!');
-});
+};
 ```
 
 </CodeDemo>
 
-This means that you can use JavaScript to manipulate the DOM (Document Object Model) of your web page, respond to user events, and communicate with the server, but also Javascript is not as forgiving as HTML and CSS. It doesn't interpret your code if you make a mistake, and it will throw an error instead. This means that you have to be very careful with your syntax and logic when writing JavaScript code, and you may have to debug your code with the console if it doesn't work as expected.
+This means that you can use [JavaScript](https://web.dev/learn/javascript) to manipulate the DOM (Document Object Model) of your web page, respond to user events, and communicate with the server, but also Javascript is not as forgiving as HTML and CSS. It doesn't interpret your code if you make a mistake, and it will throw an error instead. This means that you have to be very careful with your syntax and logic when writing JavaScript code, and you may have to debug your code with the console if it doesn't work as expected.
 
 ### Can-duplicate
 
@@ -136,12 +157,12 @@ If we wanted to create multiple copies of an element last week, we had to manual
 
 ```javascript
 // Clones get an id of the form "bunny-template-<random>", so match on that prefix.
-document.getElementById('reset-btn').addEventListener('click', () => {
+document.getElementById('reset-btn').onclick = function () {
   document.querySelectorAll("[id^='bunny-template-']").forEach((el) => {
     playhtml.deleteElementData('can-duplicate', el.id);
     el.remove();
   });
-});
+};
 ```
 
 </CodeDemo>
