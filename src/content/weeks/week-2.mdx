@@ -6,6 +6,7 @@ import { CodeDemo } from '../../components/CodeDemo';
 import {
   BunnyDuplicateDemo,
   ButtonClickDemo,
+  MirrorColorDemo,
   MirrorGuestbookDemo,
   MirrorTextareaDemo,
 } from '../../components/WeekTwoDemos';
@@ -155,16 +156,6 @@ If we wanted to create multiple copies of an element last week, we had to manual
 <button id="reset-btn">reset</button>
 ```
 
-```javascript
-// Clones get an id of the form "bunny-template-<random>", so match on that prefix.
-document.getElementById('reset-btn').onclick = function () {
-  document.querySelectorAll("[id^='bunny-template-']").forEach((el) => {
-    playhtml.deleteElementData('can-duplicate', el.id);
-    el.remove();
-  });
-};
-```
-
 </CodeDemo>
 
 ### Can-mirror
@@ -175,6 +166,27 @@ The `can-mirror` attribute is the easiest way to make a custom element collabora
 
 ```html
 <textarea can-mirror id="text-area" rows="4"></textarea>
+```
+
+</CodeDemo>
+
+It also syncs styling. Because `can-mirror` watches every attribute, anything you change on the element — including its inline `style` — shows up for everyone. Here, a button paints a rectangle a random color, and that color follows to every other screen:
+
+<CodeDemo demo={<MirrorColorDemo />}>
+
+```html
+<div can-mirror id="color-rect"></div>
+<button id="color-btn">random color</button>
+```
+
+```javascript
+const rectangle = document.getElementById('color-rect');
+const button = document.getElementById('color-btn');
+button.addEventListener('click', () => {
+  // change the style locally; can-mirror syncs it to everyone
+  const hue = Math.floor(Math.random() * 360);
+  rectangle.style.background = `hsl(${hue}, 80%, 70%)`;
+});
 ```
 
 </CodeDemo>

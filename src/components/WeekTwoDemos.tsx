@@ -164,6 +164,58 @@ export function MirrorTextareaDemo() {
   );
 }
 
+export function MirrorColorDemo() {
+  const onMount = useCallback((container: HTMLDivElement) => {
+    const rectangle = container.querySelector<HTMLDivElement>('#color-rect');
+    const button = container.querySelector<HTMLButtonElement>('#color-btn');
+
+    if (!rectangle || !button) {
+      return;
+    }
+
+    const handleClick = () => {
+      const hue = Math.floor(Math.random() * 360);
+      rectangle.style.background = `hsl(${hue}, 80%, 70%)`;
+    };
+
+    button.addEventListener('click', handleClick);
+
+    return () => {
+      button.removeEventListener('click', handleClick);
+    };
+  }, []);
+
+  return (
+    <LiveHtmlDemo
+      html={`
+<style>
+  #color-rect {
+    background: #f3efe9;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 0.5rem;
+    height: 6rem;
+    transition: background 0.3s ease;
+    width: min(100%, 16rem);
+  }
+  #color-btn {
+    background: #fff4d6;
+    border: 1px solid rgba(247, 220, 156, 0.8);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    margin-top: 0.75rem;
+    padding: 0.5rem 0.85rem;
+  }
+</style>
+<div can-mirror id="color-rect"></div>
+<button id="color-btn" type="button">random color</button>
+`}
+      onMount={onMount}
+    />
+  );
+}
+
 export function MirrorGuestbookDemo() {
   const onMount = useCallback((container: HTMLDivElement) => {
     const guestbook =
