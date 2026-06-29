@@ -52,12 +52,14 @@ export function BunnyMirrorDemo() {
     const pen = container.querySelector<HTMLDivElement>('#bunny-pen');
     const cloneButton =
       container.querySelector<HTMLButtonElement>('#clone-bunny');
+    const removeButton =
+      container.querySelector<HTMLButtonElement>('#remove-bunny');
 
-    if (!pen || !cloneButton) {
+    if (!pen || !cloneButton || !removeButton) {
       return;
     }
 
-    const handleMouseDown = () => {
+    const handleClone = () => {
       // can-mirror watches the pen's child list, so appending here
       // syncs new bunnies to everyone else.
       const bunny = document.createElement('img');
@@ -67,14 +69,16 @@ export function BunnyMirrorDemo() {
       pen.append(bunny);
     };
 
-    const handleMouseLeave = () => pen.replaceChildren();
+    // Removing the last bunny mirrors out to everyone too, so clone/remove
+    // stay in sync across visitors.
+    const handleRemove = () => pen.lastElementChild?.remove();
 
-    cloneButton.addEventListener('mousedown', handleMouseDown);
-    cloneButton.addEventListener('mouseleave', handleMouseLeave);
+    cloneButton.addEventListener('click', handleClone);
+    removeButton.addEventListener('click', handleRemove);
 
     return () => {
-      cloneButton.removeEventListener('mousedown', handleMouseDown);
-      cloneButton.removeEventListener('mouseleave', handleMouseLeave);
+      cloneButton.removeEventListener('click', handleClone);
+      removeButton.removeEventListener('click', handleRemove);
     };
   }, []);
 
@@ -89,8 +93,12 @@ export function BunnyMirrorDemo() {
     gap: 0.5rem;
     width: min(100%, 20rem);
   }
-  #clone-bunny {
-    align-self: flex-start;
+  .demo-bunny-buttons {
+    display: flex;
+    gap: 0.5rem;
+  }
+  #clone-bunny,
+  #remove-bunny {
     background: #fff4d6;
     border: 1px solid rgba(247, 220, 156, 0.8);
     border-radius: 0.5rem;
@@ -117,7 +125,10 @@ export function BunnyMirrorDemo() {
 </style>
 <div class="demo-bunny-mirror">
   <div class="demo-bunny-row">
-    <button id="clone-bunny" type="button">clone bunny</button>
+    <div class="demo-bunny-buttons">
+      <button id="clone-bunny" type="button">clone bunny</button>
+      <button id="remove-bunny" type="button">remove bunny</button>
+    </div>
     <div can-mirror id="bunny-pen"></div>
   </div>
 </div>

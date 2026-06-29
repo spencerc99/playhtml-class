@@ -226,6 +226,7 @@ This can be useful for creating shared text areas, collaborative drawing spaces,
 
 ```html
 <button id="clone-bunny">clone bunny</button>
+<button id="remove-bunny">remove bunny</button>
 <div can-mirror id="bunny-pen"></div>
 ```
 
@@ -233,16 +234,16 @@ This can be useful for creating shared text areas, collaborative drawing spaces,
 const pen = document.getElementById('bunny-pen');
 const btnClone = document.getElementById('clone-bunny');
 
-btnClone.addEventListener('mousedown', () => {
+btnClone.onclick = () => {
   const bunny = document.createElement('img');
   bunny.id = 'bunny-' + pen.children.length;
   bunny.src = '/pixel-bunny.png';
   pen.appendChild(bunny);
-});
+};
 
-btnClone.addEventListener('mouseleave', () => {
-  pen.replaceChildren();
-});
+btnRemove.onclick = () => {
+  pen.lastChild.remove();
+};
 ```
 
 </CodeDemo>
