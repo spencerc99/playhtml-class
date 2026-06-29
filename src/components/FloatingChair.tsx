@@ -21,7 +21,7 @@ export function FloatingChair({
       {...(canSpin ? { 'can-spin': '' } : {})}
       can-move-bounds={canMoveBounds}
       draggable={false}
-      className={`absolute z-10 cursor-move opacity-95 ${FLOATING_CHAIR_SIZE} ${className}`}
+      className={`floating-chair absolute z-10 cursor-move opacity-95 ${FLOATING_CHAIR_SIZE} ${className}`}
     />
   );
 }

@@ -1,5 +1,6 @@
 export const meta = {
   title: 'Sync — Move, Live Cursors',
+  chairs: true,
 };
 
 import { CodeDemo } from '../../components/CodeDemo';
@@ -19,6 +20,8 @@ import {
 - Live Coding
 - Mini in-class coding challenge
 - Debugging and Q+A
+
+<img src="/persian-rug.png" width="100%" />
 
 ## Sharing (30 mins)
 
@@ -250,7 +253,35 @@ Check out the full playground for can-mirror [here](https://playhtml.fun/docs/ad
 
 When you need more flexibility, `can-play` allows you to define how an element should behave based on the data you're saving. The complex part is that you have to think about and define your data up front. In return, you have the expressiveness to do anything in response to what someone does. We'll cover this next week but feel free to peek and poke around on the docs if you want to try it out now.
 
-For this week, there should be plenty to explore with `can-mirror`.
+### A peek at `can-play`
+
+We can start with something simple — a visit counter. One number changes: the count starts at `0` and goes up as people arrive.
+
+```html
+<div can-play id="visit-counter">0</div>
+<script>
+  const visitCounter = document.getElementById('visit-counter');
+
+  // 1. the data this element stores, and what it starts as
+  visitCounter.defaultData = { visits: 0 };
+
+  // 2. how that data turns into what people see
+  visitCounter.updateElement = ({ element, data }) => {
+    element.textContent = data.visits;
+  };
+
+  // 3. bump the count by one every time the page loads
+  visitCounter.onMount = ({ setData }) => {
+    setData((data) => {
+      data.visits += 1;
+    });
+  };
+</script>
+```
+
+`defaultData` is the starting state. `updateElement` runs whenever that data changes and updates what people see. `onMount` lets you do any extra set up when the page is loaded.
+
+We'll go deeper with `can-play` next week. For now, there should be plenty to explore with `can-mirror`.
 
 ## Now it's your turn!
 

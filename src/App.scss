@@ -721,7 +721,10 @@ a:hover {
   z-index: 0;
 }
 
-.week-page>* {
+// Lift content above the ::before texture. Exclude floating chairs: they need
+// absolute positioning for layout + can-move dragging, which a blanket
+// `position: relative` here would silently override.
+.week-page>*:not(.floating-chair) {
   position: relative;
   z-index: 1;
 }

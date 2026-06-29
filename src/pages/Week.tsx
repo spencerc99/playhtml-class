@@ -4,12 +4,15 @@
 import { useEffect, useRef, type ComponentType } from 'react';
 import { Link, useParams } from 'react-router';
 import { Attendance } from '../components/Attendance';
+import { FloatingChair } from '../components/FloatingChair';
 import { isWeekUnlocked } from '../weekSchedule';
+import { WEEK_PAGE_CHAIRS } from '../weekPageChairs';
 
 interface WeekContentMeta {
   title?: string;
   kicker?: string;
   summary?: string;
+  chairs?: boolean;
 }
 
 interface WeekContentModule {
@@ -210,8 +213,16 @@ export default function Week() {
     });
   }, [weekNumber]);
 
+  const showChairs = weekModule?.meta?.chairs === true;
+
   return (
-    <div className="week-page min-h-screen pb-16">
+    <div id="week-stage" className="week-page min-h-screen pb-16">
+      {showChairs
+        ? WEEK_PAGE_CHAIRS.map((chair) => (
+            <FloatingChair key={chair.id} {...chair} />
+          ))
+        : null}
+
       <header className="px-6 pb-6 pt-10 md:px-8 md:pb-8 md:pt-14">
         <div className="mx-auto max-w-6xl">
           <section className="py-6 md:py-8">
