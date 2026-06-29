@@ -2,31 +2,195 @@ export const meta = {
   title: 'Async — Guestbooks, Notes',
 };
 
+import { CodeDemo } from '../../components/CodeDemo';
+import {
+  GuestbookViewDemo,
+  PollImperativeDemo,
+  PollViewDemo,
+  VisitCounterDemo,
+} from '../../components/WeekThreeDemos';
+
 ## Activities
 
 - Crit and discussion in small groups:
   - Share prototypes
   - Discuss readings
 - Demo / lecture:
-  - Asynchronous tools: guestbooks, notes, and leaving traces
-  - Synchronous tools: live cursors, presence, awareness
+  - `can-play`: the data-first way to build shared UI
+  - Guestbooks, notes, and leaving traces
 - Mini in-class coding challenge
 - Debugging and Q+A
 
-## Assignment / Readings
+## can-play
 
-- Add at least one asynchronous interaction to your site:
-  - Guestbook
-  - Notes
-  - Graffiti
-  - Another trace-based interaction
-- Read: `TKTKTKTKT`
+Last week we focused on `can-mirror`, where the DOM _is_ the shared state. **`can-play`** flips that: you define **data** for each element, and write code that turns that data into what people see. When someone's interaction changes the data, playhtml syncs the data — and everyone's view updates from it.
 
-## Examples
+The `can-play` attribute is the most customizable and expressive option, but it requires you to think about the data you need up front based on how you want someone to interact with it, and then describe how that data turns into what people see.
 
-### Example 1: a shared guestbook
+### Start simple: a visit counter
 
-A guestbook is a list of messages that everyone adds to and that sticks around between visits. That's exactly the "render a list from data you own" case from last week, so we reach for `can-play` with a `view`:
+We can start with something simple, like a visit counter. Think about the interaction and what is actually changing. For a visit counter, one number changes: the count starts at `0` and goes up as people arrive.
+
+<CodeDemo demo={<VisitCounterDemo />}>
+
+```html
+<div can-play id="visit-counter">0</div>
+<script>
+  // you can also do window.getElementById('visit-counter')
+  const visitCounter = document.getElementById('visit-counter');
+
+  // 1. the data this element stores, and what it starts as
+  visitCounter.defaultData = { visits: 0 };
+
+  // 2. how that data turns into what people see
+  visitCounter.updateElement = ({ element, data }) => {
+    element.textContent = data.visits;
+  };
+
+  // 3. bump the count by one every time the page loads
+  visitCounter.onMount = ({ setData }) => {
+    setData((data) => {
+      data.visits += 1;
+    });
+  };
+</script>
+```
+
+</CodeDemo>
+
+`updateElement` runs every time the data changes for everyone on the page, so the number stays in sync for everyone. For a single value like this, hand-writing that one line (`element.textContent = data.visits`) is simple and completely fine.
+
+Now let's make this more complex. A counter tells you _how many_ people showed up, but you don't have any more information about each person. So now let's ask each visitor a question and show their answers.
+
+### When the UI is a list, or computed from the data
+
+A poll like this is really just the visit counter scaled up: instead of one number, we keep a tally for each option, and we show each option's share of the total as a bar. That small step changes two things:
+
+- the bar widths are **computed** from the votes (each option's share of the total), and
+- the options are a **list** that we render, one row each.
+
+<CodeDemo demo={<PollImperativeDemo />}>
+
+```html
+<div can-play id="room-poll">
+  <button data-id="plants">
+    <span class="bar"></span>
+    <span class="label">more plants</span>
+    <span class="count">0</span>
+  </button>
+  <button data-id="jukebox">
+    <span class="bar"></span>
+    <span class="label">a jukebox</span>
+    <span class="count">0</span>
+  </button>
+  <p class="total">0 votes</p>
+</div>
+<script>
+  const poll = document.getElementById('room-poll');
+
+  poll.defaultData = {
+    options: [
+      { id: 'plants', label: 'more plants', votes: 0 },
+      { id: 'jukebox', label: 'a jukebox', votes: 0 },
+    ],
+  };
+
+  poll.updateElement = ({ element, data }) => {
+    const total = data.options.reduce((sum, o) => sum + o.votes, 0);
+    data.options.forEach((option) => {
+      const row = element.querySelector(`[data-id="${option.id}"]`);
+      const percent = total ? (option.votes / total) * 100 : 0;
+      row.querySelector('.bar').style.width = percent + '%';
+      row.querySelector('.count').textContent = option.votes;
+    });
+    element.querySelector('.total').textContent = total + ' votes';
+  };
+
+  poll.onClick = (event, { setData }) => {
+    const row = event.target.closest('[data-id]');
+    if (!row) return;
+    setData((draft) => {
+      draft.options.find((o) => o.id === row.dataset.id).votes += 1;
+    });
+  };
+</script>
+```
+
+</CodeDemo>
+
+(Next week we'll show you how to do something based on _your answer_ vs others)
+
+It works, but the logic starts to get tricky because we have HTML code that defines the start, and separate Javascript code modifying the HTML every time the data changes. It's hard to know what is actually showing up in the DOM from the code itself.
+
+### The reactive `view` API
+
+There is an alternative API for this case to make this clearer to express, but it will be more complex / new for those used to plain HTML. Instead of _patching_ the DOM step by step, you write one function that describes what the markup _should be_ for any given state, and playhtml re-renders it for you whenever the data changes:
+
+<CodeDemo demo={<PollViewDemo />}>
+
+```html
+<div can-play id="room-poll"></div>
+<script type="module">
+  import { html, playhtml, repeat, styleMap } from 'https://unpkg.com/playhtml';
+
+  playhtml.init();
+
+  playhtml.register('room-poll', {
+    defaultData: {
+      options: [
+        { id: 'plants', label: 'more plants', votes: 0 },
+        { id: 'jukebox', label: 'a jukebox', votes: 0 },
+      ],
+    },
+    view: ({ data, setData }) => {
+      const total = data.options.reduce((sum, o) => sum + o.votes, 0);
+      const vote = (id) =>
+        setData((draft) => {
+          draft.options.find((o) => o.id === id).votes += 1;
+        });
+
+      return html`
+        ${repeat(
+          data.options,
+          (option) => option.id,
+          (option) => {
+            const percent = total ? (option.votes / total) * 100 : 0;
+            return html`
+              <button @click=${() => vote(option.id)}>
+                <span
+                  class="bar"
+                  style=${styleMap({ width: percent + '%' })}
+                ></span>
+                <span class="label">${option.label}</span>
+                <span class="count">${option.votes}</span>
+              </button>
+            `;
+          },
+        )}
+        <p>${total} votes</p>
+      `;
+    },
+  });
+</script>
+```
+
+</CodeDemo>
+
+This may look strange, but it's mostly the same HTML with some new syntax that allows you to interpolate the live data as it is changing. Each time the data changes, we "re-render" this HTML using the new data. We encourage you to try playing around with both! If you are more comfortable with the first version, you can definitely do everything using that API as well, but it might just get a bit confusing.
+
+### A guestbook
+
+Earlier, a `can-mirror` guestbook just copied `<li>` elements between screens. That works for a quick prototype, but gets confusing as the logic grows. With `can-play`, we model the entries as data and render them.
+
+The first thing to figure out is the _shape_ of our data. Unlike the counter's single number, each guestbook entry is an object: the message someone left, when they left it, and an `id` so we can track it as the list changes.
+
+```js
+{ id: 'k3f9z', message: 'hi from the bench :)', at: 1719560400000 }
+```
+
+The guestbook itself is just a growing list of these. It starts empty (`entries: []`), so we write the shape down as a comment to remember what goes in it:
+
+<CodeDemo demo={<GuestbookViewDemo />}>
 
 ```html
 <div can-play id="guestbook"></div>
@@ -36,29 +200,40 @@ A guestbook is a list of messages that everyone adds to and that sticks around b
   playhtml.init();
 
   playhtml.register('guestbook', {
-    defaultData: { messages: [] },
+    // a growing list of entries, each: { id, message, at }
+    defaultData: { entries: [] },
     view: ({ data, setData }) => {
-      const leaveNote = (event) => {
+      const sign = (event) => {
         event.preventDefault();
         const input = event.target.querySelector('input');
         const message = input.value.trim();
         if (!message) return;
         setData((draft) => {
-          draft.messages.push(message);
+          draft.entries.push({
+            id: crypto.randomUUID(),
+            message,
+            at: Date.now(),
+          });
         });
         input.value = '';
       };
 
       return html`
-        <form @submit=${leaveNote}>
+        <p>${data.entries.length} notes left</p>
+        <form @submit=${sign}>
           <input placeholder="leave a note..." />
-          <button type="submit">Leave note</button>
+          <button type="submit">sign</button>
         </form>
         <ul>
           ${repeat(
-            data.messages,
-            (message, index) => index,
-            (message) => html`<li>${message}</li>`,
+            [...data.entries].reverse(),
+            (entry) => entry.id,
+            (entry) => html`
+              <li>
+                ${entry.message}
+                <small>${new Date(entry.at).toLocaleTimeString()}</small>
+              </li>
+            `,
           )}
         </ul>
       `;
@@ -67,9 +242,17 @@ A guestbook is a list of messages that everyone adds to and that sticks around b
 </script>
 ```
 
-`defaultData` is the data the guestbook starts with (an empty list of messages), `setData` adds to it, and the `view` re-renders the list for everyone whenever a note is left. Because the messages are persisted, the guestbook fills up over time instead of resetting on refresh.
+</CodeDemo>
 
-### Example 2: start with seeded notes
+Because the entries are persisted, the guestbook fills up over time instead of resetting on refresh.
+
+### Which one should I use?
+
+- **`can-mirror`** — the shared thing is literally the DOM (a textarea, a list you append to), with no logic in between.
+- **`can-play` with `updateElement`** — you're tracking one or two values and updating them by hand is trivial, like the visit counter.
+- **`can-play` with `view`** — the UI is a list, or anything **computed** or **conditional** on shared state. Describe the result once and let it re-render.
+
+### Start with seeded notes
 
 An empty guestbook can feel intimidating — nobody wants to be first. You can seed it with a few prompts by making them the starting value in `defaultData`:
 
@@ -87,13 +270,28 @@ An empty guestbook can feel intimidating — nobody wants to be first. You can s
   ];
 
   playhtml.register('guestbook', {
-    defaultData: { messages: starterNotes },
+    defaultData: {
+      entries: starterNotes.map((message) => ({
+        id: crypto.randomUUID(),
+        message,
+        at: Date.now(),
+      })),
+    },
     // ...same view as above
   });
 </script>
 ```
 
 {/* TODO: Show poll / guestbook example with something different for the current user */}
+
+## Assignment / Readings
+
+- Add at least one asynchronous interaction to your site using `can-play`:
+  - Guestbook
+  - Notes
+  - Graffiti
+  - Another trace-based interaction
+- Read: `TKTKTKTKT`
 
 ## Submit Your Assignment
 

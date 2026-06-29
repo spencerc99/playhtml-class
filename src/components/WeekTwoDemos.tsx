@@ -1,6 +1,5 @@
-// ABOUTME: Live week 2 demos for can-duplicate, can-mirror, and basic JS.
+// ABOUTME: Live week 2 demos for can-mirror and basic JS.
 
-import { playhtml } from '@playhtml/react';
 import { useCallback } from 'react';
 import { LiveHtmlDemo } from './LiveHtmlDemo';
 
@@ -45,36 +44,37 @@ export function ButtonClickDemo() {
   );
 }
 
-export function BunnyDuplicateDemo() {
+export function BunnyMirrorDemo() {
   const onMount = useCallback((container: HTMLDivElement) => {
-    const resetButton =
-      container.querySelector<HTMLButtonElement>('#reset-btn');
+    const pen = container.querySelector<HTMLDivElement>('#bunny-pen');
+    const cloneButton =
+      container.querySelector<HTMLButtonElement>('#clone-bunny');
+    const removeButton =
+      container.querySelector<HTMLButtonElement>('#remove-bunny');
 
-    if (!resetButton) {
+    if (!pen || !cloneButton || !removeButton) {
       return;
     }
 
-    const handleReset = () => {
-      // Clones get an id of the form "bunny-template-<random>", so match on that prefix.
-      container
-        .querySelectorAll<HTMLElement>("[id^='bunny-template-']")
-        .forEach((element) => {
-          playhtml.deleteElementData('can-duplicate', element.id);
-          element.remove();
-        });
-
-      const cloneHandler = playhtml.elementHandlers
-        .get('can-duplicate')
-        ?.get('clone-btn');
-      cloneHandler?.setData((draft: string[]) => {
-        draft.splice(0, draft.length);
-      });
+    const handleClone = () => {
+      // can-mirror watches the pen's child list, so appending a bunny here
+      // shows up on everyone else's screen too.
+      const bunny = document.createElement('img');
+      bunny.src = BUNNY_SRC;
+      bunny.alt = '';
+      pen.append(bunny);
     };
 
-    resetButton.addEventListener('click', handleReset);
+    const handleRemove = () => {
+      pen.lastElementChild?.remove();
+    };
+
+    cloneButton.addEventListener('click', handleClone);
+    removeButton.addEventListener('click', handleRemove);
 
     return () => {
-      resetButton.removeEventListener('click', handleReset);
+      cloneButton.removeEventListener('click', handleClone);
+      removeButton.removeEventListener('click', handleRemove);
     };
   }, []);
 
@@ -82,7 +82,7 @@ export function BunnyDuplicateDemo() {
     <LiveHtmlDemo
       html={`
 <style>
-  .demo-bunny-duplicate { width: 100%; }
+  .demo-bunny-mirror { width: 100%; }
   .demo-bunny-row {
     align-items: center;
     display: flex;
@@ -90,8 +90,8 @@ export function BunnyDuplicateDemo() {
     gap: 0.5rem;
     width: 100%;
   }
-  #clone-btn,
-  #reset-btn {
+  #clone-bunny,
+  #remove-bunny {
     background: #fff4d6;
     border: 1px solid rgba(247, 220, 156, 0.8);
     border-radius: 0.5rem;
@@ -102,7 +102,7 @@ export function BunnyDuplicateDemo() {
     padding: 0.5rem 0.85rem;
     white-space: nowrap;
   }
-  #reset-btn {
+  #remove-bunny {
     background: #f3efe9;
     border-color: rgba(0, 0, 0, 0.12);
   }
@@ -111,6 +111,7 @@ export function BunnyDuplicateDemo() {
     flex: 1;
     flex-direction: row;
     gap: 0.5rem;
+    min-height: 4rem;
     min-width: 0;
     overflow-x: auto;
     padding-bottom: 0.25rem;
@@ -122,18 +123,11 @@ export function BunnyDuplicateDemo() {
     width: 4rem;
   }
 </style>
-<div class="demo-bunny-duplicate">
+<div class="demo-bunny-mirror">
   <div class="demo-bunny-row">
-    <button
-      can-duplicate="bunny-template"
-      can-duplicate-to="bunny-pen"
-      id="clone-btn"
-      type="button"
-    >clone a bunny</button>
-    <button id="reset-btn" type="button">reset</button>
-    <div id="bunny-pen">
-      <img id="bunny-template" src="${BUNNY_SRC}" alt="" />
-    </div>
+    <button id="clone-bunny" type="button">clone bunny</button>
+    <button id="remove-bunny" type="button">remove bunny</button>
+    <div can-mirror id="bunny-pen"></div>
   </div>
 </div>
 `}
@@ -210,66 +204,6 @@ export function MirrorColorDemo() {
 </style>
 <div can-mirror id="color-rect"></div>
 <button id="color-btn" type="button">random color</button>
-`}
-      onMount={onMount}
-    />
-  );
-}
-
-export function MirrorGuestbookDemo() {
-  const onMount = useCallback((container: HTMLDivElement) => {
-    const guestbook =
-      container.querySelector<HTMLUListElement>('#demo-guestbook');
-    const addEntryButton =
-      container.querySelector<HTMLButtonElement>('#demo-add-entry');
-
-    if (!guestbook || !addEntryButton) {
-      return;
-    }
-
-    const handleClick = () => {
-      const newEntry = document.createElement('li');
-      newEntry.textContent = 'new entry';
-      newEntry.id = 'entry-' + (guestbook.children.length + 1);
-      guestbook.appendChild(newEntry);
-    };
-
-    addEntryButton.addEventListener('click', handleClick);
-
-    return () => {
-      addEntryButton.removeEventListener('click', handleClick);
-    };
-  }, []);
-
-  return (
-    <LiveHtmlDemo
-      html={`
-<style>
-  #demo-guestbook {
-    border: 1px solid rgba(0, 0, 0, 0.12);
-    border-radius: 0.5rem;
-    font-family: var(--font-body);
-    font-size: 0.95rem;
-    list-style: disc;
-    margin: 0 0 0.75rem;
-    padding: 0.5rem 0.75rem 0.5rem 1.75rem;
-    width: min(100%, 16rem);
-  }
-  #demo-add-entry {
-    background: #d7ecff;
-    border: 1px solid rgba(44, 202, 255, 0.5);
-    border-radius: 0.5rem;
-    color: #1a6fa3;
-    cursor: pointer;
-    font-family: var(--font-body);
-    font-size: 0.9rem;
-    padding: 0.45rem 0.8rem;
-  }
-</style>
-<ul can-mirror id="demo-guestbook">
-  <li>first</li>
-</ul>
-<button id="demo-add-entry" type="button">add entry</button>
 `}
       onMount={onMount}
     />

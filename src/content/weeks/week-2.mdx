@@ -4,10 +4,9 @@ export const meta = {
 
 import { CodeDemo } from '../../components/CodeDemo';
 import {
-  BunnyDuplicateDemo,
+  BunnyMirrorDemo,
   ButtonClickDemo,
   MirrorColorDemo,
-  MirrorGuestbookDemo,
   MirrorTextareaDemo,
 } from '../../components/WeekTwoDemos';
 
@@ -90,29 +89,17 @@ Setting up these systems is more complicated than hosting a static website. You 
 
 This is why using a library like playhtml is so helpful. The library hosts the infrastructure for you, so you don't have to worry about setting up your own. It also provides a simple API for managing the state of the communal space and synchronizing it across all connected clients.
 
+![How playhtml syncs element state between browsers](/images/playhtml-sync-diagram.png)
+
+playhtml stores data for every marked element on your page by their `id` (this is why every element needs a unique ID to know which element is which!). When you change something (move a chair, toggle a lamp, type in a textarea), that is changing some data (the lamp is `on` or `off`, the chair has an `x` and `y` position, etc.) that syncs up to playhtml's server, which saves it and pushes updates to everyone else on the same page over the open WebSocket connection.
+
 Under the hood, playhtml relies on [Cloudflare](https://www.cloudflare.com/), a massive global network infrastructure. Instead of spending weeks configuring backend servers and WebSocket protocols, you just drop a small script into your HTML file. The infrastructure handles the heavy lifting, turning your static webpage into a multiplayer space instantly.
-
-## Live Cursor
-
-The first thing we can do to make our communal space feel more alive is to show where other people are on the page. This ["live cursor" feature](https://playhtml.fun/docs/data/presence/cursors/) is already built-in the library and will allow you to see where other people are looking, clicking, and interacting with the page in real-time.
-
-```html
-<script type="module">
-  import { playhtml } from 'https://unpkg.com/playhtml';
-
-  playhtml.init({
-    cursors: {
-      enabled: true,
-    },
-  });
-</script>
-```
 
 ## Short break
 
 ## Custom Behaviors
 
-Last week, we learned how to use the built-in attributes like `can-move`, `can-spin`, `can-grow`, and `can-toggle` to create communal spaces. This week, we will learn how to create more custom behaviors using `can-duplicate`, `can-mirror` and `can-play` to create more complex interactions and experiences.
+Last week, we learned how to use the built-in attributes like `can-move`, `can-spin`, `can-grow`, and `can-toggle` to create communal spaces. This week, we will learn how to create more custom behaviors using `can-mirror`.
 
 We will have to write some JavaScript code to create these custom behaviors. Javascript is a programming language that allows you to add interactivity and dynamic behavior to your web pages. Unlike HTML and CSS, which are [declarative languages](https://en.wikipedia.org/wiki/Declarative_programming) that describe the structure and style of a web page, JavaScript is an [imperative language](https://en.wikipedia.org/wiki/Imperative_programming) that allows you to write instructions for the browser to execute.
 
@@ -143,20 +130,6 @@ button.onclick = function () {
 </CodeDemo>
 
 This means that you can use [JavaScript](https://web.dev/learn/javascript) to manipulate the DOM (Document Object Model) of your web page, respond to user events, and communicate with the server, but also Javascript is not as forgiving as HTML and CSS. It doesn't interpret your code if you make a mistake, and it will throw an error instead. This means that you have to be very careful with your syntax and logic when writing JavaScript code, and you may have to debug your code with the console if it doesn't work as expected.
-
-### Can-duplicate
-
-If we wanted to create multiple copies of an element last week, we had to manually create each copy in the HTML with a unique ID. This week, we will learn how to use the `can-duplicate` attribute to create multiple copies of an element with a single line of code.
-
-<CodeDemo demo={<BunnyDuplicateDemo />} inline>
-
-```html
-<img id="bunny-template" src="/pixel-bunny.png" alt="" />
-<button can-duplicate="bunny-template" id="clone-btn">clone a bunny</button>
-<button id="reset-btn">reset</button>
-```
-
-</CodeDemo>
 
 ### Can-mirror
 
@@ -191,25 +164,30 @@ button.addEventListener('click', () => {
 
 </CodeDemo>
 
-This can be useful for creating shared text areas, collaborative drawing spaces, or any other element that you want to keep in sync across clients.
+This can be useful for creating shared text areas, collaborative drawing spaces, or any other element that you want to keep in sync across clients. It also keeps the _children_ of an element in sync as you add and remove them.
 
-<CodeDemo demo={<MirrorGuestbookDemo />}>
+<CodeDemo demo={<BunnyMirrorDemo />} inline>
 
 ```html
-<ul can-mirror id="guestbook">
-  <li>first</li>
-</ul>
-<button id="add-entry">add entry</button>
+<button id="clone-bunny">clone bunny</button>
+<button id="remove-bunny">remove bunny</button>
+<div can-mirror id="bunny-pen"></div>
 ```
 
 ```javascript
-const guestbook = document.getElementById('guestbook');
-const addEntryButton = document.getElementById('add-entry');
-addEntryButton.onclick = function () {
-  const newEntry = document.createElement('li');
-  newEntry.textContent = 'new entry';
-  newEntry.id = 'entry-' + (guestbook.children.length + 1);
-  guestbook.appendChild(newEntry);
+const pen = document.getElementById('bunny-pen');
+
+// can-mirror watches the pen's children, so adding one syncs to everyone
+document.getElementById('clone-bunny').onclick = function () {
+  const bunny = document.createElement('img');
+  bunny.id = 'bunny-' + Math.random().toString(36).substring(2, 15);
+  bunny.src = '/pixel-bunny.png';
+  pen.appendChild(bunny);
+};
+
+// removing the most recent bunny syncs too
+document.getElementById('remove-bunny').onclick = function () {
+  pen.lastElementChild?.remove();
 };
 ```
 
@@ -217,218 +195,11 @@ addEntryButton.onclick = function () {
 
 Check out the full playground for can-mirror [here](https://playhtml.fun/docs/advanced/mirror-playground/).
 
-`can-mirror` is the right tool when the DOM _is_ the shared state: whatever's on your screen should be on everyone's screen, with no logic in between. But what if you want to _compute_ something from that shared state (like what % of people did X?)? For that, we model the data ourselves with `can-play`.
+`can-mirror` is the right tool when the DOM is the shared state: whatever's on your screen should be on everyone's screen, with no logic in between.
 
-### can-play
+When you need more flexibility, `can-play` allows you to define how an element should behave based on the data you're saving. The complex part is that you have to think about and define your data up front. In return, you have the expressiveness to do anything in response to what someone does. We'll cover this next week but feel free to peek and poke around on the docs if you want to try it out now.
 
-The `can-play` attribute allows you to define custom data that each element stores and use that data to update how the element behaves and shows up. This is the most customizable and expressive attribute, but it requires you to think about the data you need up front based on how you want someone to interact with it, and then describe how that data turns into what people see.
-
-#### Start simple: a visit counter
-
-We can start with something simple, like a visit counter. Think about the interaction and what is actually changing. For a visit counter, one number changes: the count starts at `0` and goes up as people arrive.
-
-```html
-<div can-play id="visit-counter">0</div>
-<script>
-  // you can also do window.getElementById('visit-counter')
-  const visitCounter = document.getElementById('visit-counter');
-
-  // 1. the data this element stores, and what it starts as
-  visitCounter.defaultData = { visits: 0 };
-
-  // 2. how that data turns into what people see
-  visitCounter.updateElement = ({ element, data }) => {
-    element.textContent = data.visits;
-  };
-
-  // 3. count this visitor once, when their page loads
-  visitCounter.onMount = ({ getData, setData }) => {
-    setData((visits) => visits + 1);
-  };
-</script>
-```
-
-`updateElement` runs every time the data changes for everyone on the page, so the number stays in sync for everyone. For a single value like this, hand-writing that one line (`element.textContent = data.visits`) is simple and completely fine.
-
-Now let's make this more complex. A counter tells you _how many_ people showed up, but you don't have any more information about each person. So now let's ask each visitor a question and show their answers.
-
-#### When the UI is a list, or computed from the data
-
-A poll like this is really just the visit counter scaled up: instead of one number, we keep a tally for each option, and we show each option's share of the total as a bar. That small step changes two things:
-
-- the bar widths are **computed** from the votes (each option's share of the total), and
-- the options are a **list** that we render, one row each.
-
-```html
-<div can-play id="room-poll">
-  <button data-id="plants">
-    <span class="bar"></span>
-    <span class="label">more plants</span>
-    <span class="count">0</span>
-  </button>
-  <button data-id="jukebox">
-    <span class="bar"></span>
-    <span class="label">a jukebox</span>
-    <span class="count">0</span>
-  </button>
-  <p class="total">0 votes</p>
-</div>
-<script>
-  const poll = document.getElementById('room-poll');
-
-  poll.defaultData = {
-    options: [
-      { id: 'plants', label: 'more plants', votes: 0 },
-      { id: 'jukebox', label: 'a jukebox', votes: 0 },
-    ],
-  };
-
-  poll.updateElement = ({ element, data }) => {
-    const total = data.options.reduce((sum, o) => sum + o.votes, 0);
-    data.options.forEach((option) => {
-      const row = element.querySelector(`[data-id="${option.id}"]`);
-      const percent = total ? (option.votes / total) * 100 : 0;
-      row.querySelector('.bar').style.width = percent + '%';
-      row.querySelector('.count').textContent = option.votes;
-    });
-    element.querySelector('.total').textContent = total + ' votes';
-  };
-
-  poll.onClick = (event, { setData }) => {
-    const row = event.target.closest('[data-id]');
-    if (!row) return;
-    setData((draft) => {
-      draft.options.find((o) => o.id === row.dataset.id).votes += 1;
-    });
-  };
-</script>
-```
-
-(Next week we'll show you how to do something based on _your answer_ vs others)
-
-It works, but the logic starts to get tricky because we have HTML code that defines the start, and separate Javacript code modifying the HTML every time the data changes. It's hard to know what is actually showing up in the DOM from the code itself.
-
-#### The reactive `view` API
-
-There is an alternative API for this case to make this clearer to express, but it will be more complex / new for those used to plain HTML. Instead of _patching_ the DOM step by step, you write one function that describes what the markup _should be_ for any given state, and playhtml re-renders it for you whenever the data changes:
-
-```html
-<div can-play id="room-poll"></div>
-<script type="module">
-  import { html, playhtml, repeat, styleMap } from 'https://unpkg.com/playhtml';
-
-  playhtml.init();
-
-  playhtml.register('room-poll', {
-    defaultData: {
-      options: [
-        { id: 'plants', label: 'more plants', votes: 0 },
-        { id: 'jukebox', label: 'a jukebox', votes: 0 },
-      ],
-    },
-    view: ({ data, setData }) => {
-      const total = data.options.reduce((sum, o) => sum + o.votes, 0);
-      const vote = (id) =>
-        setData((draft) => {
-          draft.options.find((o) => o.id === id).votes += 1;
-        });
-
-      return html`
-        ${repeat(
-          data.options,
-          (option) => option.id,
-          (option) => {
-            const percent = total ? (option.votes / total) * 100 : 0;
-            return html`
-              <button @click=${() => vote(option.id)}>
-                <span
-                  class="bar"
-                  style=${styleMap({ width: percent + '%' })}
-                ></span>
-                <span class="label">${option.label}</span>
-                <span class="count">${option.votes}</span>
-              </button>
-            `;
-          },
-        )}
-        <p>${total} votes</p>
-      `;
-    },
-  });
-</script>
-```
-
-This may look strange, but it's mostly the same HTML with some new syntax that allows you to interpolate the live data as it is changing. Each time the data changes, we "re-render" this HTML using the new data. We encourage you to try playing around with both! If you are more comfortable the the first version, you can definitely do everything using that API as well, but it might just get a bit confusing.
-
-#### A Guestbook!
-
-Earlier, the `can-mirror` guestbook just copied `<li>` elements between screens. This works but can get confusing as the guestbook logic grows. Here's a more complex example for comparison.
-
-The first thing to figure out is the _shape_ of our data. Unlike the counter's single number, each guestbook entry is an object: the message someone left, when they left it, and an `id` so we can track it as the list changes.
-
-```js
-{ id: 'k3f9z', message: 'hi from the bench :)', at: 1719560400000 }
-```
-
-The guestbook itself is just a growing list of these. It starts empty (`entries: []`), so we write the shape down as a comment to remember what goes in it:
-
-```html
-<div can-play id="guestbook"></div>
-<script type="module">
-  import { html, playhtml, repeat } from 'https://unpkg.com/playhtml';
-
-  playhtml.init();
-
-  playhtml.register('guestbook', {
-    // a growing list of entries, each: { id, message, at }
-    defaultData: { entries: [] },
-    view: ({ data, setData }) => {
-      const sign = (event) => {
-        event.preventDefault();
-        const input = event.target.querySelector('input');
-        const message = input.value.trim();
-        if (!message) return;
-        setData((draft) => {
-          draft.entries.push({
-            id: crypto.randomUUID(),
-            message,
-            at: Date.now(),
-          });
-        });
-        input.value = '';
-      };
-
-      return html`
-        <p>${data.entries.length} notes left</p>
-        <form @submit=${sign}>
-          <input placeholder="leave a note..." />
-          <button type="submit">sign</button>
-        </form>
-        <ul>
-          ${repeat(
-            [...data.entries].reverse(),
-            (entry) => entry.id,
-            (entry) => html`
-              <li>
-                ${entry.message}
-                <small>${new Date(entry.at).toLocaleTimeString()}</small>
-              </li>
-            `,
-          )}
-        </ul>
-      `;
-    },
-  });
-</script>
-```
-
-#### Which one should I use?
-
-- **`can-mirror`** — the shared thing is literally the DOM (a textarea, a list you append to), with no logic in between.
-- **`can-play` with `updateElement`** — you're tracking one or two values and updating them by hand is trivial, like the visit counter.
-- **`can-play` with `view`** — the UI is a list, or anything **computed** or **conditional** on shared state. Describe the result once and let it re-render.
-
-{/* TODO: live demos for the can-play poll + guestbook once the playhtml view API (#190) ships */}
+For this week, there should be plenty to explore with `can-mirror`.
 
 ## Now it's your turn!
 
@@ -444,7 +215,6 @@ Let's cowork and we'll share a bit at the end what we've done!
 
 ## Assignment for next week
 
-- Use these attributes to create your own collective space! Feel free to build on top of your existing site.
-  1. What will make
+- Use `can-mirror` to make your space more dynamic! How can you have people continually adding to your site?
 - Read [Reimagining Privacy Online Through a Spectrum of Intimacy](https://www.are.na/editorial/reimagining-privacy-online-through-gradients-of-intimacy)
 - Install we were online

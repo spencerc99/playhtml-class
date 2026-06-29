@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import mdx from '@mdx-js/rollup';
 import react from '@vitejs/plugin-react';
 import rehypeExternalLinks from 'rehype-external-links';
@@ -8,6 +9,11 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   server: {
     port: process.env.PORT ? Number(process.env.PORT) : undefined,
+  },
+  // playhtml touches `document` at import time, so component tests that pull it
+  // in need a DOM environment rather than the default node runtime.
+  test: {
+    environment: 'jsdom',
   },
   plugins: [
     mdx({

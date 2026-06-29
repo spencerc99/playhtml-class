@@ -65,7 +65,10 @@ interface DemoBoundaryProps {
   children: ReactNode;
 }
 
-class DemoBoundary extends Component<DemoBoundaryProps, { failed: boolean }> {
+export class DemoBoundary extends Component<
+  DemoBoundaryProps,
+  { failed: boolean }
+> {
   state = { failed: false };
 
   static getDerivedStateFromError() {
