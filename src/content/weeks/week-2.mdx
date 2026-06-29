@@ -97,6 +97,22 @@ Under the hood, playhtml relies on [Cloudflare](https://www.cloudflare.com/), a 
 
 ## Short break
 
+## Live Cursors
+
+The first thing we can do to make our communal space feel more alive is to show where other people are on the page. This ["live cursor" feature](https://playhtml.fun/docs/data/presence/cursors/) is already built-in the library and will allow you to see where other people are looking, clicking, and interacting with the page in real-time.
+
+```html
+<script type="module">
+  import { playhtml } from 'https://unpkg.com/playhtml';
+
+  playhtml.init({
+    cursors: {
+      enabled: true,
+    },
+  });
+</script>
+```
+
 ## Custom Behaviors
 
 Last week, we learned how to use the built-in attributes like `can-move`, `can-spin`, `can-grow`, and `can-toggle` to create communal spaces. This week, we will learn how to create more custom behaviors using `can-mirror`.
@@ -106,7 +122,7 @@ We will have to write some JavaScript code to create these custom behaviors. Jav
 <CodeDemo demo={<ButtonClickDemo />}>
 
 ```html
-<button id="my-button">Click me</button>
+<button id="my-button">Click me!!</button>
 ```
 
 ```css
@@ -121,19 +137,52 @@ We will have to write some JavaScript code to create these custom behaviors. Jav
 ```
 
 ```javascript
+// select the button element by its ID
 const button = document.getElementById('my-button');
-button.onclick = function () {
+
+// add an event listener to the button that listens for a click event
+button.addEventListener('click', () => {
+  // when the button is clicked, show an alert message
   alert('Button clicked!');
-};
+  // you can also change the button's text or style here if you want
+  button.textContent = 'Clicked!';
+  // change the button's css style
+  button.style.backgroundColor = 'red';
+});
 ```
 
 </CodeDemo>
 
 This means that you can use [JavaScript](https://web.dev/learn/javascript) to manipulate the DOM (Document Object Model) of your web page, respond to user events, and communicate with the server, but also Javascript is not as forgiving as HTML and CSS. It doesn't interpret your code if you make a mistake, and it will throw an error instead. This means that you have to be very careful with your syntax and logic when writing JavaScript code, and you may have to debug your code with the console if it doesn't work as expected.
 
+### Arrow Functions
+
+You will see arrow functions a lot in this class. They are just a shorter way to write functions. We can write a function like this:
+
+```javascript
+// regular function
+button.addEventListener('click', function () {
+  console.log('clicked');
+});
+
+// arrow function (same behavior here)
+button.addEventListener('click', () => {
+  console.log('clicked');
+});
+```
+
+There are many many things you can do with JavaScript, but for this class, we will focus on using it to create custom behaviors for our communal spaces. Particularly, we'll be looking at:
+
+- how to respond to [user events](https://www.w3schools.com/jsref/dom_obj_event.asp) like clicks, mouse movements, and keyboard inputs
+- how to dynamically change the content of my HTML elements
+- how to dynamically change the style (CSS) of my HTML elements
+- how to add and remove elements from the DOM
+
 ### Can-mirror
 
 The `can-mirror` attribute is the easiest way to make a custom element collaborative, because you don't model any data yourself: it mirrors the element's own state. It automatically syncs every attribute of the original element (position, rotation, scale, color) and the internal state of form elements (text areas, inputs, etc.), so whatever is on your screen shows up on everyone else's.
+
+#### syncing the content
 
 <CodeDemo demo={<MirrorTextareaDemo />}>
 
@@ -142,6 +191,8 @@ The `can-mirror` attribute is the easiest way to make a custom element collabora
 ```
 
 </CodeDemo>
+
+#### syncing the style
 
 It also syncs styling. Because `can-mirror` watches every attribute, anything you change on the element — including its inline `style` — shows up for everyone. Here, a button paints a rectangle a random color, and that color follows to every other screen:
 
@@ -164,31 +215,31 @@ button.addEventListener('click', () => {
 
 </CodeDemo>
 
+#### syncing the children (add or remove elements)
+
 This can be useful for creating shared text areas, collaborative drawing spaces, or any other element that you want to keep in sync across clients. It also keeps the _children_ of an element in sync as you add and remove them.
 
 <CodeDemo demo={<BunnyMirrorDemo />} inline>
 
 ```html
 <button id="clone-bunny">clone bunny</button>
-<button id="remove-bunny">remove bunny</button>
 <div can-mirror id="bunny-pen"></div>
 ```
 
 ```javascript
 const pen = document.getElementById('bunny-pen');
+const btnClone = document.getElementById('clone-bunny');
 
-// can-mirror watches the pen's children, so adding one syncs to everyone
-document.getElementById('clone-bunny').onclick = function () {
+btnClone.addEventListener('mousedown', () => {
   const bunny = document.createElement('img');
-  bunny.id = 'bunny-' + Math.random().toString(36).substring(2, 15);
+  bunny.id = 'bunny-' + pen.children.length;
   bunny.src = '/pixel-bunny.png';
   pen.appendChild(bunny);
-};
+});
 
-// removing the most recent bunny syncs too
-document.getElementById('remove-bunny').onclick = function () {
-  pen.lastElementChild?.remove();
-};
+btnClone.addEventListener('mouseleave', () => {
+  pen.replaceChildren();
+});
 ```
 
 </CodeDemo>

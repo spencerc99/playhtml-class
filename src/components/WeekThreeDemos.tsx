@@ -1,6 +1,8 @@
 // ABOUTME: Live week 3 demos for can-play (imperative updateElement + view API).
 
-import { html, repeat, styleMap } from 'playhtml';
+import { html } from 'lit';
+import { repeat } from 'lit/directives/repeat.js';
+import { styleMap } from 'lit/directives/style-map.js';
 import { CanPlayDemo, type CanPlayInit } from './CanPlayDemo';
 
 const POLL_OPTIONS = [

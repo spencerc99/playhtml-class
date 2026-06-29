@@ -15,6 +15,8 @@ export function ButtonClickDemo() {
 
     const handleClick = () => {
       alert('Button clicked!');
+      button.textContent = 'Clicked!';
+      button.style.backgroundColor = 'red';
     };
 
     button.addEventListener('click', handleClick);
@@ -37,7 +39,7 @@ export function ButtonClickDemo() {
     cursor: pointer;
   }
 </style>
-<button id="my-button" type="button">Click me</button>
+<button id="my-button" type="button">Click me!!</button>
 `}
       onMount={onMount}
     />
@@ -49,32 +51,29 @@ export function BunnyMirrorDemo() {
     const pen = container.querySelector<HTMLDivElement>('#bunny-pen');
     const cloneButton =
       container.querySelector<HTMLButtonElement>('#clone-bunny');
-    const removeButton =
-      container.querySelector<HTMLButtonElement>('#remove-bunny');
 
-    if (!pen || !cloneButton || !removeButton) {
+    if (!pen || !cloneButton) {
       return;
     }
 
-    const handleClone = () => {
-      // can-mirror watches the pen's child list, so appending a bunny here
-      // shows up on everyone else's screen too.
+    const handleMouseDown = () => {
+      // can-mirror watches the pen's child list, so appending here
+      // syncs new bunnies to everyone else.
       const bunny = document.createElement('img');
+      bunny.id = `bunny-${pen.children.length}`;
       bunny.src = BUNNY_SRC;
       bunny.alt = '';
       pen.append(bunny);
     };
 
-    const handleRemove = () => {
-      pen.lastElementChild?.remove();
-    };
+    const handleMouseLeave = () => pen.replaceChildren();
 
-    cloneButton.addEventListener('click', handleClone);
-    removeButton.addEventListener('click', handleRemove);
+    cloneButton.addEventListener('mousedown', handleMouseDown);
+    cloneButton.addEventListener('mouseleave', handleMouseLeave);
 
     return () => {
-      cloneButton.removeEventListener('click', handleClone);
-      removeButton.removeEventListener('click', handleRemove);
+      cloneButton.removeEventListener('mousedown', handleMouseDown);
+      cloneButton.removeEventListener('mouseleave', handleMouseLeave);
     };
   }, []);
 
@@ -84,35 +83,27 @@ export function BunnyMirrorDemo() {
 <style>
   .demo-bunny-mirror { width: 100%; }
   .demo-bunny-row {
-    align-items: center;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     gap: 0.5rem;
-    width: 100%;
+    width: min(100%, 20rem);
   }
-  #clone-bunny,
-  #remove-bunny {
+  #clone-bunny {
+    align-self: flex-start;
     background: #fff4d6;
     border: 1px solid rgba(247, 220, 156, 0.8);
     border-radius: 0.5rem;
     cursor: pointer;
-    flex-shrink: 0;
     font-family: var(--font-body);
     font-size: 0.9rem;
     padding: 0.5rem 0.85rem;
-    white-space: nowrap;
-  }
-  #remove-bunny {
-    background: #f3efe9;
-    border-color: rgba(0, 0, 0, 0.12);
   }
   #bunny-pen {
     display: flex;
-    flex: 1;
     flex-direction: row;
     gap: 0.5rem;
     min-height: 4rem;
-    min-width: 0;
+    width: 100%;
     overflow-x: auto;
     padding-bottom: 0.25rem;
   }
@@ -126,7 +117,6 @@ export function BunnyMirrorDemo() {
 <div class="demo-bunny-mirror">
   <div class="demo-bunny-row">
     <button id="clone-bunny" type="button">clone bunny</button>
-    <button id="remove-bunny" type="button">remove bunny</button>
     <div can-mirror id="bunny-pen"></div>
   </div>
 </div>

@@ -10,6 +10,7 @@
     "@playhtml/react": "^1.0.0",
     "@react-three/drei": "^10",
     "@react-three/fiber": "^9",
+    "lit": "^3.3.3",
     "playhtml": "^2.11.0",
     "react": "^19",
     "react-dom": "^19",
