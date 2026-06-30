@@ -116,6 +116,20 @@ The first thing we can do to make our communal space feel more alive is to show 
 </script>
 ```
 
+### Config: development mode
+
+When you are building and debugging, it can be helpful to initialize playhtml with development mode enabled. This gives you a more debugging-friendly setup while you iterate locally.
+
+```html
+<script type="module">
+  import { playhtml } from 'https://unpkg.com/playhtml';
+
+  playhtml.init({
+    developmentMode: true,
+  });
+</script>
+```
+
 ## Custom Behaviors
 
 Last week, we learned how to use the built-in attributes like `can-move`, `can-spin`, `can-grow`, and `can-toggle` to create communal spaces. This week, we will learn how to create more custom behaviors using `can-mirror`.
