@@ -1,7 +1,6 @@
 // ABOUTME: Live week 2 demos for can-mirror, basic JS, and a can-play preview.
 
 import { useCallback } from 'react';
-import { CanPlayDemo, type CanPlayInit } from './CanPlayDemo';
 import { LiveHtmlDemo } from './LiveHtmlDemo';
 
 const BUNNY_SRC = '/pixel-bunny.png';

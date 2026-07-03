@@ -5,9 +5,12 @@ export const meta = {
 import { CodeDemo } from '../../components/CodeDemo';
 import {
   GuestbookViewDemo,
+  HoverZoneDemo,
   PollImperativeDemo,
   PollViewDemo,
+  PresenceCountDemo,
   VisitCounterDemo,
+  VisitCounterRecentDemo,
 } from '../../components/WeekThreeDemos';
 
 ## Activities
@@ -16,27 +19,76 @@ import {
   - Share prototypes
   - Discuss readings
 - Demo / lecture:
-  - `can-play`: the data-first way to build shared UI
-  - Guestbooks, notes, and leaving traces
-- Mini in-class coding challenge
-- Debugging and Q+A
+  - Sync vs. Async (spectrum)
+  - Presence (anything that is live and not persisted)
+  - Persistence and Accumulation via `can-play`
+- Coding together!
 
-## can-play
+## Sharing (25 mins)
 
-Last week we focused on `can-mirror`, where the DOM _is_ the shared state. **`can-play`** flips that: you define **data** for each element, and write code that turns that data into what people see. When someone's interaction changes the data, playhtml syncs the data — and everyone's view updates from it.
+We will break into smaller groups to share what we've been working on. Here are some questions to guide your discussion:
 
-The `can-play` attribute is the most customizable and expressive option, but it requires you to think about the data you need up front based on how you want someone to interact with it, and then describe how that data turns into what people see.
+- What is the physical communal space you want to re-create digitally?
+- What are the attributes, interactions, or elements that define that space?
+- How do you envision people interacting with each other in that space?
+- Any inspirations or references you want to share with the class?
+- Anything you are struggling with or want feedback on?
 
-### Start simple: a visit counter
+## Reading Discussion (25 mins)
 
-We can start with something simple, like a visit counter. Think about the interaction and what is actually changing. For a visit counter, one number changes: the count starts at `0` and goes up as people arrive.
+TODO
+
+## Sync and Async
+
+We've been talking about intimacy gradients, and part of what lets you build them is having different modes of interaction for different spaces and contexts. Any space that feels welcoming is successful at facilitating meaningful encounters had many different modes of interaction. It also sets the context appropriately so that you know that you can participate and how to do so.
+
+These are social norms that happen easily in the real world because you can watch what other people do before trying yourself. In a digital space, we have to create space for these norms to be visible, by showing what have done before and setting the stage for what level of interaction is appropriate.
+
+Beyond the design of the interactions, the way you design and cultivate the space also has a big impact on how people treat it. If it looks handmade and has very specific indicators of your personality, people may feel more reverent towards it. If it looks like a corporate website, people will treat it that way, too.
+
+<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <img
+    src="/week-3/saint-frank-communal-table.png"
+    alt="People gathered around a large communal wooden table at Saint Frank coffee in San Francisco"
+    class="aspect-[4/3] w-full object-cover"
+  />
+  <img
+    src="/week-3/tablet-tables-iah.jpg"
+    alt="Rows of airport gate seating at IAH with tablet ordering screens built into each seat"
+    class="aspect-[4/3] w-full object-cover"
+  />
+</div>
+
+One spectrum I find useful to think about is across a spectrum of **asynchronous** and what is **synchronous**.
+
+**Asynchronous** can happen without everyone being there at the same moment. Think comments on social media, entries in a guestbook, or the art / reviews left on a wall at a cafe. They are lower pressure and can change and accumulate over time, so they give you a sense of what is possible and what has happened before.
+
+**Synchronous** happen with people present spontaneously. Like live cursors on this page, seeing a typing indicator in a message, or helping someone out when they spill their coffee or ask for the wifi password. These are momentary, ephemeral interactions.
+
+These two are very different interactions to design for and they map to two different data models in playhtml. Asynchronous things must be saved somewhere, so you have to think about what _state_ is being saved. That's how you use `defaultData` and the like in `can-play`. Synchronous things aren't meant to be persistent, so there's a separate presence (awareness) API that's used for live things. There's also a way to use _events_, which are live things that aren't data-driven.
+
+{/* TODO: diagram of the async ↔ sync spectrum, showing when to use can-play (state), presence (awareness), and events */}
+
+We also want to think about individual vs collective contributions, and the level of effort or intentionality required for the interaction.
+
+- Individual vs. Collective
+- Ambient vs. Active
+
+## SHORT BREAK!
+
+## Live Code
+
+To make this concrete, let's take one interaction and walk it along the spectrum: start with something that persists, make it live, then fire a one-off moment.
+
+### State: a visit counter (async)
+
+The async end is **state**: data that playhtml saves and syncs for you. `can-play` is how you define it — you give an element some `defaultData`, then describe how that data turns into what people see. The simplest version is a visit counter: one number that starts at `0` and goes up as people arrive.
 
 <CodeDemo demo={<VisitCounterDemo />}>
 
 ```html
 <div can-play id="visit-counter">0</div>
 <script>
-  // you can also do window.getElementById('visit-counter')
   const visitCounter = document.getElementById('visit-counter');
 
   // 1. the data this element stores, and what it starts as
@@ -58,13 +110,165 @@ We can start with something simple, like a visit counter. Think about the intera
 
 </CodeDemo>
 
-`updateElement` runs every time the data changes for everyone on the page, so the number stays in sync for everyone. For a single value like this, hand-writing that one line (`element.textContent = data.visits`) is simple and completely fine.
+`updateElement` runs every time the data changes for anyone on the page, so the number stays in sync for everyone. The value is persisted, so it keeps climbing across refreshes and visits — that's the async half of the spectrum.
 
-Now let's make this more complex. A counter tells you _how many_ people showed up, but you don't have any more information about each person. So now let's ask each visitor a question and show their answers.
+### Richer state: who just visited
+
+A bare count tells you _how many_ people came, but nothing about _who_. Because it's just state, we can store more: alongside the count, keep a short list of recent visitors — each with their name, color, and when they stopped by. Same model, slightly bigger shape.
+
+<CodeDemo demo={<VisitCounterRecentDemo />}>
+
+```html
+<div can-play id="visit-log">
+  <div class="big"><span class="count">0</span> visits</div>
+  <p>recent visitors</p>
+  <ul class="recent"></ul>
+</div>
+<script>
+  const visitLog = document.getElementById('visit-log');
+
+  // count is still here; we just also keep the last few visitors
+  visitLog.defaultData = { count: 0, recent: [] };
+
+  visitLog.updateElement = ({ element, data }) => {
+    element.querySelector('.count').textContent = data.count;
+    const list = element.querySelector('.recent');
+    // newest first; textContent keeps other people's names as plain text
+    list.replaceChildren(
+      ...[...data.recent].reverse().map((visit) => {
+        const row = document.createElement('li');
+        row.textContent = visit.name;
+        row.style.color = visit.color;
+        return row;
+      }),
+    );
+  };
+
+  visitLog.onMount = ({ setData }) => {
+    setData((data) => {
+      data.count += 1;
+      data.recent.push({
+        name: window.cursors?.name || 'someone',
+        color: window.cursors?.color,
+        at: Date.now(),
+      });
+      // keep defaultData small: only remember the last 5
+      if (data.recent.length > 5) data.recent.splice(0, data.recent.length - 5);
+    });
+  };
+</script>
+```
+
+</CodeDemo>
+
+It still survives a refresh, and now it remembers a little about each person. This is the same async idea, just with a richer shape — exactly the kind of thing we'll lean on for guestbooks and notes below.
+
+### Presence: who's here right now (sync)
+
+Now the sync end. "Who's here _right now_" shouldn't persist — when you leave, you should disappear. That's what the **presence (awareness)** API is for. Instead of `defaultData`, each visitor publishes a `myDefaultAwareness` value, and `updateElementAwareness` hands you the live list of everyone's values. Nothing is saved; refresh and the list rebuilds from whoever is actually connected.
+
+<CodeDemo demo={<PresenceCountDemo />}>
+
+```html
+<div can-play id="who-is-here">
+  <p><span class="count">0</span> here right now</p>
+  <ul class="people"></ul>
+</div>
+<script>
+  const here = document.getElementById('who-is-here');
+
+  // presence is per-visitor and not saved, so it lives in awareness, not data
+  here.defaultData = {};
+  here.myDefaultAwareness = {
+    name: window.cursors?.name || 'someone',
+    color: window.cursors?.color,
+  };
+
+  // there's no saved data to render, but can-play still needs an updateElement
+  here.updateElement = () => {};
+
+  // awareness is the live array of everyone's values (including yours)
+  here.updateElementAwareness = ({ element, awareness }) => {
+    element.querySelector('.count').textContent = awareness.length;
+    element.querySelector('.people').replaceChildren(
+      ...awareness.map((person) => {
+        const chip = document.createElement('li');
+        chip.textContent = person.name;
+        chip.style.color = person.color;
+        return chip;
+      }),
+    );
+  };
+</script>
+```
+
+</CodeDemo>
+
+Open this page in a second tab to watch the count climb — and close it to watch yourself disappear. That's the sync half: live, but with nothing left behind.
+
+### Events: a one-off moment
+
+Sometimes you don't want lasting state _or_ a standing presence list — you just want to mark a moment, once, for whoever's around. That's an **event**. Here we combine the pieces: each visitor's awareness tracks whether they're hovering a zone, and the first time five people hover at once, we `dispatchPlayEvent` so everyone present sees a little celebration. The event leaves nothing behind; it just happens.
+
+<CodeDemo demo={<HoverZoneDemo />}>
+
+```html
+<div can-play id="hover-zone">
+  <p>hover here together</p>
+  <p><span class="count">0</span>/5 hovering</p>
+</div>
+<script>
+  const zone = document.getElementById('hover-zone');
+
+  // each visitor only tracks their own hover state (presence, not saved)
+  zone.defaultData = {};
+  zone.myDefaultAwareness = { hovering: false };
+
+  // no saved data to render, but can-play still needs an updateElement
+  zone.updateElement = () => {};
+
+  zone.onMount = ({ getElement, setMyAwareness }) => {
+    const el = getElement();
+    el.addEventListener('mouseenter', () => setMyAwareness({ hovering: true }));
+    el.addEventListener('mouseleave', () =>
+      setMyAwareness({ hovering: false }),
+    );
+  };
+
+  let wasBelow = true; // only fire as we *cross* the threshold, not every tick
+  zone.updateElementAwareness = ({ element, awareness }) => {
+    const hovering = awareness.filter((a) => a?.hovering).length;
+    element.querySelector('.count').textContent = hovering;
+    if (hovering >= 5 && wasBelow) {
+      playhtml.dispatchPlayEvent({ type: 'zone-celebrate' });
+    }
+    wasBelow = hovering < 5;
+  };
+
+  // an event is a one-off broadcast: everyone present runs this once
+  playhtml.registerPlayEventListener('zone-celebrate', {
+    onEvent: () => {
+      // TODO: your little celebration animation here
+    },
+  });
+</script>
+```
+
+</CodeDemo>
+
+These three — **state**, **presence**, and **events** — are the whole toolkit. Most interactions are just some combination of them. The rest of today digs into the state side, since that's where guestbooks and notes live.
+
+{/* TODO: add a break here before the live-coding portion. */}
+
+## Defining your Data
+
+Last week we focused on `can-mirror`, where the DOM _is_ the shared state. **`can-play`** flips that: you define **data** for each element, and write code that turns that data into what people see. When someone's interaction changes the data, playhtml syncs the data — and everyone's view updates from it.
+
+That's exactly what the visit counter above did: `defaultData` held the count, `updateElement` turned it into text, and `onMount` bumped it. `can-play` is the most customizable and expressive option, but it asks you to think about the data you need up front — based on how you want someone to interact with it — and then describe how that data turns into what people see. For a single value, hand-writing that one line (`element.textContent = data.visits`) is simple and completely fine. The interesting part is what happens when the data grows.
 
 ### When the UI is a list, or computed from the data
 
-A poll like this is really just the visit counter scaled up: instead of one number, we keep a tally for each option, and we show each option's share of the total as a bar. That small step changes two things:
+Say we want to ask each visitor a question and show everyone's answers. A poll like that is really just the visit counter scaled up: instead of one number, we keep a tally for each option, and we show each option's share of the total as a bar. That small step changes two things:
 
 - the bar widths are **computed** from the votes (each option's share of the total), and
 - the options are a **list** that we render, one row each.

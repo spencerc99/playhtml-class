@@ -10,27 +10,47 @@ import { DemoBoundary } from './LiveHtmlDemo';
 // use ourselves. This keeps the demo callbacks fully typed by their data shape.
 type DataUpdater<T> = T | ((draft: T) => void);
 
-export interface ViewContext<T> {
+export interface ViewContext<T, V = unknown> {
   data: T;
   setData: (next: DataUpdater<T>) => void;
   setLocalData: (next: unknown) => void;
+  // The live list of every connected visitor's awareness value. Ephemeral:
+  // entries appear/disappear as people join/leave, and nothing is persisted.
+  awareness: V[];
+  setMyAwareness: (next: V) => void;
   element: HTMLElement;
   requestUpdate: () => void;
 }
 
-export interface MountContext<T> {
+// Fired whenever anyone's awareness (presence) changes, separately from data.
+export interface AwarenessContext<T, V = unknown> {
+  data: T;
+  awareness: V[];
+  myAwareness?: V;
+  setData: (next: DataUpdater<T>) => void;
+  setMyAwareness: (next: V) => void;
+  element: HTMLElement;
+}
+
+export interface MountContext<T, V = unknown> {
   getData: () => T;
   setData: (next: DataUpdater<T>) => void;
+  getAwareness: () => V[];
+  setMyAwareness: (next: V) => void;
   getElement: () => HTMLElement;
   requestUpdate: () => void;
 }
 
-export interface CanPlayInit<T> {
+export interface CanPlayInit<T, V = unknown> {
   defaultData: T;
-  updateElement?: (ctx: ViewContext<T>) => void;
-  view?: (ctx: ViewContext<T>) => unknown;
-  onMount?: (ctx: MountContext<T>) => void | (() => void);
-  onClick?: (event: MouseEvent, ctx: ViewContext<T>) => void;
+  // Per-visitor presence value. Not persisted — use for "who's here", hover
+  // state, typing indicators, anything that should vanish on disconnect.
+  myDefaultAwareness?: V | ((element: HTMLElement) => V);
+  updateElement?: (ctx: ViewContext<T, V>) => void;
+  updateElementAwareness?: (ctx: AwarenessContext<T, V>) => void;
+  view?: (ctx: ViewContext<T, V>) => unknown;
+  onMount?: (ctx: MountContext<T, V>) => void | (() => void);
+  onClick?: (event: MouseEvent, ctx: ViewContext<T, V>) => void;
 }
 
 export interface DemoHandle<T> {
@@ -38,11 +58,11 @@ export interface DemoHandle<T> {
   setData: (next: DataUpdater<T>) => void;
 }
 
-interface CanPlayDemoProps<T> {
+interface CanPlayDemoProps<T, V = unknown> {
   // Unique, stable id for the shared element. All visitors of the page share
   // this element's data, so keep ids distinct across demos.
   elementId: string;
-  init: CanPlayInit<T>;
+  init: CanPlayInit<T, V>;
   // Optional starting markup for imperative (updateElement) demos that patch an
   // existing DOM skeleton. View demos leave this empty and render everything.
   skeleton?: string;
@@ -53,7 +73,7 @@ interface CanPlayDemoProps<T> {
   onReady?: (handle: DemoHandle<T>) => void;
 }
 
-export function CanPlayDemo<T>(props: CanPlayDemoProps<T>) {
+export function CanPlayDemo<T, V = unknown>(props: CanPlayDemoProps<T, V>) {
   return (
     <DemoBoundary>
       <CanPlayDemoRunner {...props} />
@@ -61,13 +81,13 @@ export function CanPlayDemo<T>(props: CanPlayDemoProps<T>) {
   );
 }
 
-function CanPlayDemoRunner<T>({
+function CanPlayDemoRunner<T, V = unknown>({
   elementId,
   init,
   skeleton = '',
   styles = '',
   onReady,
-}: CanPlayDemoProps<T>) {
+}: CanPlayDemoProps<T, V>) {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
