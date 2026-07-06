@@ -1,5 +1,5 @@
 export const meta = {
-  title: 'Async — Guestbooks, Notes',
+  title: 'Thinking about Data and Interactions',
 };
 
 import { CodeDemo } from '../../components/CodeDemo';
@@ -73,8 +73,6 @@ One spectrum I find useful to think about is across a spectrum of **asynchronous
 **Synchronous** happen with people present spontaneously. Like live cursors on this page, seeing a typing indicator in a message, or helping someone out when they spill their coffee or ask for the wifi password. These are momentary, ephemeral interactions.
 
 These two are very different interactions to design for and they map to two different data models in playhtml. Asynchronous things must be saved somewhere, so you have to think about what _state_ is being saved. That's how you use `defaultData` and the like in `can-play`. Synchronous things aren't meant to be persistent, so there's a separate presence (awareness) API that's used for live things. There's also a way to use _events_, which are live things that aren't data-driven.
-
-{/* TODO: diagram of the async ↔ sync spectrum, showing when to use can-play (state), presence (awareness), and events */}
 
 We also want to think about individual vs collective contributions, and the level of effort or intentionality required for the interaction.
 
