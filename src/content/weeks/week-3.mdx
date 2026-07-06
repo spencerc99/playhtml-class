@@ -599,7 +599,7 @@ The guestbook itself is just a growing list of these. It starts empty (`entries:
             [...data.entries].reverse(),
             (entry) => html`
               <li>
-                ${entry.name}: ${entry.message}
+                <b>${entry.name}</b>: ${entry.message}
                 <small>${new Date(entry.at).toLocaleTimeString()}</small>
               </li>
             `,

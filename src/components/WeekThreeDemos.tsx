@@ -293,7 +293,7 @@ const guestbookInit: CanPlayInit<GuestbookData> = {
           [...data.entries].reverse(),
           (entry: GuestbookEntry) => html`
             <li>
-              ${entry.name}: ${entry.message}
+              <b>${entry.name}</b>: ${entry.message}
               <small>${new Date(entry.at).toLocaleTimeString()}</small>
             </li>
           `,
