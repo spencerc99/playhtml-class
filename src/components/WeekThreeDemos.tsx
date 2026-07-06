@@ -85,13 +85,54 @@ function pollStyles(id: string) {
 }
 
 interface CounterData {
-  visits: number;
+  count: number;
 }
 
+function checkInButtonStyles(id: string) {
+  return `
+  #${id} {
+    font-family: var(--font-body);
+    width: min(100%, 18rem);
+  }
+  #${id} button {
+    background: #fff4d6;
+    border: 1px solid rgba(247, 220, 156, 0.8);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 0.85rem;
+  }
+  #${id} p {
+    margin: 0;
+    font-size: 0.95rem;
+  }
+  #${id} .count {
+    font-size: 1.5rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+`;
+}
+
+const visitCounterSkeleton = `
+  <button type="button">I'm here!</button>
+  <p><span class="count">0</span> people have checked in</p>
+`;
+
 const visitCounterInit: CanPlayInit<CounterData> = {
-  defaultData: { visits: 0 },
+  defaultData: { count: 0 },
   updateElement: ({ element, data }) => {
-    element.textContent = String(data.visits);
+    const countEl = element.querySelector<HTMLElement>('.count');
+    if (countEl) countEl.textContent = String(data.count);
+  },
+  onClick: (event, { setData }) => {
+    const target = event.target as HTMLElement;
+    if (!target.closest('button')) return;
+    setData((data) => {
+      data.count += 1;
+    });
   },
 };
 
@@ -99,12 +140,9 @@ export function VisitCounterDemo() {
   return (
     <CanPlayDemo
       elementId="week3-visit-counter"
-      skeleton="0"
-      styles={`#week3-visit-counter { font-size: 2.5rem; font-weight: 600; font-variant-numeric: tabular-nums; }`}
+      skeleton={visitCounterSkeleton}
+      styles={checkInButtonStyles('week3-visit-counter')}
       init={visitCounterInit}
-      onReady={(handle) =>
-        handle.setData({ visits: handle.getData().visits + 1 })
-      }
     />
   );
 }
@@ -380,19 +418,34 @@ const visitLogInit: CanPlayInit<VisitLogData> = {
       }),
     );
   },
+  onClick: (event, { setData }) => {
+    const target = event.target as HTMLElement;
+    if (!target.closest('button')) return;
+    const { name, color } = getProfile();
+    setData((data) => {
+      data.count += 1;
+      data.recent.push({
+        id: crypto.randomUUID(),
+        name,
+        color,
+        at: Date.now(),
+      });
+      const overflow = data.recent.length - RECENT_LIMIT;
+      if (overflow > 0) data.recent.splice(0, overflow);
+    });
+  },
 };
 
 const visitLogSkeleton = `
-  <div class="big"><span class="count">0</span> <span class="big-label">visits</span></div>
+  <button type="button">I'm here!</button>
+  <p><span class="count">0</span> people have checked in</p>
   <p class="recent-label">recent visitors</p>
   <ul class="recent"></ul>
 `;
 
 function visitLogStyles(id: string) {
   return `
-  #${id} { font-family: var(--font-body); width: min(100%, 18rem); }
-  #${id} .big { font-size: 2.2rem; font-weight: 600; font-variant-numeric: tabular-nums; }
-  #${id} .big-label { font-size: 0.9rem; font-weight: 400; opacity: 0.55; }
+  ${checkInButtonStyles(id)}
   #${id} .recent-label { margin: 0.5rem 0 0.3rem; font-size: 0.8rem; opacity: 0.6; }
   #${id} .recent { display: flex; flex-direction: column; gap: 0.3rem; list-style: none; margin: 0; padding: 0; }
   #${id} .recent li { align-items: center; background: #f7f4ee; border-radius: 0.4rem; display: flex; gap: 0.5rem; padding: 0.35rem 0.5rem; font-size: 0.9rem; }
@@ -409,20 +462,6 @@ export function VisitCounterRecentDemo() {
       skeleton={visitLogSkeleton}
       styles={visitLogStyles('week3-visit-log')}
       init={visitLogInit}
-      onReady={(handle) => {
-        const { name, color } = getProfile();
-        handle.setData((draft) => {
-          draft.count += 1;
-          draft.recent.push({
-            id: crypto.randomUUID(),
-            name,
-            color,
-            at: Date.now(),
-          });
-          const overflow = draft.recent.length - RECENT_LIMIT;
-          if (overflow > 0) draft.recent.splice(0, overflow);
-        });
-      }}
     />
   );
 }
@@ -433,7 +472,12 @@ interface EmojiPresence {
 
 const EMOJI_ORBIT_RADIUS = 90;
 
-function layoutEmojiOrbit(orbit: HTMLElement, emojis: string[]) {
+interface EmojiOrbitEntry {
+  emoji: string;
+  isMe: boolean;
+}
+
+function layoutEmojiOrbit(orbit: HTMLElement, emojis: EmojiOrbitEntry[]) {
   const count = emojis.length;
   if (count === 0) {
     orbit.replaceChildren();
@@ -441,9 +485,10 @@ function layoutEmojiOrbit(orbit: HTMLElement, emojis: string[]) {
   }
 
   orbit.replaceChildren(
-    ...emojis.map((emoji, index) => {
+    ...emojis.map(({ emoji, isMe }, index) => {
       const span = document.createElement('span');
-      span.className = 'emoji';
+      console.log(isMe);
+      span.className = isMe ? 'emoji mine' : 'emoji';
       span.textContent = emoji;
       const angle = (index / count) * 2 * Math.PI - Math.PI / 2;
       span.style.left = `calc(50% + ${Math.cos(angle) * EMOJI_ORBIT_RADIUS}px)`;
@@ -471,10 +516,13 @@ const emojiCircleInit: CanPlayInit<Record<string, never>, EmojiPresence> = {
     input.addEventListener('input', handleInput);
     return () => input.removeEventListener('input', handleInput);
   },
-  updateElementAwareness: ({ element, awareness }) => {
-    const emojis = (awareness.filter(Boolean) as EmojiPresence[])
-      .map((entry) => entry.emoji)
-      .filter(Boolean);
+  updateElementAwareness: ({ element, awareness, myAwareness }) => {
+    const emojis = awareness
+      .filter((entry): entry is EmojiPresence => Boolean(entry?.emoji))
+      .map((entry) => ({
+        emoji: entry.emoji,
+        isMe: entry === myAwareness,
+      }));
     const orbit = element.querySelector<HTMLElement>('.orbit');
     if (!orbit) return;
     layoutEmojiOrbit(orbit, emojis);
@@ -534,6 +582,9 @@ function emojiCircleStyles(id: string) {
     line-height: 1;
     position: absolute;
     transform: translate(-50%, -50%);
+  }
+  #${id} .orbit .emoji.mine {
+    background: radial-gradient(circle, red 0%, red 50%, transparent 100%);
   }
 `;
 }

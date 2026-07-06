@@ -91,31 +91,89 @@ Here's some examples:
 
 ## Live Code
 
-To make this concrete, let's take one interaction and walk it along the spectrum: start with something that persists, make it live, then fire a one-off moment.
+To make this concrete, let's take one interaction and walk it along the spectrum: start with something that persists, make it live, then trigger an event.
+
+We're going to be diving into JavaScript to build these interactions, which might feel like a lot. We recommend refreshing up on some of the JavaScript tutorials we've shown in the past!
 
 ### State: a visit counter (async)
 
-To start, we must think about our data. What is the information we must store for the interaction we want to enable? The simplest version is a visit counter: one number that starts at `0` and goes up as people arrive.
+To start, we must think about our data. What is the information we must store for the interaction we want to enable?
+
+```javascript
+{
+  // Required. Starting shared state. Must be an object (or a function that
+  // returns one) — not a bare number or string. Synced across the room.
+  defaultData: { count: 0 },
+  // defaultData: (element) => ({ color: element.dataset.color }),
+
+  /*
+    ctx: {
+      data,                // shared synced state (read-only snapshot)
+      localData,           // per-user, per-tab; not synced
+      awareness,           // array of every user's awareness value for this element
+      awarenessByStableId, // Map<stableId, awareness value>
+      element,             // the HTMLElement
+
+      setData,             // set the shared state
+      setLocalData,        // set the local state
+      setMyAwareness,      // set your ephemeral awareness value
+    }
+  */
+
+  // --- update path: provide updateElement OR view, not both ---
+  updateElement(ctx) {
+    // ctx — see Callback context above. Write the DOM from ctx.data.
+    // Do not call ctx.setData here — it loops.
+  },
+  view(ctx) {
+    // ctx — see Callback context above. Return a lit-html template.
+    // Mutually exclusive with updateElement, onClick, onDrag, onDragStart.
+  },
+   // Per-user, per-tab state. Never synced. Drag anchors, drafts, UI flags.
+  defaultLocalData: undefined,
+
+  // Your starting awareness value for this element. Ephemeral — clears on disconnect.
+  myDefaultAwareness: undefined,
+  updateElementAwareness(ctx) {
+    // ctx — Callback context + myAwareness
+  },
+
+  // --- event handlers (ignored when using view) ---
+  onClick(e, ctx) {},       // e: MouseEvent; ctx — Callback context
+  onDragStart(e, ctx) {},   // e: MouseEvent | TouchEvent, once at drag start
+  onDrag(e, ctx) {},         // e: MouseEvent | TouchEvent, each move until release
+
+  onMount(ctx) {
+    // for any additional event listeners or other logic for setting data
+    return () => {}; // cleanup on unmount
+  },
+}
+```
+
+The simplest version is a visit counter: one number that starts at `0` and goes up each time someone clicks to say they're here.
 
 <CodeDemo demo={<VisitCounterDemo />}>
 
 ```html
-<div can-play id="visit-counter">0</div>
+<div can-play id="visit-counter">
+  <button type="button">I'm here!</button>
+  <p><span class="count">0</span> people have checked in</p>
+</div>
 <script>
   const visitCounter = document.getElementById('visit-counter');
 
   // 1. the data this element stores, and what it starts as
-  visitCounter.defaultData = { visits: 0 };
+  visitCounter.defaultData = { count: 0 };
 
   // 2. how that data turns into what people see
   visitCounter.updateElement = ({ element, data }) => {
-    element.textContent = data.visits;
+    element.querySelector('.count').textContent = data.count;
   };
 
-  // 3. bump the count by one every time the page loads
-  visitCounter.onMount = ({ setData }) => {
+  // 3. bump the count when someone clicks the button
+  visitCounter.onClick = (event, { setData }) => {
     setData((data) => {
-      data.visits += 1;
+      data.count += 1;
     });
   };
 </script>
@@ -127,13 +185,14 @@ To start, we must think about our data. What is the information we must store fo
 
 ### Richer state: who just visited
 
-Visitor count tells you _how many_ people came, but nothing about _who_. So let's try to add some more intentional info, like showing the names of the people who came recently.
+Visitor count tells you _how many_ people came, but nothing about _who_. So let's try to add some more intentional info, like showing the names of the people who checked in recently.
 
 <CodeDemo demo={<VisitCounterRecentDemo />}>
 
 ```html
 <div can-play id="visit-log">
-  <div class="big"><span class="count">0</span> visits</div>
+  <button type="button">I'm here!</button>
+  <p><span class="count">0</span> people have checked in</p>
   <p>recent visitors</p>
   <ul class="recent"></ul>
 </div>
@@ -157,7 +216,7 @@ Visitor count tells you _how many_ people came, but nothing about _who_. So let'
     );
   };
 
-  visitLog.onMount = ({ setData }) => {
+  visitLog.onClick = (event, { setData }) => {
     setData((data) => {
       data.count += 1;
       data.recent.push({
@@ -165,7 +224,7 @@ Visitor count tells you _how many_ people came, but nothing about _who_. So let'
         color: window.cursors?.color,
         at: Date.now(),
       });
-      // keep defaultData small: only remember the last 5
+      // keep data small: only remember the last 5
       if (data.recent.length > 5) data.recent.splice(0, data.recent.length - 5);
     });
   };
@@ -204,20 +263,6 @@ You can also use this to easily show everyone who is here right now.
 <CodeDemo demo={<AllColorsDemo />}>
 
 ```html
-<style>
-  #all-colors {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem;
-  }
-  #all-colors .dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    border: 1px solid white;
-    flex-shrink: 0;
-  }
-</style>
 <div id="all-colors"></div>
 <script>
   const allColorsEl = document.getElementById('all-colors');
@@ -249,39 +294,7 @@ Or push your own awareness from a `can-play` element — pick one emoji and watc
 
 ```html
 <style>
-  #emoji-circle {
-    position: relative;
-    width: 15rem;
-    height: 15rem;
-  }
-  #emoji-circle::before {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 11.25rem;
-    height: 11.25rem;
-    transform: translate(-50%, -50%);
-    border: 1px dashed rgba(0, 0, 0, 0.12);
-    border-radius: 50%;
-    pointer-events: none;
-  }
-  #emoji-circle .hub {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 1;
-  }
-  #emoji-circle .emoji-input {
-    width: 2.5rem;
-    height: 2.5rem;
-    padding: 0;
-    border: 1px solid rgba(0, 0, 0, 0.15);
-    border-radius: 0.5rem;
-    font-size: 1.25rem;
-    text-align: center;
-  }
+  /* other styles for the emoji circle... */
   #emoji-circle .orbit {
     position: absolute;
     inset: 0;
@@ -292,6 +305,9 @@ Or push your own awareness from a `can-play` element — pick one emoji and watc
     font-size: 1.35rem;
     line-height: 1;
     transform: translate(-50%, -50%);
+  }
+  .emoji.mine {
+    background: radial-gradient(circle, red 0%, red 50%, transparent 100%);
   }
 </style>
 <div can-play id="emoji-circle">
@@ -316,20 +332,23 @@ Or push your own awareness from a `can-play` element — pick one emoji and watc
     });
   };
 
-  circle.updateElementAwareness = ({ element, awareness }) => {
-    const emojis = awareness.map((a) => a?.emoji).filter(Boolean);
+  circle.updateElementAwareness = ({ element, awareness, myAwareness }) => {
+    const emojis = awareness
+      .filter((a) => a?.emoji)
+      .map((a) => ({ emoji: a.emoji, isMe: a === myAwareness }));
     const orbit = element.querySelector('.orbit');
     const count = emojis.length;
     const radius = 90;
 
     orbit.replaceChildren(
-      ...emojis.map((emoji, i) => {
+      ...emojis.map(({ emoji, isMe }, i) => {
         const span = document.createElement('span');
         span.className = 'emoji';
         span.textContent = emoji;
         const angle = (i / count) * 2 * Math.PI - Math.PI / 2;
         span.style.left = `calc(50% + ${Math.cos(angle) * radius}px)`;
         span.style.top = `calc(50% + ${Math.sin(angle) * radius}px)`;
+        if (isMe) span.classList.add('mine');
         return span;
       }),
     );
@@ -349,21 +368,6 @@ Sometimes you don't want lasting state _or_ a standing presence list — you jus
 
 ```html
 <style>
-  #hover-zone {
-    align-items: center;
-    background: #f3efe9;
-    border: 1px dashed rgba(0, 0, 0, 0.2);
-    border-radius: 0.75rem;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    font-family: var(--font-body);
-    gap: 0.25rem;
-    justify-content: center;
-    min-height: 7rem;
-    text-align: center;
-    width: min(100%, 18rem);
-  }
   @keyframes zone-spin {
     to {
       transform: rotate(360deg) scale(3);
@@ -500,8 +504,6 @@ Instead of _patching_ the DOM when the data changes via `updateElement`, you wri
 <script type="module">
   import { html, playhtml, repeat, styleMap } from 'https://unpkg.com/playhtml';
 
-  playhtml.init();
-
   playhtml.register('room-poll', {
     defaultData: {
       options: [
@@ -551,7 +553,7 @@ Earlier, a `can-mirror` guestbook just copied `<li>` elements between screens. T
 
 This uses [lit-html](https://lit.dev/), which is a popular library for building custom components using HTML that improves on these things we're talking about. It uses some new syntax like `html` and `repeat` to interpolate (insert dyanmic data) into the HTML.
 
-The first thing to figure out is the _shape_ of our data. Unlike the counter's single number, each guestbook entry is an object: the message someone left, when they left it, and an `id` so we can track it as the list changes.
+The first thing to figure out is the _shape_ of our data. Unlike the counter's single number, each guestbook entry is an object: who left it, the message, and when.
 
 ```js
 { name: 'Spencer', message: 'hi from the bench :)', at: Date.now() }
@@ -566,15 +568,14 @@ The guestbook itself is just a growing list of these. It starts empty (`entries:
 <script type="module">
   import { html, playhtml, repeat } from 'https://unpkg.com/playhtml';
 
-  playhtml.init();
-
   playhtml.register('guestbook', {
-    // a growing list of entries, each: { id, message, at }
+    // a growing list of entries, each: { name, message, at }
     defaultData: { entries: [] },
     view: ({ data, setData }) => {
       const sign = (event) => {
         event.preventDefault();
-        const input = event.target.querySelector('input');
+        const form = event.target;
+        const input = form.querySelector('input');
         const message = input.value.trim();
         if (!message) return;
         setData((draft) => {
