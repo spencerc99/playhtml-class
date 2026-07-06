@@ -5,8 +5,9 @@
 // templates are built with the SAME lit-html instance playhtml renders with —
 // otherwise the templates aren't recognized and the element renders empty.
 import { html, playhtml, repeat, styleMap } from 'playhtml';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { CanPlayDemo, type CanPlayInit } from './CanPlayDemo';
+import { LiveHtmlDemo } from './LiveHtmlDemo';
 
 // Read the current visitor's cursor profile (set via the profile pill). Falls
 // back gracefully when nobody has set a name/color yet. Read lazily at call
@@ -214,7 +215,7 @@ export function PollViewDemo() {
 }
 
 interface GuestbookEntry {
-  id: string;
+  name: string;
   message: string;
   at: number;
 }
@@ -235,7 +236,7 @@ const guestbookInit: CanPlayInit<GuestbookData> = {
       if (!message) return;
       setData((draft) => {
         draft.entries.push({
-          id: crypto.randomUUID(),
+          name: getProfile().name,
           message,
           at: Date.now(),
         });
@@ -252,10 +253,9 @@ const guestbookInit: CanPlayInit<GuestbookData> = {
       <ul>
         ${repeat(
           [...data.entries].reverse(),
-          (entry: GuestbookEntry) => entry.id,
           (entry: GuestbookEntry) => html`
             <li>
-              <span>${entry.message}</span>
+              ${entry.name}: ${entry.message}
               <small>${new Date(entry.at).toLocaleTimeString()}</small>
             </li>
           `,
@@ -427,74 +427,205 @@ export function VisitCounterRecentDemo() {
   );
 }
 
-interface PresenceInfo {
-  name: string;
-  color: string;
+interface EmojiPresence {
+  emoji: string;
 }
 
-// Presence lives in awareness, not defaultData: it should disappear when a
-// visitor leaves, and never survive a refresh.
-const presenceCountInit: CanPlayInit<Record<string, never>, PresenceInfo> = {
+const EMOJI_ORBIT_RADIUS = 90;
+
+function layoutEmojiOrbit(orbit: HTMLElement, emojis: string[]) {
+  const count = emojis.length;
+  if (count === 0) {
+    orbit.replaceChildren();
+    return;
+  }
+
+  orbit.replaceChildren(
+    ...emojis.map((emoji, index) => {
+      const span = document.createElement('span');
+      span.className = 'emoji';
+      span.textContent = emoji;
+      const angle = (index / count) * 2 * Math.PI - Math.PI / 2;
+      span.style.left = `calc(50% + ${Math.cos(angle) * EMOJI_ORBIT_RADIUS}px)`;
+      span.style.top = `calc(50% + ${Math.sin(angle) * EMOJI_ORBIT_RADIUS}px)`;
+      return span;
+    }),
+  );
+}
+
+// Each visitor publishes one emoji via awareness — ephemeral, not saved.
+const emojiCircleInit: CanPlayInit<Record<string, never>, EmojiPresence> = {
   defaultData: {},
-  myDefaultAwareness: () => getProfile(),
-  // playhtml requires updateElement (or view) even when the UI is entirely
-  // presence-driven — there's no saved data here, so it's a no-op and the
-  // awareness handler below does all the rendering.
+  myDefaultAwareness: { emoji: '' },
   updateElement: () => {},
-  onMount: ({ setMyAwareness }) => {
-    // Publish the freshest profile once we're mounted (the profile pill may
-    // have populated after defaultAwareness was first read).
-    setMyAwareness(getProfile());
+  onMount: ({ getElement, setMyAwareness }) => {
+    const input = getElement().querySelector<HTMLInputElement>('.emoji-input');
+    if (!input) return;
+
+    const handleInput = () => {
+      const emoji = [...input.value].slice(0, 1).join('');
+      if (input.value !== emoji) input.value = emoji;
+      setMyAwareness({ emoji });
+    };
+
+    input.addEventListener('input', handleInput);
+    return () => input.removeEventListener('input', handleInput);
   },
   updateElementAwareness: ({ element, awareness }) => {
-    const people = awareness.filter(Boolean) as PresenceInfo[];
-    const countEl = element.querySelector<HTMLElement>('.count');
-    if (countEl) countEl.textContent = String(people.length);
-
-    const list = element.querySelector<HTMLUListElement>('.people');
-    if (!list) return;
-    list.replaceChildren(
-      ...people.map((person) => {
-        const chip = document.createElement('li');
-        chip.textContent = person.name;
-        chip.style.color = person.color;
-        return chip;
-      }),
-    );
+    const emojis = (awareness.filter(Boolean) as EmojiPresence[])
+      .map((entry) => entry.emoji)
+      .filter(Boolean);
+    const orbit = element.querySelector<HTMLElement>('.orbit');
+    if (!orbit) return;
+    layoutEmojiOrbit(orbit, emojis);
   },
 };
 
-const presenceSkeleton = `
-  <p><span class="count">0</span> here right now</p>
-  <ul class="people"></ul>
+const emojiCircleSkeleton = `
+  <div class="hub">
+    <input class="emoji-input" type="text" maxlength="4" placeholder="?" aria-label="pick an emoji" />
+  </div>
+  <div class="orbit"></div>
 `;
 
-function presenceStyles(id: string) {
+function emojiCircleStyles(id: string) {
   return `
-  #${id} { font-family: var(--font-body); width: min(100%, 18rem); }
-  #${id} > p { margin: 0 0 0.4rem; font-size: 0.95rem; }
-  #${id} .count { font-weight: 600; font-variant-numeric: tabular-nums; }
-  #${id} .people { display: flex; flex-wrap: wrap; gap: 0.35rem; list-style: none; margin: 0; padding: 0; }
-  #${id} .people li { background: #f7f4ee; border-radius: 999px; font-size: 0.82rem; font-weight: 600; padding: 0.2rem 0.6rem; }
+  #${id} {
+    font-family: var(--font-body);
+    height: 15rem;
+    position: relative;
+    width: 15rem;
+  }
+  #${id}::before {
+    border: 1px dashed rgba(0, 0, 0, 0.12);
+    border-radius: 50%;
+    content: '';
+    height: 11.25rem;
+    left: 50%;
+    pointer-events: none;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 11.25rem;
+  }
+  #${id} .hub {
+    left: 50%;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+  }
+  #${id} .emoji-input {
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 0.5rem;
+    font-size: 1.25rem;
+    height: 2.5rem;
+    padding: 0;
+    text-align: center;
+    width: 2.5rem;
+  }
+  #${id} .orbit {
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+  }
+  #${id} .orbit .emoji {
+    font-size: 1.35rem;
+    line-height: 1;
+    position: absolute;
+    transform: translate(-50%, -50%);
+  }
 `;
 }
 
-export function PresenceCountDemo() {
+export function EmojiCircleDemo() {
   return (
-    <CanPlayDemo<Record<string, never>, PresenceInfo>
-      elementId="week3-presence-count"
-      skeleton={presenceSkeleton}
-      styles={presenceStyles('week3-presence-count')}
-      init={presenceCountInit}
+    <CanPlayDemo<Record<string, never>, EmojiPresence>
+      elementId="week3-emoji-circle"
+      skeleton={emojiCircleSkeleton}
+      styles={emojiCircleStyles('week3-emoji-circle')}
+      init={emojiCircleInit}
     />
   );
+}
+
+const ALL_COLORS_MARKUP = `
+<style>
+  #all-colors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+  #all-colors .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 1px solid white;
+    flex-shrink: 0;
+  }
+</style>
+<div id="all-colors"></div>
+`;
+
+export function AllColorsDemo() {
+  const onMount = useCallback((container: HTMLDivElement) => {
+    const allColorsEl = container.querySelector<HTMLElement>('#all-colors');
+    if (!allColorsEl) return;
+
+    const target = allColorsEl;
+
+    // Same logic as the HTML snippet in week-3.mdx (scripts don't run via
+    // innerHTML, so LiveHtmlDemo wires it here instead).
+    function showColors(colors: string[]) {
+      target.replaceChildren(
+        ...colors.map((color) => {
+          const dot = document.createElement('span');
+          dot.className = 'dot';
+          dot.style.backgroundColor = color;
+          return dot;
+        }),
+      );
+    }
+
+    let cancelled = false;
+
+    void playhtml.ready.then(() => {
+      if (cancelled) return;
+      const cursors = (
+        window as unknown as {
+          cursors?: {
+            allColors: string[];
+            on: (event: 'allColors', cb: (colors: string[]) => void) => void;
+            off: (event: 'allColors', cb: (colors: string[]) => void) => void;
+          };
+        }
+      ).cursors;
+      if (!cursors) return;
+
+      showColors(cursors.allColors);
+      cursors.on('allColors', showColors);
+    });
+
+    return () => {
+      cancelled = true;
+      (
+        window as unknown as {
+          cursors?: {
+            off: (event: 'allColors', cb: (colors: string[]) => void) => void;
+          };
+        }
+      ).cursors?.off('allColors', showColors);
+    };
+  }, []);
+
+  return <LiveHtmlDemo html={ALL_COLORS_MARKUP} onMount={onMount} />;
 }
 
 interface HoverInfo {
   hovering: boolean;
 }
 
-const HOVER_GOAL = 5;
+const HOVER_GOAL = 3;
 const ZONE_CELEBRATE = 'zone-celebrate';
 
 // Track the previous hovering count locally so we only fire as the count
@@ -538,8 +669,9 @@ const hoverSkeleton = `
 
 function hoverStyles(id: string) {
   return `
-  #${id} { align-items: center; background: #f3efe9; border: 1px dashed rgba(0,0,0,0.2); border-radius: 0.75rem; cursor: pointer; display: flex; flex-direction: column; font-family: var(--font-body); gap: 0.25rem; justify-content: center; min-height: 7rem; text-align: center; transition: background 0.2s ease, transform 0.2s ease; width: min(100%, 18rem); }
-  #${id}.celebrate { background: #fff0c2; transform: scale(1.03); }
+  #${id} { align-items: center; background: #f3efe9; border: 1px dashed rgba(0,0,0,0.2); border-radius: 0.75rem; cursor: pointer; display: flex; flex-direction: column; font-family: var(--font-body); gap: 0.25rem; justify-content: center; min-height: 7rem; text-align: center; width: min(100%, 18rem); }
+  @keyframes zone-spin { to { transform: rotate(1080deg); } }
+  #${id}.celebrate { animation: zone-spin 0.9s ease-in-out; }
   #${id} .zone-label { margin: 0; font-size: 0.95rem; }
   #${id} .zone-count { margin: 0; font-size: 0.8rem; opacity: 0.6; }
   #${id} .count { font-weight: 600; font-variant-numeric: tabular-nums; }
@@ -552,13 +684,14 @@ export function HoverZoneDemo() {
     // has no teardown hook). Dispatch happens inside updateElementAwareness.
     const listenerId = playhtml.registerPlayEventListener(ZONE_CELEBRATE, {
       onEvent: () => {
-        // TODO(you): drop your own little celebration animation in here. The
-        // placeholder below just pulses the zone for a second so the wiring is
-        // visible — replace it with confetti, a sound, whatever you like.
         const zone = document.getElementById('week3-hover-zone');
         if (!zone) return;
         zone.classList.add('celebrate');
-        window.setTimeout(() => zone.classList.remove('celebrate'), 1000);
+        zone.addEventListener(
+          'animationend',
+          () => zone.classList.remove('celebrate'),
+          { once: true },
+        );
       },
     });
     return () => playhtml.removePlayEventListener(ZONE_CELEBRATE, listenerId);
