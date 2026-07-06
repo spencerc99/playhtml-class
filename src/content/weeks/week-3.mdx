@@ -71,8 +71,16 @@ These two are very different interactions to design for and they map to two diff
 
 We also want to think about individual vs collective contributions, and the level of effort or intentionality required for the interaction.
 
-- Individual vs. Collective
-- Ambient vs. Active
+![](/week-3/social-presence-map.png)
+
+I think any good social space has a mix of these, but you could also choose to focus on one or the other and see how that feels. The low-effort ones are good for socializing norms and getting you to feel safe and comfortable with the space to participate. The higher-effort ones allow for more intimate, meaningful encounters.
+
+Here's some examples:
+
+- [One Million Checkboxes](https://en.wikipedia.org/wiki/One_Million_Checkboxes#Development)
+- [Special.fish](https://special.fish/)
+- [Sent You a Song](https://www.sentyouasong.com/)
+- [Melonland](https://melonland.net/)
 
 ## SHORT BREAK!
 
@@ -239,10 +247,10 @@ Sometimes you don't want lasting state _or_ a standing presence list — you jus
   zone.updateElementAwareness = ({ element, awareness }) => {
     const hovering = awareness.filter((a) => a?.hovering).length;
     element.querySelector('.count').textContent = hovering;
-    if (hovering >= 5 && wasBelow) {
+    if (hovering >= 2 && wasBelow) {
       playhtml.dispatchPlayEvent({ type: 'zone-celebrate' });
     }
-    wasBelow = hovering < 5;
+    wasBelow = hovering < 2;
   };
 
   // an event is a one-off broadcast: everyone present runs this once
@@ -450,43 +458,13 @@ The guestbook itself is just a growing list of these. It starts empty (`entries:
 
 Because the entries are persisted, the guestbook fills up over time instead of resetting on refresh.
 
+{/* TODO: Show poll / guestbook example with something different for the current user */}
+
 ### Which one should I use?
 
 - **`can-mirror`** — the shared thing is literally the DOM (a textarea, a list you append to), with no logic in between.
 - **`can-play` with `updateElement`** — you're tracking one or two values and updating them by hand is trivial, like the visit counter.
 - **`can-play` with `view`** — the UI is a list, or anything **computed** or **conditional** on shared state. Describe the result once and let it re-render.
-
-### Start with seeded notes
-
-An empty guestbook can feel intimidating — nobody wants to be first. You can seed it with a few prompts by making them the starting value in `defaultData`:
-
-```html
-<div can-play id="guestbook"></div>
-<script type="module">
-  import { playhtml } from 'https://unpkg.com/playhtml';
-
-  playhtml.init();
-
-  const starterNotes = [
-    'What makes this place feel welcoming?',
-    'What sounds should live here?',
-    'What should visitors be able to leave behind?',
-  ];
-
-  playhtml.register('guestbook', {
-    defaultData: {
-      entries: starterNotes.map((message) => ({
-        id: crypto.randomUUID(),
-        message,
-        at: Date.now(),
-      })),
-    },
-    // ...same view as above
-  });
-</script>
-```
-
-{/* TODO: Show poll / guestbook example with something different for the current user */}
 
 ## Assignment / Readings
 
@@ -495,7 +473,7 @@ An empty guestbook can feel intimidating — nobody wants to be first. You can s
   - Notes
   - Graffiti
   - Another trace-based interaction
-- Read: `TKTKTKTKT`
+- Read: [The Internet has no Benches](https://news.spencer.place/p/the-internet-has-no-benches)
 
 ## Submit Your Assignment
 
