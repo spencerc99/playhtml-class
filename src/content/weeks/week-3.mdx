@@ -1,14 +1,15 @@
 export const meta = {
-  title: 'Async — Guestbooks, Notes',
+  title: 'Thinking about Data and Interactions',
 };
 
 import { CodeDemo } from '../../components/CodeDemo';
 import {
+  AllColorsDemo,
+  EmojiCircleDemo,
   GuestbookViewDemo,
   HoverZoneDemo,
   PollImperativeDemo,
   PollViewDemo,
-  PresenceCountDemo,
   VisitCounterDemo,
   VisitCounterRecentDemo,
 } from '../../components/WeekThreeDemos';
@@ -20,8 +21,8 @@ import {
   - Discuss readings
 - Demo / lecture:
   - Sync vs. Async (spectrum)
-  - Presence (anything that is live and not persisted)
-  - Persistence and Accumulation via `can-play`
+  - Basics of Presence (anything that is live and not persisted)
+  - Basics of Persistence and Accumulation via `can-play`
 - Coding together!
 
 ## Sharing (25 mins)
@@ -73,8 +74,6 @@ One spectrum I find useful to think about is across a spectrum of **asynchronous
 
 These two are very different interactions to design for and they map to two different data models in playhtml. Asynchronous things must be saved somewhere, so you have to think about what _state_ is being saved. That's how you use `defaultData` and the like in `can-play`. Synchronous things aren't meant to be persistent, so there's a separate presence (awareness) API that's used for live things. There's also a way to use _events_, which are live things that aren't data-driven.
 
-{/* TODO: diagram of the async ↔ sync spectrum, showing when to use can-play (state), presence (awareness), and events */}
-
 We also want to think about individual vs collective contributions, and the level of effort or intentionality required for the interaction.
 
 ![](/week-3/social-presence-map.png)
@@ -92,31 +91,89 @@ Here's some examples:
 
 ## Live Code
 
-To make this concrete, let's take one interaction and walk it along the spectrum: start with something that persists, make it live, then fire a one-off moment.
+To make this concrete, let's take one interaction and walk it along the spectrum: start with something that persists, make it live, then trigger an event.
+
+We're going to be diving into JavaScript to build these interactions, which might feel like a lot. We recommend refreshing up on some of the JavaScript tutorials we've shown in the past!
 
 ### State: a visit counter (async)
 
-The async end is **state**: data that playhtml saves and syncs for you. `can-play` is how you define it — you give an element some `defaultData`, then describe how that data turns into what people see. The simplest version is a visit counter: one number that starts at `0` and goes up as people arrive.
+To start, we must think about our data. What is the information we must store for the interaction we want to enable?
+
+```javascript
+{
+  // Required. Starting shared state. Must be an object (or a function that
+  // returns one) — not a bare number or string. Synced across the room.
+  defaultData: { count: 0 },
+  // defaultData: (element) => ({ color: element.dataset.color }),
+
+  /*
+    ctx: {
+      data,                // shared synced state (read-only snapshot)
+      localData,           // per-user, per-tab; not synced
+      awareness,           // array of every user's awareness value for this element
+      awarenessByStableId, // Map<stableId, awareness value>
+      element,             // the HTMLElement
+
+      setData,             // set the shared state
+      setLocalData,        // set the local state
+      setMyAwareness,      // set your ephemeral awareness value
+    }
+  */
+
+  // --- update path: provide updateElement OR view, not both ---
+  updateElement(ctx) {
+    // ctx — see Callback context above. Write the DOM from ctx.data.
+    // Do not call ctx.setData here — it loops.
+  },
+  view(ctx) {
+    // ctx — see Callback context above. Return a lit-html template.
+    // Mutually exclusive with updateElement, onClick, onDrag, onDragStart.
+  },
+   // Per-user, per-tab state. Never synced. Drag anchors, drafts, UI flags.
+  defaultLocalData: undefined,
+
+  // Your starting awareness value for this element. Ephemeral — clears on disconnect.
+  myDefaultAwareness: undefined,
+  updateElementAwareness(ctx) {
+    // ctx — Callback context + myAwareness
+  },
+
+  // --- event handlers (ignored when using view) ---
+  onClick(e, ctx) {},       // e: MouseEvent; ctx — Callback context
+  onDragStart(e, ctx) {},   // e: MouseEvent | TouchEvent, once at drag start
+  onDrag(e, ctx) {},         // e: MouseEvent | TouchEvent, each move until release
+
+  onMount(ctx) {
+    // for any additional event listeners or other logic for setting data
+    return () => {}; // cleanup on unmount
+  },
+}
+```
+
+The simplest version is a visit counter: one number that starts at `0` and goes up each time someone clicks to say they're here.
 
 <CodeDemo demo={<VisitCounterDemo />}>
 
 ```html
-<div can-play id="visit-counter">0</div>
+<div can-play id="visit-counter">
+  <button type="button">I'm here!</button>
+  <p><span class="count">0</span> people have checked in</p>
+</div>
 <script>
   const visitCounter = document.getElementById('visit-counter');
 
   // 1. the data this element stores, and what it starts as
-  visitCounter.defaultData = { visits: 0 };
+  visitCounter.defaultData = { count: 0 };
 
   // 2. how that data turns into what people see
   visitCounter.updateElement = ({ element, data }) => {
-    element.textContent = data.visits;
+    element.querySelector('.count').textContent = data.count;
   };
 
-  // 3. bump the count by one every time the page loads
-  visitCounter.onMount = ({ setData }) => {
+  // 3. bump the count when someone clicks the button
+  visitCounter.onClick = (event, { setData }) => {
     setData((data) => {
-      data.visits += 1;
+      data.count += 1;
     });
   };
 </script>
@@ -124,17 +181,18 @@ The async end is **state**: data that playhtml saves and syncs for you. `can-pla
 
 </CodeDemo>
 
-`updateElement` runs every time the data changes for anyone on the page, so the number stays in sync for everyone. The value is persisted, so it keeps climbing across refreshes and visits — that's the async half of the spectrum.
+`updateElement` runs every time the data changes for anyone on the page, so the number stays in sync for everyone. The value is persisted, so it keeps climbing across refreshes and visits.
 
 ### Richer state: who just visited
 
-A bare count tells you _how many_ people came, but nothing about _who_. Because it's just state, we can store more: alongside the count, keep a short list of recent visitors — each with their name, color, and when they stopped by. Same model, slightly bigger shape.
+Visitor count tells you _how many_ people came, but nothing about _who_. So let's try to add some more intentional info, like showing the names of the people who checked in recently.
 
 <CodeDemo demo={<VisitCounterRecentDemo />}>
 
 ```html
 <div can-play id="visit-log">
-  <div class="big"><span class="count">0</span> visits</div>
+  <button type="button">I'm here!</button>
+  <p><span class="count">0</span> people have checked in</p>
   <p>recent visitors</p>
   <ul class="recent"></ul>
 </div>
@@ -158,7 +216,7 @@ A bare count tells you _how many_ people came, but nothing about _who_. Because 
     );
   };
 
-  visitLog.onMount = ({ setData }) => {
+  visitLog.onClick = (event, { setData }) => {
     setData((data) => {
       data.count += 1;
       data.recent.push({
@@ -166,7 +224,7 @@ A bare count tells you _how many_ people came, but nothing about _who_. Because 
         color: window.cursors?.color,
         at: Date.now(),
       });
-      // keep defaultData small: only remember the last 5
+      // keep data small: only remember the last 5
       if (data.recent.length > 5) data.recent.splice(0, data.recent.length - 5);
     });
   };
@@ -175,41 +233,123 @@ A bare count tells you _how many_ people came, but nothing about _who_. Because 
 
 </CodeDemo>
 
-It still survives a refresh, and now it remembers a little about each person. This is the same async idea, just with a richer shape — exactly the kind of thing we'll lean on for guestbooks and notes below.
+This still persists and also remembers a little about each person.
 
 ### Presence: who's here right now (sync)
 
-Now the sync end. "Who's here _right now_" shouldn't persist — when you leave, you should disappear. That's what the **presence (awareness)** API is for. Instead of `defaultData`, each visitor publishes a `myDefaultAwareness` value, and `updateElementAwareness` hands you the live list of everyone's values. Nothing is saved; refresh and the list rebuilds from whoever is actually connected.
+Now for ephemeral, shared interactions. This is what the **presence (awareness)** API is for. Instead of `defaultData`, each visitor publishes a `myDefaultAwareness` value, and `updateElementAwareness` gives you access to a live list of everyone's values.
 
-<CodeDemo demo={<PresenceCountDemo />}>
+There are three different levels to this:
+
+- Scoped to one element → element myDefaultAwareness
+- Page-wide → playhtml.presence.setMyPresence('status', \{ text: 'typing' \})
+- Person-specific -> window.cursors
+
+Live cursors, which you see on this site, we mentioned last week are a special case of this because it represents the fundamental identity of each person on the website. We've baked in a few parts of their identity which you can access directly from the `playhtml` object for use. For example, you can get and set the name and the color of the cursor from the `window.cursors` object. These are automatically saved to `localStorage` so they persist across refreshes (but aren't synced).
 
 ```html
-<div can-play id="who-is-here">
-  <p><span class="count">0</span> here right now</p>
-  <ul class="people"></ul>
+<script>
+  // this only works if you set cursors: true when you init!
+  // this is how your profile is set!
+  window.cursors.name = 'John Doe';
+  window.cursors.color = 'red';
+
+  console.log(window.cursors.name, window.cursors.color);
+</script>
+```
+
+You can also use this to easily show everyone who is here right now.
+
+<CodeDemo demo={<AllColorsDemo />}>
+
+```html
+<div id="all-colors"></div>
+<script>
+  const allColorsEl = document.getElementById('all-colors');
+
+  function showColors(colors) {
+    allColorsEl.replaceChildren(
+      ...colors.map((color) => {
+        const dot = document.createElement('span');
+        dot.className = 'dot';
+        dot.style.backgroundColor = color;
+        return dot;
+      }),
+    );
+  }
+
+  // window.cursors is ready after playhtml.init — show current colors, then listen
+  playhtml.ready.then(() => {
+    showColors(window.cursors.allColors);
+    window.cursors.on('allColors', showColors);
+  });
+</script>
+```
+
+</CodeDemo>
+
+Or push your own awareness from a `can-play` element — pick one emoji and watch everyone arrange in a circle:
+
+<CodeDemo demo={<EmojiCircleDemo />}>
+
+```html
+<style>
+  /* other styles for the emoji circle... */
+  #emoji-circle .orbit {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  #emoji-circle .orbit .emoji {
+    position: absolute;
+    font-size: 1.35rem;
+    line-height: 1;
+    transform: translate(-50%, -50%);
+  }
+  .emoji.mine {
+    background: radial-gradient(circle, red 0%, red 50%, transparent 100%);
+  }
+</style>
+<div can-play id="emoji-circle">
+  <div class="hub">
+    <input class="emoji-input" type="text" maxlength="4" placeholder="?" />
+  </div>
+  <div class="orbit"></div>
 </div>
 <script>
-  const here = document.getElementById('who-is-here');
+  const circle = document.getElementById('emoji-circle');
 
-  // presence is per-visitor and not saved, so it lives in awareness, not data
-  here.defaultData = {};
-  here.myDefaultAwareness = {
-    name: window.cursors?.name || 'someone',
-    color: window.cursors?.color,
+  circle.defaultData = {};
+  circle.myDefaultAwareness = { emoji: '' };
+  circle.updateElement = () => {};
+
+  circle.onMount = ({ getElement, setMyAwareness }) => {
+    const input = getElement().querySelector('.emoji-input');
+    input.addEventListener('input', () => {
+      const emoji = [...input.value].slice(0, 1).join('');
+      input.value = emoji;
+      setMyAwareness({ emoji });
+    });
   };
 
-  // there's no saved data to render, but can-play still needs an updateElement
-  here.updateElement = () => {};
+  circle.updateElementAwareness = ({ element, awareness, myAwareness }) => {
+    const emojis = awareness
+      .filter((a) => a?.emoji)
+      .map((a) => ({ emoji: a.emoji, isMe: a === myAwareness }));
+    const orbit = element.querySelector('.orbit');
+    const count = emojis.length;
+    const radius = 90;
 
-  // awareness is the live array of everyone's values (including yours)
-  here.updateElementAwareness = ({ element, awareness }) => {
-    element.querySelector('.count').textContent = awareness.length;
-    element.querySelector('.people').replaceChildren(
-      ...awareness.map((person) => {
-        const chip = document.createElement('li');
-        chip.textContent = person.name;
-        chip.style.color = person.color;
-        return chip;
+    orbit.replaceChildren(
+      ...emojis.map(({ emoji, isMe }, i) => {
+        const span = document.createElement('span');
+        span.className = 'emoji';
+        span.textContent = emoji;
+        const angle = (i / count) * 2 * Math.PI - Math.PI / 2;
+        span.style.left = `calc(50% + ${Math.cos(angle) * radius}px)`;
+        span.style.top = `calc(50% + ${Math.sin(angle) * radius}px)`;
+        if (isMe) span.classList.add('mine');
+        return span;
       }),
     );
   };
@@ -218,18 +358,28 @@ Now the sync end. "Who's here _right now_" shouldn't persist — when you leave,
 
 </CodeDemo>
 
-Open this page in a second tab to watch the count climb — and close it to watch yourself disappear. That's the sync half: live, but with nothing left behind.
+Open a second tab, pick a different emoji, and watch the circle fill in.
 
 ### Events: a one-off moment
 
-Sometimes you don't want lasting state _or_ a standing presence list — you just want to mark a moment, once, for whoever's around. That's an **event**. Here we combine the pieces: each visitor's awareness tracks whether they're hovering a zone, and the first time five people hover at once, we `dispatchPlayEvent` so everyone present sees a little celebration. The event leaves nothing behind; it just happens.
+Sometimes you don't want lasting state _or_ a standing presence list — you just want to mark a moment, once, for whoever's around. That's an **event**. Here we combine the pieces: each visitor's awareness tracks whether they're hovering a zone, and the first time three people hover at once, we `dispatchPlayEvent` so everyone present sees a little celebration. The event leaves nothing behind; it just happens.
 
 <CodeDemo demo={<HoverZoneDemo />}>
 
 ```html
+<style>
+  @keyframes zone-spin {
+    to {
+      transform: rotate(360deg) scale(3);
+    }
+  }
+  #hover-zone.celebrate {
+    animation: zone-spin 0.9s ease-in-out;
+  }
+</style>
 <div can-play id="hover-zone">
   <p>hover here together</p>
-  <p><span class="count">0</span>/5 hovering</p>
+  <p><span class="count">0</span>/3 hovering</p>
 </div>
 <script>
   const zone = document.getElementById('hover-zone');
@@ -253,16 +403,21 @@ Sometimes you don't want lasting state _or_ a standing presence list — you jus
   zone.updateElementAwareness = ({ element, awareness }) => {
     const hovering = awareness.filter((a) => a?.hovering).length;
     element.querySelector('.count').textContent = hovering;
-    if (hovering >= 2 && wasBelow) {
+    if (hovering >= 3 && wasBelow) {
       playhtml.dispatchPlayEvent({ type: 'zone-celebrate' });
     }
-    wasBelow = hovering < 2;
+    wasBelow = hovering < 3;
   };
 
   // an event is a one-off broadcast: everyone present runs this once
   playhtml.registerPlayEventListener('zone-celebrate', {
     onEvent: () => {
-      // TODO: your little celebration animation here
+      zone.classList.add('celebrate');
+      zone.addEventListener(
+        'animationend',
+        () => zone.classList.remove('celebrate'),
+        { once: true },
+      );
     },
   });
 </script>
@@ -270,19 +425,17 @@ Sometimes you don't want lasting state _or_ a standing presence list — you jus
 
 </CodeDemo>
 
-These three — **state**, **presence**, and **events** — are the whole toolkit. Most interactions are just some combination of them. The rest of today digs into the state side, since that's where guestbooks and notes live.
-
-{/* TODO: add a break here before the live-coding portion. */}
+These three properties (state, presence, events) show most of the range of playhtml. Most interactions are just some combination of them.
 
 ## Defining your Data
 
-Last week we focused on `can-mirror`, where the DOM _is_ the shared state. **`can-play`** flips that: you define **data** for each element, and write code that turns that data into what people see. When someone's interaction changes the data, playhtml syncs the data — and everyone's view updates from it.
+Last week we focused on `can-mirror`, where the DOM _is_ the shared state while **`can-play`** requires you to define the data and how the element should change in response to data changes. When someone's interaction changes the data, playhtml syncs the data and everyone's view updates from it automatically. This gives you full flexibility over the library.
 
-That's exactly what the visit counter above did: `defaultData` held the count, `updateElement` turned it into text, and `onMount` bumped it. `can-play` is the most customizable and expressive option, but it asks you to think about the data you need up front — based on how you want someone to interact with it — and then describe how that data turns into what people see. For a single value, hand-writing that one line (`element.textContent = data.visits`) is simple and completely fine. The interesting part is what happens when the data grows.
+### Working with Lists
 
-### When the UI is a list, or computed from the data
+One of the most powerful ways to add interesting data interactions involves working with lists of things that grow with how people interact with them!
 
-Say we want to ask each visitor a question and show everyone's answers. A poll like that is really just the visit counter scaled up: instead of one number, we keep a tally for each option, and we show each option's share of the total as a bar. That small step changes two things:
+Say we want to ask each visitor a question and show everyone's answers. A poll like that is really just the visit counter scaled up: instead of one number, we keep a tally for each option, and we show each option's share of the total as a bar. This small change has two big implications:
 
 - the bar widths are **computed** from the votes (each option's share of the total), and
 - the options are a **list** that we render, one row each.
@@ -338,20 +491,20 @@ Say we want to ask each visitor a question and show everyone's answers. A poll l
 
 (Next week we'll show you how to do something based on _your answer_ vs others)
 
-It works, but the logic starts to get tricky because we have HTML code that defines the start, and separate Javascript code modifying the HTML every time the data changes. It's hard to know what is actually showing up in the DOM from the code itself.
+This works, but it starts to get confusing because what you see in the HTML (0 votes) doesn't reflect what is actually going to show. So we have an experimental slightly more complex API that makes this clearer to express.
 
 ### The reactive `view` API
 
-There is an alternative API for this case to make this clearer to express, but it will be more complex / new for those used to plain HTML. Instead of _patching_ the DOM step by step, you write one function that describes what the markup _should be_ for any given state, and playhtml re-renders it for you whenever the data changes:
+Instead of _patching_ the DOM when the data changes via `updateElement`, you write one function that describes what the HTML _should_ be for any given state.
+
+We use `playhtml.register('<ID>', {options})` to register a new element with the given ID. The options object is a configuration object for the element rather than having to put the options on the element itself. The main change is using `view` instead of `updateElement`.
 
 <CodeDemo demo={<PollViewDemo />}>
 
 ```html
 <div can-play id="room-poll"></div>
 <script type="module">
-  import { html, playhtml, repeat, styleMap } from 'https://unpkg.com/playhtml';
-
-  playhtml.init();
+  import { html, playhtml, repeat } from 'https://unpkg.com/playhtml';
 
   playhtml.register('room-poll', {
     defaultData: {
@@ -375,10 +528,7 @@ There is an alternative API for this case to make this clearer to express, but i
             const percent = total ? (option.votes / total) * 100 : 0;
             return html`
               <button @click=${() => vote(option.id)}>
-                <span
-                  class="bar"
-                  style=${styleMap({ width: percent + '%' })}
-                ></span>
+                <span class="bar" style="width: ${percent}%"></span>
                 <span class="label">${option.label}</span>
                 <span class="count">${option.votes}</span>
               </button>
@@ -400,10 +550,12 @@ This may look strange, but it's mostly the same HTML with some new syntax that a
 
 Earlier, a `can-mirror` guestbook just copied `<li>` elements between screens. That works for a quick prototype, but gets confusing as the logic grows. With `can-play`, we model the entries as data and render them.
 
-The first thing to figure out is the _shape_ of our data. Unlike the counter's single number, each guestbook entry is an object: the message someone left, when they left it, and an `id` so we can track it as the list changes.
+This uses [lit-html](https://lit.dev/), which is a popular library for building custom components using HTML that improves on these things we're talking about. It uses some new syntax like `html` and `repeat` to interpolate (insert dyanmic data) into the HTML.
+
+The first thing to figure out is the _shape_ of our data. Unlike the counter's single number, each guestbook entry is an object: who left it, the message, and when.
 
 ```js
-{ id: 'k3f9z', message: 'hi from the bench :)', at: 1719560400000 }
+{ name: 'Spencer', message: 'hi from the bench :)', at: Date.now() }
 ```
 
 The guestbook itself is just a growing list of these. It starts empty (`entries: []`), so we write the shape down as a comment to remember what goes in it:
@@ -415,20 +567,18 @@ The guestbook itself is just a growing list of these. It starts empty (`entries:
 <script type="module">
   import { html, playhtml, repeat } from 'https://unpkg.com/playhtml';
 
-  playhtml.init();
-
   playhtml.register('guestbook', {
-    // a growing list of entries, each: { id, message, at }
+    // a growing list of entries, each: { name, message, at }
     defaultData: { entries: [] },
     view: ({ data, setData }) => {
       const sign = (event) => {
-        event.preventDefault();
-        const input = event.target.querySelector('input');
+        const form = event.target;
+        const input = form.querySelector('input');
         const message = input.value.trim();
         if (!message) return;
         setData((draft) => {
           draft.entries.push({
-            id: crypto.randomUUID(),
+            name: window.cursors?.name || 'someone',
             message,
             at: Date.now(),
           });
@@ -445,10 +595,9 @@ The guestbook itself is just a growing list of these. It starts empty (`entries:
         <ul>
           ${repeat(
             [...data.entries].reverse(),
-            (entry) => entry.id,
             (entry) => html`
               <li>
-                ${entry.message}
+                <b>${entry.name}</b>: ${entry.message}
                 <small>${new Date(entry.at).toLocaleTimeString()}</small>
               </li>
             `,
@@ -464,21 +613,23 @@ The guestbook itself is just a growing list of these. It starts empty (`entries:
 
 Because the entries are persisted, the guestbook fills up over time instead of resetting on refresh.
 
-{/* TODO: Show poll / guestbook example with something different for the current user */}
+## Recap
 
-### Which one should I use?
+**Which tag should I use?**
 
 - **`can-mirror`** — the shared thing is literally the DOM (a textarea, a list you append to), with no logic in between.
 - **`can-play` with `updateElement`** — you're tracking one or two values and updating them by hand is trivial, like the visit counter.
 - **`can-play` with `view`** — the UI is a list, or anything **computed** or **conditional** on shared state. Describe the result once and let it re-render.
 
+**Which API should I use?**
+
+- **data**: state that should be persisted over time
+- **awareness/presence** - state that should show live but not be persisted
+- **events** - things that should happen just once for everyone but not be persisted or represented as data.
+
 ## Assignment / Readings
 
-- Add at least one asynchronous interaction to your site using `can-play`:
-  - Guestbook
-  - Notes
-  - Graffiti
-  - Another trace-based interaction
+- Try adding one asynchronous interaction and one synchronous interaction to your site using `can-play`:
 - Read: [The Internet has no Benches by our very own Spencer](https://news.spencer.place/p/the-internet-has-no-benches)
 
 ## Submit Your Assignment
