@@ -499,6 +499,8 @@ Instead of _patching_ the DOM when the data changes via `updateElement`, you wri
 
 We use `playhtml.register('<ID>', {options})` to register a new element with the given ID. The options object is a configuration object for the element rather than having to put the options on the element itself. The main change is using `view` instead of `updateElement`.
 
+This uses [lit-html](https://lit.dev/), which is a popular library for building custom components using HTML that improves on these things we're talking about. It uses some new syntax like `html` and `repeat` to interpolate (insert dyanmic data) into the HTML.
+
 <CodeDemo demo={<PollViewDemo />}>
 
 ```html
@@ -549,8 +551,6 @@ This may look strange, but it's mostly the same HTML with some new syntax that a
 ### A guestbook
 
 Earlier, a `can-mirror` guestbook just copied `<li>` elements between screens. That works for a quick prototype, but gets confusing as the logic grows. With `can-play`, we model the entries as data and render them.
-
-This uses [lit-html](https://lit.dev/), which is a popular library for building custom components using HTML that improves on these things we're talking about. It uses some new syntax like `html` and `repeat` to interpolate (insert dyanmic data) into the HTML.
 
 The first thing to figure out is the _shape_ of our data. Unlike the counter's single number, each guestbook entry is an object: who left it, the message, and when.
 
