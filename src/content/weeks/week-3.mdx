@@ -497,12 +497,14 @@ This works, but it starts to get confusing because what you see in the HTML (0 v
 
 Instead of _patching_ the DOM when the data changes via `updateElement`, you write one function that describes what the HTML _should_ be for any given state.
 
+We use `playhtml.register('<ID>', {options})` to register a new element with the given ID. The options object is a configuration object for the element rather than having to put the options on the element itself. The main change is using `view` instead of `updateElement`.
+
 <CodeDemo demo={<PollViewDemo />}>
 
 ```html
 <div can-play id="room-poll"></div>
 <script type="module">
-  import { html, playhtml, repeat, styleMap } from 'https://unpkg.com/playhtml';
+  import { html, playhtml, repeat } from 'https://unpkg.com/playhtml';
 
   playhtml.register('room-poll', {
     defaultData: {
@@ -526,10 +528,7 @@ Instead of _patching_ the DOM when the data changes via `updateElement`, you wri
             const percent = total ? (option.votes / total) * 100 : 0;
             return html`
               <button @click=${() => vote(option.id)}>
-                <span
-                  class="bar"
-                  style=${styleMap({ width: percent + '%' })}
-                ></span>
+                <span class="bar" style="width: ${percent}%"></span>
                 <span class="label">${option.label}</span>
                 <span class="count">${option.votes}</span>
               </button>
@@ -573,7 +572,6 @@ The guestbook itself is just a growing list of these. It starts empty (`entries:
     defaultData: { entries: [] },
     view: ({ data, setData }) => {
       const sign = (event) => {
-        event.preventDefault();
         const form = event.target;
         const input = form.querySelector('input');
         const message = input.value.trim();
