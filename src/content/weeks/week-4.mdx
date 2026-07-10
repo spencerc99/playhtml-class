@@ -1,5 +1,5 @@
 export const meta = {
-  title: 'Custom Events',
+  title: 'Connecting the Web',
 };
 
 ## Activities
@@ -8,20 +8,19 @@ export const meta = {
   - Share prototypes
   - Discuss readings
 - Demo / lecture:
-  - WWO and custom identity
   - Creating custom events
   - Permissions
+  - WWO and custom identity
   - Cross-site interactions
-- Mini challenge
 - Debugging and Q+A
 
-## Assignment / Readings
-
-- Finalize your site.
-- Optional: implement one custom event or shared behavior that interacts with others' sites.
-- Read: `TKTKTKTKT`
-
 ## Examples
+
+## Connecting the Web
+
+- connecting the rich life on the internet
+- making a game across the web
+-
 
 ### Example: counting visits automatically on page load
 
@@ -89,6 +88,29 @@ Dispatching the event is what triggers everyone's listener. Here we fire it when
 ```
 
 The click happens on one person's screen, but because `dispatchPlayEvent` sends the event through playhtml's shared infrastructure, the `confetti` listener from Example 2 runs on _every_ connected page. You can also pass data along with the event (`dispatchPlayEvent({ type: 'confetti', eventPayload: { color: 'gold' } })`) and read it in `onEvent`.
+
+## Permissions
+
+Show Konami Code
+
+- not secure but easy ways to moderate via visibility
+  - `?admin` query param that toggles admin panel
+  - hiding it unless you say some combination of things
+- eventually we are making something more secure
+
+## Connecting the Web
+
+- we were online
+- like crypto wallets gives you identity across the web that you can access to do these permissioned things
+- people who visit a lot or do X a lot can become "regulars" and get enhanced Permissions
+- ideally want things across the web that change and respond to each other
+- web rings!
+
+## Assignment / Readings
+
+- Finalize your site.
+- Optional: implement one custom event or shared behavior that interacts with others' sites.
+- Read: `TKTKTKTKT`
 
 ## Submit Your Assignment
 

@@ -220,8 +220,8 @@ Visitor count tells you _how many_ people came, but nothing about _who_. So let'
     setData((data) => {
       data.count += 1;
       data.recent.push({
-        name: window.cursors?.name || 'someone',
-        color: window.cursors?.color,
+        name: window.cursors.name || 'someone',
+        color: window.cursors.color,
         at: Date.now(),
       });
       // keep data small: only remember the last 5
@@ -578,7 +578,7 @@ The guestbook itself is just a growing list of these. It starts empty (`entries:
         if (!message) return;
         setData((draft) => {
           draft.entries.push({
-            name: window.cursors?.name || 'someone',
+            name: window.cursors.name || 'someone',
             message,
             at: Date.now(),
           });
