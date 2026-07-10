@@ -67,6 +67,13 @@ interface CanPlayDemoProps<T, V = unknown> {
   // existing DOM skeleton. View demos leave this empty and render everything.
   skeleton?: string;
   styles?: string;
+  // Mark this element as a cross-page/cross-site source others can subscribe to.
+  // true → read-write; "read-only" → consumers can mirror but not write.
+  shared?: boolean | 'read-only' | 'read-write';
+  // Subscribe to a source on another page/site. Format: "domain[/path]#elementId".
+  dataSource?: string;
+  // Force this consumer read-only even if the source is read-write.
+  dataSourceReadOnly?: boolean;
   // Runs once after the room has synced. Use for writes that must not race the
   // initial hydration (e.g. a visit counter increment), which an onMount write
   // can lose because it fires before the shared value loads.
@@ -86,6 +93,9 @@ function CanPlayDemoRunner<T, V = unknown>({
   init,
   skeleton = '',
   styles = '',
+  shared,
+  dataSource,
+  dataSourceReadOnly = false,
   onReady,
 }: CanPlayDemoProps<T, V>) {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -100,7 +110,20 @@ function CanPlayDemoRunner<T, V = unknown>({
     // All markup here is hardcoded demo content (no user input), so innerHTML is
     // safe. View-rendered, user-typed values go through lit-html, which escapes.
     const styleTag = styles ? `<style>${styles}</style>` : '';
-    container.innerHTML = `${styleTag}<div can-play id="${elementId}">${skeleton}</div>`;
+    // shared / data-source must be on the DOM before register/init wiring so
+    // playhtml can advertise the source or subscribe the consumer.
+    const sharedAttr =
+      shared === true || shared === 'read-write'
+        ? ' shared'
+        : shared === 'read-only'
+          ? ' shared="read-only"'
+          : '';
+    const dataSourceAttr = dataSource
+      ? ` data-source="${dataSource}"`
+      : '';
+    const readOnlyAttr =
+      dataSource && dataSourceReadOnly ? ' data-source-read-only' : '';
+    container.innerHTML = `${styleTag}<div can-play id="${elementId}"${sharedAttr}${dataSourceAttr}${readOnlyAttr}>${skeleton}</div>`;
 
     const handle = playhtml.register(
       elementId,
@@ -126,7 +149,16 @@ function CanPlayDemoRunner<T, V = unknown>({
       handle.unregister();
       container.innerHTML = '';
     };
-  }, [elementId, init, skeleton, styles, onReady]);
+  }, [
+    elementId,
+    init,
+    skeleton,
+    styles,
+    shared,
+    dataSource,
+    dataSourceReadOnly,
+    onReady,
+  ]);
 
   return <div ref={containerRef} className="live-html-demo" />;
 }

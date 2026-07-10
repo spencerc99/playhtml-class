@@ -1,121 +1,351 @@
 export const meta = {
   title: 'Connecting the Web',
+  chairs: true,
 };
+
+import { CodeDemo } from '../../components/CodeDemo';
+import {
+  GuestbookAdminDemo,
+  HomeBeaconDemo,
+  PasswordLockDemo,
+  SharedLampConsumerDemo,
+  SharedLampSourceDemo,
+  WebringDemo,
+} from '../../components/WeekFourDemos';
+
+<img src="/persian-rug.png" width="100%" />
 
 ## Activities
 
 - Crit and discussion in small groups:
   - Share prototypes
   - Discuss readings
-- Demo / lecture:
-  - Creating custom events
+- Making public spaces on the web
+- Demo
+  - WWO and Identity
   - Permissions
-  - WWO and custom identity
   - Cross-site interactions
 - Debugging and Q+A
 
-## Examples
+## Sharing (30 mins)
 
-## Connecting the Web
+## Making Public Spaces on the Web
 
-- connecting the rich life on the internet
-- making a game across the web
--
+- facilitating unexpected encounters
+- third spaces
+- max and 2nd place
 
-### Example: counting visits automatically on page load
+Seating spots along with protected backs provide safety for people to familiarize with a space. It's a balance between openness to other people and still feeling safe to be yourself.
 
-Last week we peeked at a visit counter that bumps on page load. That works, but there's a timing catch: `onMount` runs when playhtml wires up the element locally — often **before** persisted data has finished loading. A write in plain `onMount` can get overwritten by the incoming saved value.
+![](https://kaarwan.s3.amazonaws.com/public/blog/media/1/prospectrefuge161jpeg_1773667726227g)
+from [kaarwan.com](https://www.kaarwan.com/blog/architecture/prospect-and-refuge-in-architecture-designing-spaces-people-feel-comfortable-in?id=2128)
 
-If you want auto-increment without a click, wait until the connection is ready:
+How does this compare to the web?
+
+1. Most people are **lurkers**. They are peeking out from inside a home where no one can see them. This is different from sitting in a public space, where you are actually showing that you are there. There's a baseline cost for you to show up.
+2. When we do show ourselves and post, it's to the entire world—our profiles, content, and entire history visible for all to see.
+3. Our choices are binary: completely private and unperceived or completely public and visible to the entire world.
+
+Remember **gradients of intimacy**. How do we let people observe first, then take small actions, so they feel comfortable taking larger ownership of the space?
+
+Not all benches are created equal. We still set the context around the bench and what people can do on it.
+
+<div style={{ display: 'flex', gap: '1rem' }}>
+  <img
+    src="https://d2w9rnfcy7mm78.cloudfront.net/46967789/original_47a4394f4a0c64223a009b36c9f7d429.jpeg?1781219432?bc=0"
+    alt="private benches"
+    width="50%"
+  />
+  <img
+    src="https://d2w9rnfcy7mm78.cloudfront.net/44828023/original_f5c45c4be9a05ceba42f82081969dd36.jpg?1774723766?bc=0"
+    alt="public benches"
+    width="50%"
+  />
+</div>
+
+Sometimes benches can even be a [guerilla act of resistance](https://sfbabc.org/), providing public seats in a space where no one has before.
+
+And when we open up our own spaces to the public, we take on the responsibility of **hosting**. We have greater control over the space and also the responsibility to steward it. What happens if someone does something we don't like?
+
+We've talked about what makes these spaces feel good, but why are they important?
+
+I think the Internet, at its best, brings us closer to other people and cultures, some of whom we might not have otherwise encountered. Rather than assimilating into a global monoculture, we've seen how the internet can cause an explosion of diversity and creativity. Its promise is that the web can bring us closer to each other, while giving us space to express and celebrate our unique differences.
+
+The pluriverse is a concept popularized by anthropologist Arturo Escobar in [Designs for the Pluriverse: Radical Interdependence, Autonomy, and the Making of Worlds](https://en.wikipedia.org/wiki/Designs_for_the_Pluriverse) which describes "a world in which many worlds fit" to advocate for the co-existence of multiple, potentially conflicting ways of being and organizing society.
+
+That's what I want to see from the internet! Thousands of interfaces and spaces and experiences that are completely different, not feeds under different names.
+
+## Reading & Lecture Discussion (30 mins)
+
+## Code
+
+## Identity & Permissions
+
+As we grow in data that is being added from various visitors, we need to think about moderation. How do we steward a good space? Ultimately, for the spaces we create, we have the responsibility to take care of them.
+
+While playhtml currently doesn't support secure permissions (because that is very complex!), we can still use some simple workarounds to get access to moderating a space. These are not fully secure to someone deliberately trying to hack it, but they are [secure by obscurity](https://en.wikipedia.org/wiki/Security_through_obscurity), which is often good enough for these small spaces.
+
+We'll be hiding the admin controls using small behavioral gates, kind of like a password!
+
+---
+
+![](https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Konami_Code.svg/330px-Konami_Code.svg.png)
+[Konami Code](https://en.wikipedia.org/wiki/Konami_Code). We'll borrow this practice of having a secret sequence of keys or codes you enter to unlock the feature.
+
+For example, here's some things we could do:
+
+- `?admin` query param that toggles admin panel
+- lock it behind a password field
+- hiding it unless you press a combination of key shortcuts
+- clicking a transparent button on a particular part of the page
+
+### Soft admin on a guestbook
+
+Same guestbook as last week. Per-row **delete** buttons only appear once admin is unlocked — via `?admin` or `⌘⇧A` / `Ctrl⇧A`.
+
+<CodeDemo demo={<GuestbookAdminDemo />}>
 
 ```html
-<div can-play id="visit-counter">0</div>
-<script>
-  const visitCounter = document.getElementById('visit-counter');
-
-  visitCounter.defaultData = { visits: 0 };
-
-  visitCounter.updateElement = ({ element, data }) => {
-    element.textContent = data.visits;
-  };
-
-  visitCounter.onMount = ({ setData }) => {
-    void playhtml.ready.then(() => {
-      setData((data) => {
-        data.visits += 1;
-      });
-    });
-  };
-</script>
-```
-
-For teaching and most projects, a click ("I'm here!") is simpler and avoids the race entirely.
-
-### Example 2: listen for a shared custom event
-
-So far our data has lived _on_ an element. Sometimes you instead want a one-shot signal that fires for everyone on the page at once — confetti, a sound, a flash — without storing anything. That's a custom event. You register a listener for an event type, and playhtml runs your `onEvent` whenever _anyone_ dispatches it:
-
-```html
+<div can-play id="guestbook"></div>
 <script type="module">
-  import { playhtml } from 'https://unpkg.com/playhtml';
+  import { html, playhtml, repeat } from 'https://unpkg.com/playhtml';
 
-  playhtml.init();
+  const isAdmin = () =>
+    new URLSearchParams(location.search).has('admin') ||
+    sessionStorage.getItem('admin') === '1';
 
-  playhtml.registerPlayEventListener('confetti', {
-    onEvent: () => {
-      console.log('confetti for everyone');
-      // ...drop confetti, play a sound, flash the screen, etc.
+  const unlock = () => sessionStorage.setItem('admin', '1');
+
+  // Simpler than Konami: Cmd/Ctrl + Shift + A
+  window.addEventListener('keydown', (event) => {
+    if (
+      (event.metaKey || event.ctrlKey) &&
+      event.shiftKey &&
+      event.key === 'a'
+    ) {
+      event.preventDefault();
+      unlock();
+      // toggle .is-admin / re-render so delete buttons show
+    }
+  });
+
+  playhtml.register('guestbook', {
+    defaultData: { entries: [] },
+    view: ({ data, setData }) => {
+      const admin = isAdmin();
+
+      const sign = (event) => {
+        event.preventDefault();
+        const input = event.target.querySelector('input');
+        const message = input.value.trim();
+        if (!message) return;
+        setData((draft) => {
+          draft.entries.push({
+            name: window.cursors?.name || 'someone',
+            message,
+            at: Date.now(),
+          });
+        });
+        input.value = '';
+      };
+
+      const remove = (at) => {
+        if (!admin) return;
+        setData((draft) => {
+          const i = draft.entries.findIndex((e) => e.at === at);
+          if (i >= 0) draft.entries.splice(i, 1);
+        });
+      };
+
+      return html`
+        ${admin ? html`<div class="admin-bar">admin unlocked</div>` : null}
+        <form @submit=${sign}>
+          <input placeholder="leave a note..." />
+          <button type="submit">sign</button>
+        </form>
+        <ul>
+          ${repeat(
+            [...data.entries].reverse(),
+            (entry) => html`
+              <li>
+                <b>${entry.name}</b>: ${entry.message}
+                ${admin
+                  ? html`<button type="button" @click=${() => remove(entry.at)}>
+                      delete
+                    </button>`
+                  : null}
+              </li>
+            `,
+          )}
+        </ul>
+      `;
     },
   });
 </script>
 ```
 
-### Example 3: connect it to a button
+</CodeDemo>
 
-Dispatching the event is what triggers everyone's listener. Here we fire it when this visitor clicks a button:
+Try it: add `?admin` to the URL, or press `⌘⇧A` / `Ctrl⇧A`. A delete button shows up on each note.
+
+### Lock a clear-everything control behind a password
+
+Same obscurity idea, different shape: a dangerous **clear everything** control is on the page (blurred), and a hardcoded password reveals it. Here it wipes the guestbook above.
+
+<CodeDemo demo={<PasswordLockDemo />}>
 
 ```html
-<button id="celebrate-btn">Celebrate</button>
-<script type="module">
-  import { playhtml } from 'https://unpkg.com/playhtml';
+<div id="moderation">
+  <div class="panel">
+    <p>Danger zone: wipe every guestbook note.</p>
+    <button type="button" id="clear-all">clear everything</button>
+  </div>
+  <form id="gate">
+    <input type="password" placeholder="password" />
+    <button type="submit">unlock</button>
+  </form>
+</div>
+<script>
+  const PASSWORD = 'bench'; // hardcoded on purpose — soft gate only
+  const panel = document.getElementById('moderation');
 
-  playhtml.init();
+  document.getElementById('gate').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const value = event.target.querySelector('input').value.trim();
+    if (value === PASSWORD) {
+      sessionStorage.setItem('unlocked', '1');
+      panel.classList.add('is-unlocked'); // CSS drops the blur
+    }
+  });
 
-  document.getElementById('celebrate-btn').addEventListener('click', () => {
-    playhtml.dispatchPlayEvent({ type: 'confetti' });
+  document.getElementById('clear-all').addEventListener('click', () => {
+    if (sessionStorage.getItem('unlocked') !== '1') return;
+    playhtml.getHandle('guestbook').setData((draft) => {
+      draft.entries.splice(0, draft.entries.length);
+    });
   });
 </script>
 ```
 
-The click happens on one person's screen, but because `dispatchPlayEvent` sends the event through playhtml's shared infrastructure, the `confetti` listener from Example 2 runs on _every_ connected page. You can also pass data along with the event (`dispatchPlayEvent({ type: 'confetti', eventPayload: { color: 'gold' } })`) and read it in `onEvent`.
+</CodeDemo>
 
-## Permissions
+### In the future
 
-Show Konami Code
+This is sufficient for moderation from trusted people, but it's not great for things like wanting to let people be able to change just the things they made or granting more permissions to people who have earned trust.
 
-- not secure but easy ways to moderate via visibility
-  - `?admin` query param that toggles admin panel
-  - hiding it unless you say some combination of things
-- eventually we are making something more secure
+Real permissioning, tied to each person's unique ID, is on the roadmap which will enable these kinds of things. If you're interested, you can take a look at the WIP work here: https://github.com/spencerc99/playhtml/pull/264
 
 ## Connecting the Web
 
-- we were online
-- like crypto wallets gives you identity across the web that you can access to do these permissioned things
-- people who visit a lot or do X a lot can become "regulars" and get enhanced Permissions
-- ideally want things across the web that change and respond to each other
-- web rings!
+To really make public spaces on the web, we need to connect people across the web, not just within single websites. we were online (WWO) is the next evolution of playhtml. It's a browser extension that brings playhtml to every website you visit to turn the entire internet into a shared space.
+
+https://wewere.online
+
+The benefit to playhtml websites is that people get a stable identitifer that travels with them across different websites, and it opens up the ability for actions on one site to affect another or for people to bring objects from one place to another.
+
+So you can use this to carry the same "identity" across different playhtml websites. For example, this is how I trigger stuff on my website when I'm home: spencer.place
+
+### Shared elements (same domain + cross domain)
+
+[Shared elements](https://playhtml.fun/docs/advanced/shared-elements/) let one page publish a source (`shared`) and other pages — on the **same domain** or another site — subscribe with `data-source="domain/path#elementId"`.
+
+You already use this in class: the Showcase owns `student-projects`, and week pages submit into it via `dataSource`.
+
+Live porch lamp on this page (the source). The mirror beside it is a **read-only consumer** of the same element via `data-source` — including across another path on this domain, or another site, with the same attribute.
+
+<CodeDemo demo={<SharedLampSourceDemo />}>
+
+```html
+<!-- Source: this page publishes the lamp -->
+<div id="porch-lamp" shared can-play>💡</div>
+<script>
+  const lamp = document.getElementById('porch-lamp');
+  lamp.defaultData = { on: false };
+  lamp.updateElement = ({ element, data }) => {
+    element.classList.toggle('is-on', data.on);
+  };
+  lamp.onClick = (_e, { data, setData }) => setData({ on: !data.on });
+</script>
+```
+
+</CodeDemo>
+
+<CodeDemo demo={<SharedLampConsumerDemo />}>
+
+```html
+<!-- Consumer: another page (or site) mirrors it -->
+<div
+  data-source="your-domain.com/week/4#porch-lamp"
+  data-source-read-only
+  can-play
+>
+  💡
+</div>
+```
+
+</CodeDemo>
+
+You can also connect across websites like spencer.place and playhtml.fun.
+
+### Webring: is anyone home?
+
+Let's try making an example live webring where each site glows if the host is online.
+
+Each site publishes a small **shared beacon** that pulses `lastSeen` while the page is open. A webring widget mirrors those beacons with `data-source` and glows when the pulse is recent. Leave the page → pulses stop → glow fades.
+
+Beacon on this page (source + local presence count):
+
+<CodeDemo demo={<HomeBeaconDemo />}>
+
+```html
+<div id="home-beacon" shared can-play></div>
+<script>
+  const beacon = document.getElementById('home-beacon');
+  beacon.defaultData = { lastSeen: 0 };
+  beacon.myDefaultAwareness = { here: true }; // local "who's on this page"
+
+  beacon.onMount = ({ setData }) => {
+    const pulse = () =>
+      setData((d) => {
+        d.lastSeen = Date.now();
+      });
+    pulse();
+    const id = setInterval(pulse, 4000);
+    return () => clearInterval(id);
+  };
+
+  beacon.updateElementAwareness = ({ element, awareness }) => {
+    // optional: show how many people are on *this* page right now
+  };
+</script>
+```
+
+</CodeDemo>
+
+Webring widget (one orb per site; this class site should glow while you're here):
+
+<CodeDemo demo={<WebringDemo />}>
+
+```html
+<!-- One read-only consumer per member site -->
+<div
+  data-source="yoursite.com#home-beacon"
+  data-source-read-only
+  can-play
+></div>
+<div data-source="afriend.com#home-beacon" data-source-read-only can-play></div>
+<script>
+  // home = Date.now() - data.lastSeen < 12000
+  // render favicon; add a glow class when home
+</script>
+```
+
+</CodeDemo>
 
 ## Assignment / Readings
 
 - Finalize your site.
 - Optional: implement one custom event or shared behavior that interacts with others' sites.
+- Soft-admin stretch: add a `?admin` or Konami gate to something you moderate (guestbook deletes, clear canvas, etc.).
+- Webring stretch: publish a `#home-beacon` on your site and point a classmate's widget at it (or mirror theirs).
 - Read: `TKTKTKTKT`
-
-## Submit Your Assignment
-
-Paste your site URL below to submit.
-
-## Live Crit
-
-Submitted projects will appear here for live review.
