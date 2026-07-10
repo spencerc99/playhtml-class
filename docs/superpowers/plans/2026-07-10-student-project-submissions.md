@@ -26,7 +26,7 @@
 - Create: `src/components/ProjectSubmissions.tsx`
 
 **Interfaces:**
-- Consumes: `withSharedState`, `usePlayContext`, and the current browser hostname.
+- Consumes: `withSharedState`, `usePlayContext`, and the current browser host.
 - Produces: `ProjectSubmissions({ variant: 'form' | 'showcase' })`.
 
 - [ ] **Step 1: Define the shared data contract and source configuration**
@@ -43,7 +43,7 @@ const PROJECTS_ELEMENT_ID = 'student-projects';
 const EMPTY_PROJECTS: ProjectSubmissionData = { projects: {} };
 
 const projectSource = () =>
-  `${window.location.hostname}/showcase#${PROJECTS_ELEMENT_ID}`;
+  `${window.location.host}/showcase#${PROJECTS_ELEMENT_ID}`;
 
 export const ProjectSubmissions = withSharedState<
   ProjectSubmissionData,

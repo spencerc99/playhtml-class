@@ -762,7 +762,7 @@ a:hover {
 
 .showcase-page__title {
   color: var(--red);
-  font-size: clamp(4.5rem, 15vw, 10rem);
+  font-size: clamp(3rem, 13vw, 8rem);
   font-weight: 800;
   letter-spacing: -0.035em;
   line-height: 0.78;
@@ -1060,10 +1060,6 @@ a:hover {
 }
 
 @media (max-width: 700px) {
-  .showcase-page__title {
-    font-size: clamp(4rem, 22vw, 6rem);
-  }
-
   .project-submissions {
     margin-top: 2.75rem;
   }

@@ -39,7 +39,7 @@ const MAX_NAME_LENGTH = 80;
 const MAX_TITLE_LENGTH = 120;
 
 function projectDataSource(): string {
-  return `${window.location.hostname}/showcase#${PROJECTS_ELEMENT_ID}`;
+  return `${window.location.host}/showcase#${PROJECTS_ELEMENT_ID}`;
 }
 
 function normalizeProjectUrl(value: string): string | null {
@@ -195,7 +195,11 @@ export const ProjectSubmissions = withSharedState<
             </p>
           </div>
 
-          <form className="project-submissions__form" onSubmit={handleSubmit}>
+          <form
+            className="project-submissions__form"
+            noValidate
+            onSubmit={handleSubmit}
+          >
             <label className="project-submissions__field">
               <span className="project-submissions__label">Your name</span>
               <input

@@ -29,7 +29,7 @@ interactions between student sites are outside this implementation.
 The Showcase owns the canonical shared element at
 `/showcase#student-projects`. It is registered as a read-write shared source.
 Submission forms on other routes connect to that source through PlayHTML's
-`dataSource` support using the current hostname, the canonical `/showcase`
+`dataSource` support using the current host, the canonical `/showcase`
 path, and the `student-projects` element id.
 
 This keeps the existing PlayProvider room page-scoped. Changing the provider to
