@@ -83,8 +83,8 @@ function normalizeProjectUrl(value: string): string | null {
 
 - [ ] **Step 3: Write one keyed submission on submit**
 
-Create a UUID-based id, snapshot all fields and `Date.now()`, and perform one
-mutator write:
+Create a UUID-based id, snapshot all fields, the stable PlayHTML player id, and
+`Date.now()`, then perform one mutator write:
 
 ```ts
 setData((draft) => {
@@ -94,6 +94,10 @@ setData((draft) => {
 
 Keep the submitted name, clear title and URL, and announce success
 through an `aria-live="polite"` status.
+
+Derive the current visitor's previous submissions by filtering on the stored
+player id and render them as a read-only link list beneath the form. Older
+records without an owner id remain visible in the Showcase but are not claimed.
 
 - [ ] **Step 4: Render Showcase cards in source mode**
 

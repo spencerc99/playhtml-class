@@ -44,6 +44,7 @@ Submissions are stored in a keyed map:
 interface ProjectSubmission {
   id: string;
   name: string;
+  submittedBy?: string;
   title: string;
   url: string;
   submittedAt: number;
@@ -83,6 +84,11 @@ The form collects:
 All fields are required. URLs are trimmed, parsed with `URL`, and accepted only
 when they use `http:` or `https:`. A successful submission retains the name
 while clearing the title and URL for intentional follow-up submissions.
+New submissions snapshot the visitor's stable PlayHTML player id in
+`submittedBy`. The form uses that id to show a read-only list of the current
+visitor's previous submissions after reloads and across class-site routes.
+Records created before ownership tracking remain in the Showcase but do not
+appear in a visitor's personal list.
 
 ### Showcase cards
 
@@ -96,6 +102,8 @@ movement, and generous spacing.
 - Missing fields produce concise inline guidance.
 - Invalid or non-web URLs are rejected before any shared write.
 - Submit controls remain ordinary accessible HTML controls and work by keyboard.
+- Submitting waits for a stable PlayHTML player identity so the record can be
+  attributed across browser sessions.
 - Shared data is never written from an effect or render callback; writes occur
   only from explicit form submissions.
 - Empty shared data renders a loading state before PlayHTML sync and an inviting

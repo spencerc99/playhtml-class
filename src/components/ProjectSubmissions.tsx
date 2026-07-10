@@ -13,6 +13,7 @@ import {
 interface ProjectSubmission {
   id: string;
   name: string;
+  submittedBy?: string;
   title: string;
   url: string;
   submittedAt: number;
@@ -66,7 +67,7 @@ export const ProjectSubmissions = withSharedState<
       : { dataSource: projectDataSource() }),
   }),
   ({ data, setData, ref }, { variant }) => {
-    const { cursors, hasSynced } = usePlayContext();
+    const { cursors, getMyPlayerIdentity, hasSynced } = usePlayContext();
     const nameEdited = useRef(false);
     const [name, setName] = useState(() => cursors.name?.trim() ?? '');
     const [title, setTitle] = useState('');
@@ -84,6 +85,10 @@ export const ProjectSubmissions = withSharedState<
     const projects = Object.values(data.projects).sort(
       (left, right) => right.submittedAt - left.submittedAt,
     );
+    const playerId = getMyPlayerIdentity()?.publicKey;
+    const myProjects = playerId
+      ? projects.filter((project) => project.submittedBy === playerId)
+      : [];
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
@@ -109,9 +114,18 @@ export const ProjectSubmissions = withSharedState<
         return;
       }
 
+      if (!playerId) {
+        setStatus({
+          message: 'Your PlayHTML identity is still loading. Try again.',
+          tone: 'error',
+        });
+        return;
+      }
+
       const submission: ProjectSubmission = {
         id: crypto.randomUUID(),
         name: trimmedName.slice(0, MAX_NAME_LENGTH),
+        submittedBy: playerId,
         title: trimmedTitle.slice(0, MAX_TITLE_LENGTH),
         url: normalizedUrl,
         submittedAt: Date.now(),
@@ -252,6 +266,28 @@ export const ProjectSubmissions = withSharedState<
               </p>
             </div>
           </form>
+
+          {myProjects.length > 0 ? (
+            <div className="project-submissions__mine">
+              <p className="project-submissions__mine-title">
+                Your submissions
+              </p>
+              <ul className="project-submissions__mine-list">
+                {myProjects.map((project) => (
+                  <li key={project.id}>
+                    <a
+                      className="project-submissions__mine-link"
+                      href={project.url}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {project.title} <span aria-hidden="true">↗</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </div>
       </section>
     );
