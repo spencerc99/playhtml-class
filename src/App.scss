@@ -1,3 +1,6 @@
+// ABOUTME: Global class-site styling for pages and collaborative components.
+// ABOUTME: Defines the shared visual language, responsive layouts, and states.
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -736,4 +739,367 @@ a:hover {
   margin-top: 2.5rem;
   padding-top: 1rem;
   text-align: left;
+}
+
+.showcase-page {
+  background-color: #f6eee3;
+  background-image:
+    linear-gradient(rgba(246, 238, 227, 0.9), rgba(246, 238, 227, 0.9)),
+    url('/shirt-light-texture-dithered-playhtml-class-bg.png');
+  background-position: center;
+  background-size: cover;
+  font-family: var(--font-body);
+}
+
+.showcase-page__eyebrow {
+  color: var(--red);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  letter-spacing: 0.14em;
+  margin: 0 0 0.7rem;
+  text-transform: uppercase;
+}
+
+.showcase-page__title {
+  color: var(--red);
+  font-size: clamp(4.5rem, 15vw, 10rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 0.78;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.showcase-page__intro {
+  color: #5e403b;
+  font-size: clamp(1rem, 2.2vw, 1.35rem);
+  line-height: 1.55;
+  margin: 2rem 0 0;
+  max-width: 42rem;
+}
+
+.project-submissions {
+  font-family: var(--font-body);
+  margin-top: 3.5rem;
+  width: 100%;
+}
+
+.project-submissions--form {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 60rem;
+}
+
+.project-submissions__collection {
+  min-height: 8rem;
+}
+
+.project-submissions__empty {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px dashed rgba(224, 0, 0, 0.35);
+  border-radius: 1.2rem;
+  color: #7b5750;
+  display: flex;
+  font-size: 1.05rem;
+  justify-content: center;
+  margin: 0;
+  min-height: 9rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.project-submissions__grid {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.project-submissions__card {
+  --project-card-tilt: -0.65deg;
+  background: rgba(255, 255, 255, 0.94);
+  border: 2px solid var(--red);
+  border-radius: 0.8rem 1.35rem 0.9rem 1.2rem;
+  box-shadow: 6px 7px 0 rgba(224, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  min-height: 15rem;
+  padding: 1.4rem;
+  transform: rotate(var(--project-card-tilt));
+  transition:
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.project-submissions__card:nth-child(3n + 2) {
+  --project-card-tilt: 0.8deg;
+}
+
+.project-submissions__card:nth-child(3n) {
+  --project-card-tilt: -0.2deg;
+}
+
+.project-submissions__card:hover {
+  box-shadow: 9px 12px 0 rgba(224, 0, 0, 0.16);
+  transform: rotate(var(--project-card-tilt)) translateY(-0.35rem);
+}
+
+.project-submissions__badge {
+  align-self: flex-start;
+  border-radius: 999px;
+  color: #17324d;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  padding: 0.35rem 0.7rem 0.3rem;
+  text-transform: uppercase;
+}
+
+.project-submissions__badge--monday {
+  background: #bfe8ff;
+}
+
+.project-submissions__badge--tuesday {
+  background: #ffe68d;
+  color: #5d3c00;
+}
+
+.project-submissions__card-title {
+  color: var(--red);
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 0.95;
+  margin: 1.4rem 0 0;
+  overflow-wrap: anywhere;
+  text-transform: uppercase;
+}
+
+.project-submissions__student {
+  color: #70534c;
+  font-size: 0.95rem;
+  margin: 0.8rem 0 1.6rem;
+}
+
+.project-submissions__link {
+  align-items: center;
+  align-self: flex-start;
+  color: var(--red);
+  display: inline-flex;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  gap: 0.35rem;
+  margin-top: auto;
+  text-decoration-thickness: 2px;
+  text-transform: uppercase;
+}
+
+.project-submissions__form-panel {
+  background: rgba(255, 255, 255, 0.94);
+  border: 3px solid var(--red);
+  border-radius: 1.5rem 0.8rem 1.8rem 0.9rem;
+  box-shadow: 10px 12px 0 rgba(224, 0, 0, 0.16);
+  display: grid;
+  gap: 2.5rem;
+  grid-template-columns: minmax(12rem, 0.72fr) minmax(0, 1.5fr);
+  padding: clamp(1.4rem, 4vw, 2.75rem);
+}
+
+.project-submissions--showcase .project-submissions__form-panel {
+  margin-top: 4.5rem;
+}
+
+.project-submissions__intro {
+  align-self: start;
+}
+
+.project-submissions__eyebrow {
+  color: #785a52;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  letter-spacing: 0.13em;
+  margin: 0 0 0.75rem;
+  text-transform: uppercase;
+}
+
+.project-submissions__form-title {
+  color: var(--red);
+  font-size: clamp(2.6rem, 5vw, 4.5rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 0.84;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.project-submissions__form-copy {
+  color: #70534c;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 1.2rem 0 0;
+  max-width: 18rem;
+}
+
+.project-submissions__form {
+  display: grid;
+  gap: 1.1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.project-submissions__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.project-submissions__field--url,
+.project-submissions__actions {
+  grid-column: 1 / -1;
+}
+
+.project-submissions__label {
+  color: #4b312c;
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.project-submissions__input {
+  appearance: none;
+  background: #fffaf5;
+  border: 2px solid rgba(224, 0, 0, 0.28);
+  border-radius: 0.7rem;
+  color: #2f2624;
+  font: inherit;
+  min-height: 3rem;
+  padding: 0.7rem 0.85rem;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+  width: 100%;
+}
+
+.project-submissions__input::placeholder {
+  color: #a88c85;
+}
+
+.project-submissions__input:focus-visible {
+  background: #ffffff;
+  border-color: var(--red);
+  box-shadow: 0 0 0 4px rgba(224, 0, 0, 0.12);
+  outline: none;
+}
+
+.project-submissions__select {
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--red) 50%),
+    linear-gradient(135deg, var(--red) 50%, transparent 50%);
+  background-position:
+    calc(100% - 1.05rem) 1.25rem,
+    calc(100% - 0.72rem) 1.25rem;
+  background-repeat: no-repeat;
+  background-size: 0.35rem 0.35rem;
+  padding-right: 2.2rem;
+}
+
+.project-submissions__actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem 1.2rem;
+  margin-top: 0.2rem;
+}
+
+.project-submissions__submit {
+  background: var(--red);
+  border: 2px solid var(--red);
+  border-radius: 999px;
+  color: #ffffff;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  letter-spacing: 0.03em;
+  min-height: 3rem;
+  padding: 0.65rem 1.25rem;
+  text-transform: uppercase;
+  transition:
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.project-submissions__submit:hover {
+  box-shadow: 4px 5px 0 rgba(224, 0, 0, 0.18);
+  transform: translateY(-0.15rem) rotate(-0.5deg);
+}
+
+.project-submissions__submit:focus-visible {
+  box-shadow: 0 0 0 4px rgba(224, 0, 0, 0.2);
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.project-submissions__status {
+  color: #70534c;
+  flex: 1 1 12rem;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  margin: 0;
+  min-height: 1.25rem;
+}
+
+.project-submissions__status--error {
+  color: #b10000;
+  font-weight: 700;
+}
+
+.project-submissions__status--success {
+  color: #176333;
+  font-weight: 700;
+}
+
+@media (max-width: 700px) {
+  .showcase-page__title {
+    font-size: clamp(4rem, 22vw, 6rem);
+  }
+
+  .project-submissions {
+    margin-top: 2.75rem;
+  }
+
+  .project-submissions__form-panel {
+    gap: 1.8rem;
+    grid-template-columns: 1fr;
+  }
+
+  .project-submissions__form-copy {
+    max-width: 26rem;
+  }
+
+  .project-submissions__form {
+    grid-template-columns: 1fr;
+  }
+
+  .project-submissions__field--url,
+  .project-submissions__actions {
+    grid-column: auto;
+  }
+
+  .project-submissions__actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .project-submissions__submit {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .project-submissions__card,
+  .project-submissions__input,
+  .project-submissions__submit {
+    transition: none;
+  }
 }
