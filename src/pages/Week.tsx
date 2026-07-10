@@ -5,6 +5,7 @@ import { useEffect, useRef, type ComponentType } from 'react';
 import { Link, useParams } from 'react-router';
 import { Attendance } from '../components/Attendance';
 import { FloatingChair } from '../components/FloatingChair';
+import { ProjectSubmissions } from '../components/ProjectSubmissions';
 import { isWeekUnlocked } from '../weekSchedule';
 import { WEEK_PAGE_CHAIRS } from '../weekPageChairs';
 
@@ -270,6 +271,7 @@ export default function Week() {
               </p>
             </section>
           )}
+          <ProjectSubmissions variant="form" />
         </div>
       </div>
     </div>

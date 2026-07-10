@@ -1,18 +1,19 @@
-// ABOUTME: Showcase page displaying all student projects as draggable cards.
-// ABOUTME: Projects accumulate here over the course of the class.
+// ABOUTME: Showcase page hosting the domain-shared student project collection.
+// ABOUTME: Students can submit projects here or from the bottom of week pages.
+
+import { ProjectSubmissions } from '../components/ProjectSubmissions';
 
 export default function Showcase() {
   return (
-    <div className="min-h-screen px-8 py-12">
-      <h1 className="mb-8 text-4xl font-extrabold uppercase text-[#e00000]">
-        Showcase
-      </h1>
-      <p className="mb-8 text-neutral-500 dark:text-neutral-400">
-        Student projects will appear here as they are submitted throughout the
-        class.
-      </p>
-      <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4">
-        {/* Student project cards will go here */}
+    <div className="showcase-page min-h-screen px-6 py-12 md:px-8 md:py-16">
+      <div className="mx-auto max-w-6xl">
+        <p className="showcase-page__eyebrow">Built by the class</p>
+        <h1 className="showcase-page__title">Showcase</h1>
+        <p className="showcase-page__intro">
+          Visit the communal spaces, experiments, and web benches made
+          throughout the class.
+        </p>
+        <ProjectSubmissions variant="showcase" />
       </div>
     </div>
   );
