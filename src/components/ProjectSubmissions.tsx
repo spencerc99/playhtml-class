@@ -10,14 +10,11 @@ import {
   type RefObject,
 } from 'react';
 
-type ClassSection = 'monday' | 'tuesday';
-
 interface ProjectSubmission {
   id: string;
   name: string;
   title: string;
   url: string;
-  section: ClassSection;
   submittedAt: number;
 }
 
@@ -56,10 +53,6 @@ function normalizeProjectUrl(value: string): string | null {
   }
 }
 
-function sectionLabel(section: ClassSection): string {
-  return section === 'monday' ? 'Monday' : 'Tuesday';
-}
-
 export const ProjectSubmissions = withSharedState<
   ProjectSubmissionData,
   never,
@@ -78,7 +71,6 @@ export const ProjectSubmissions = withSharedState<
     const [name, setName] = useState(() => cursors.name?.trim() ?? '');
     const [title, setTitle] = useState('');
     const [url, setUrl] = useState('');
-    const [section, setSection] = useState<ClassSection | ''>('');
     const [status, setStatus] = useState<SubmitStatus | null>(null);
 
     useEffect(() => {
@@ -99,7 +91,7 @@ export const ProjectSubmissions = withSharedState<
       const trimmedName = name.trim();
       const trimmedTitle = title.trim();
 
-      if (!trimmedName || !trimmedTitle || !url.trim() || !section) {
+      if (!trimmedName || !trimmedTitle || !url.trim()) {
         setStatus({
           message: 'Fill out every field before submitting.',
           tone: 'error',
@@ -122,7 +114,6 @@ export const ProjectSubmissions = withSharedState<
         name: trimmedName.slice(0, MAX_NAME_LENGTH),
         title: trimmedTitle.slice(0, MAX_TITLE_LENGTH),
         url: normalizedUrl,
-        section,
         submittedAt: Date.now(),
       };
 
@@ -158,11 +149,6 @@ export const ProjectSubmissions = withSharedState<
                     key={project.id}
                     className="project-submissions__card"
                   >
-                    <span
-                      className={`project-submissions__badge project-submissions__badge--${project.section}`}
-                    >
-                      {sectionLabel(project.section)}
-                    </span>
                     <h2 className="project-submissions__card-title">
                       {project.title}
                     </h2>
@@ -248,23 +234,6 @@ export const ProjectSubmissions = withSharedState<
                   setStatus(null);
                 }}
               />
-            </label>
-
-            <label className="project-submissions__field">
-              <span className="project-submissions__label">Class section</span>
-              <select
-                className="project-submissions__input project-submissions__select"
-                value={section}
-                required
-                onChange={(event) => {
-                  setSection(event.target.value as ClassSection | '');
-                  setStatus(null);
-                }}
-              >
-                <option value="">Choose a section</option>
-                <option value="monday">Monday</option>
-                <option value="tuesday">Tuesday</option>
-              </select>
             </label>
 
             <div className="project-submissions__actions">

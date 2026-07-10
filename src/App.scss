@@ -844,26 +844,6 @@ a:hover {
   transform: rotate(var(--project-card-tilt)) translateY(-0.35rem);
 }
 
-.project-submissions__badge {
-  align-self: flex-start;
-  border-radius: 999px;
-  color: #17324d;
-  font-family: var(--font-display);
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
-  padding: 0.35rem 0.7rem 0.3rem;
-  text-transform: uppercase;
-}
-
-.project-submissions__badge--monday {
-  background: #bfe8ff;
-}
-
-.project-submissions__badge--tuesday {
-  background: #ffe68d;
-  color: #5d3c00;
-}
-
 .project-submissions__card-title {
   color: var(--red);
   font-size: 2rem;
@@ -990,18 +970,6 @@ a:hover {
   border-color: var(--red);
   box-shadow: 0 0 0 4px rgba(224, 0, 0, 0.12);
   outline: none;
-}
-
-.project-submissions__select {
-  background-image:
-    linear-gradient(45deg, transparent 50%, var(--red) 50%),
-    linear-gradient(135deg, var(--red) 50%, transparent 50%);
-  background-position:
-    calc(100% - 1.05rem) 1.25rem,
-    calc(100% - 0.72rem) 1.25rem;
-  background-repeat: no-repeat;
-  background-size: 0.35rem 0.35rem;
-  padding-right: 2.2rem;
 }
 
 .project-submissions__actions {

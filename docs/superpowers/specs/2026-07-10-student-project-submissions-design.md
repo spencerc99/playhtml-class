@@ -14,7 +14,7 @@ page-scoped PlayHTML behavior used by attendance and the guestbook.
 This implementation includes:
 
 - A reusable React submission form.
-- Name, project title, project URL, and Monday/Tuesday section fields.
+- Name, project title, and project URL fields.
 - A domain-accessible PlayHTML collection.
 - Submission forms on week pages and the Showcase page.
 - A responsive Showcase card grid.
@@ -46,7 +46,6 @@ interface ProjectSubmission {
   name: string;
   title: string;
   url: string;
-  section: 'monday' | 'tuesday';
   submittedAt: number;
 }
 
@@ -80,16 +79,15 @@ The form collects:
 - Student name, initially populated from the current PlayHTML cursor identity.
 - Project title.
 - Project URL.
-- Monday or Tuesday section.
 
 All fields are required. URLs are trimmed, parsed with `URL`, and accepted only
-when they use `http:` or `https:`. A successful submission retains the name and
-section while clearing the title and URL for intentional follow-up submissions.
+when they use `http:` or `https:`. A successful submission retains the name
+while clearing the title and URL for intentional follow-up submissions.
 
 ### Showcase cards
 
 The Showcase renders responsive cards with the project title, student name,
-section badge, and external project link. The design follows the existing class
+and external project link. The design follows the existing class
 site's oversized uppercase typography, red accent, white panels, playful hover
 movement, and generous spacing.
 

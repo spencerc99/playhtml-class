@@ -63,7 +63,7 @@ export const ProjectSubmissions = withSharedState<
 
 - [ ] **Step 2: Implement local form state and validation**
 
-Use controlled fields for name, title, URL, and section. Seed the name from
+Use controlled fields for name, title, and URL. Seed the name from
 `cursors.name`, then update it locally if identity arrives after mount and the
 student has not typed a different name. Validate required fields and normalize
 URLs with:
@@ -92,13 +92,13 @@ setData((draft) => {
 });
 ```
 
-Keep the submitted name and section, clear title and URL, and announce success
+Keep the submitted name, clear title and URL, and announce success
 through an `aria-live="polite"` status.
 
 - [ ] **Step 4: Render Showcase cards in source mode**
 
 Sort `Object.values(data.projects)` by descending `submittedAt`. Render an empty
-state after sync, or a responsive card grid with title, student, section badge,
+state after sync, or a responsive card grid with title, student,
 and an external `http(s)` link using `target="_blank"` and `rel="noreferrer"`.
 
 - [ ] **Step 5: Commit the shared component**
@@ -164,8 +164,8 @@ focus movement without shifting surrounding layout.
 
 - [ ] **Step 2: Add Showcase card styles**
 
-Use a responsive `repeat(auto-fit, minmax(220px, 1fr))` grid, section-specific
-badge colors, visible external-link affordance, and subtle rotation/translation
+Use a responsive `repeat(auto-fit, minmax(220px, 1fr))` grid, visible
+external-link affordance, and subtle rotation/translation
 on hover. Preserve readable contrast in dark mode wherever the current page
 supports it.
 
@@ -204,7 +204,7 @@ the inline error appears and no Showcase card is created.
 - [ ] **Step 3: Verify cross-route persistence**
 
 Submit a uniquely titled project from `/week/0`, navigate to `/showcase`, and
-confirm the matching title, name, section, and normalized URL appear. Reload the
+confirm the matching title, name, and normalized URL appear. Reload the
 Showcase and confirm the card remains.
 
 - [ ] **Step 4: Verify responsive layout**
