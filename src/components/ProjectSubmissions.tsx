@@ -157,29 +157,31 @@ export const ProjectSubmissions = withSharedState<
                   : 'Loading projects…'}
               </p>
             ) : (
-              <div className="project-submissions__grid">
+              <ul className="project-submissions__list">
                 {projects.map((project) => (
-                  <article
-                    key={project.id}
-                    className="project-submissions__card"
-                  >
-                    <h2 className="project-submissions__card-title">
-                      {project.title}
-                    </h2>
-                    <p className="project-submissions__student">
-                      by {project.name}
-                    </p>
+                  <li key={project.id} className="project-submissions__row">
                     <a
-                      className="project-submissions__link"
+                      className="project-submissions__row-link"
                       href={project.url}
                       target="_blank"
                       rel="noreferrer"
                     >
-                      Visit project <span aria-hidden="true">↗</span>
+                      <span className="project-submissions__row-title">
+                        {project.title}
+                      </span>
+                      <span className="project-submissions__row-student">
+                        by {project.name}
+                      </span>
+                      <span
+                        className="project-submissions__row-arrow"
+                        aria-hidden="true"
+                      >
+                        ↗
+                      </span>
                     </a>
-                  </article>
+                  </li>
                 ))}
-              </div>
+              </ul>
             )}
           </div>
         ) : null}

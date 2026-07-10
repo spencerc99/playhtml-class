@@ -99,11 +99,11 @@ Derive the current visitor's previous submissions by filtering on the stored
 player id and render them as a read-only link list beneath the form. Older
 records without an owner id remain visible in the Showcase but are not claimed.
 
-- [ ] **Step 4: Render Showcase cards in source mode**
+- [ ] **Step 4: Render the Showcase list in source mode**
 
 Sort `Object.values(data.projects)` by descending `submittedAt`. Render an empty
-state after sync, or a responsive card grid with title, student,
-and an external `http(s)` link using `target="_blank"` and `rel="noreferrer"`.
+state after sync, or a compact row list with title, student, and an external
+`http(s)` link using `target="_blank"` and `rel="noreferrer"`.
 
 - [ ] **Step 5: Commit the shared component**
 
@@ -214,7 +214,7 @@ Showcase and confirm the card remains.
 - [ ] **Step 4: Verify responsive layout**
 
 Inspect both routes at desktop width and a narrow mobile viewport. Confirm fields
-remain usable, the card grid collapses cleanly, the fixed navigation does not
+remain usable, the compact list reflows cleanly, the fixed navigation does not
 cover controls, and focus states are visible.
 
 - [ ] **Step 5: Commit browser-driven fixes, if any**

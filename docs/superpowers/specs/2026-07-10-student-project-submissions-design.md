@@ -17,7 +17,7 @@ This implementation includes:
 - Name, project title, and project URL fields.
 - A domain-accessible PlayHTML collection.
 - Submission forms on week pages and the Showcase page.
-- A responsive Showcase card grid.
+- A compact Showcase project list.
 - Inline validation and submission feedback.
 - Browser verification across separate routes.
 
@@ -90,12 +90,11 @@ visitor's previous submissions after reloads and across class-site routes.
 Records created before ownership tracking remain in the Showcase but do not
 appear in a visitor's personal list.
 
-### Showcase cards
+### Showcase list
 
-The Showcase renders responsive cards with the project title, student name,
-and external project link. The design follows the existing class
-site's oversized uppercase typography, red accent, white panels, playful hover
-movement, and generous spacing.
+The Showcase renders one compact row per project with the project title,
+student name, and external-link arrow. The list is intentionally simple until
+student-controlled editing and visual customization are designed separately.
 
 ## Error handling
 
