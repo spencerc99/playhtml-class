@@ -1,5 +1,5 @@
-// ABOUTME: Per-page home beacon — each class route publishes its own shared
-// ABOUTME: pulse with a unique element id so the webring can mirror many at once.
+// ABOUTME: Class page presence publisher that pulses each active route into the
+// ABOUTME: shared Week 4 registry and renders the route's title beacon.
 
 import { withSharedState } from '@playhtml/react';
 import { playhtml } from 'playhtml';
@@ -9,16 +9,24 @@ import { useLocation } from 'react-router';
 /** How long after the last pulse a page still counts as "someone is here". */
 export const HOME_MS = 10_000;
 const PULSE_MS = 4_000;
-/** All beacon consumers poll at this interval so glow turns off without new sync. */
+/** Consumers poll so glow turns off without a new sync event. */
 export const BEACON_FRESHNESS_POLL_MS = 1_000;
 
-export interface HomeBeaconData {
-  lastSeen: number;
+/** Shared element on /week/4 — other pages write via data-source. */
+export const CLASS_PAGE_PRESENCE_ID = 'class-page-presence';
+export const CLASS_PAGE_PRESENCE_PATH = '/week/4';
+
+export interface ClassPagePresenceData {
+  byPath: Record<string, number>;
 }
 
 interface OrbPlacement {
   top: string;
   left: string;
+}
+
+export function normalizePath(pathname: string): string {
+  return pathname.replace(/\/$/, '') || '/';
 }
 
 export function isHomeBeaconLive(
@@ -28,24 +36,16 @@ export function isHomeBeaconLive(
   return lastSeen > 0 && now - lastSeen < HOME_MS;
 }
 
-/** Stable unique id per class route — required because playhtml keys data-source
- *  consumers by the #fragment, not the full host/path. */
-export function pageBeaconIdForPath(pathname: string): string {
-  const path = pathname.replace(/\/$/, '') || '/';
-  if (path === '/') return 'page-beacon-home';
-  const week = path.match(/^\/week\/(\d+)$/);
-  if (week) return `page-beacon-week-${week[1]}`;
-  if (path === '/showcase') return 'page-beacon-showcase';
-  return `page-beacon-${path.replace(/[^\w]+/g, '-').replace(/^-|-$/g, '')}`;
+export function presenceLastSeen(
+  data: ClassPagePresenceData | null | undefined,
+  pathname: string,
+): number {
+  return data?.byPath?.[normalizePath(pathname)] ?? 0;
 }
 
-/** data-source for a page's beacon. Must match playhtml shared-source paths:
- *  `/` → `host/#id`; `/week/4` → `host/week/4#id`. */
-export function pageHomeBeaconDataSource(pathname: string): string {
-  const host = window.location.host;
-  const path = pathname.replace(/\/$/, '') || '/';
-  const id = pageBeaconIdForPath(pathname);
-  return `${host}${path}#${id}`;
+/** data-source pointing at the week-4 presence registry. */
+export function classPagePresenceDataSource(): string {
+  return `${window.location.host}${CLASS_PAGE_PRESENCE_PATH}#${CLASS_PAGE_PRESENCE_ID}`;
 }
 
 function pickPlacement(): OrbPlacement {
@@ -68,49 +68,83 @@ function pickPlacement(): OrbPlacement {
   };
 }
 
+type PresenceDataUpdater = (fn: (draft: ClassPagePresenceData) => void) => void;
+
+function pulsePath(setData: PresenceDataUpdater, pathname: string) {
+  const path = normalizePath(pathname);
+  setData((draft) => {
+    draft.byPath ??= {};
+    draft.byPath[path] = Date.now();
+  });
+}
+
+export function startClassPagePresenceHeartbeat(
+  setData: PresenceDataUpdater,
+  getElement: () => HTMLElement,
+  pathname: string,
+): () => void {
+  let cancelled = false;
+  let pulseId: ReturnType<typeof setInterval> | undefined;
+  let readinessTimer: ReturnType<typeof setTimeout> | undefined;
+
+  void playhtml.ready.then(() => {
+    const start = () => {
+      if (cancelled) return;
+      if (getElement().getAttribute('aria-busy') === 'true') {
+        readinessTimer = setTimeout(start, 100);
+        return;
+      }
+
+      const pulse = () => pulsePath(setData, pathname);
+      pulse();
+      pulseId = setInterval(pulse, PULSE_MS);
+    };
+
+    start();
+  });
+
+  return () => {
+    cancelled = true;
+    if (readinessTimer) clearTimeout(readinessTimer);
+    if (pulseId) clearInterval(pulseId);
+  };
+}
+
 interface ClassHomeBeaconOrbProps {
-  // Defaults to the current route via useLocation when omitted.
   pathname?: string;
 }
 
 const ClassHomeBeaconOrbShared = withSharedState<
-  HomeBeaconData,
+  ClassPagePresenceData,
   never,
   { pathname: string }
 >(
   ({ pathname }) => ({
-    defaultData: { lastSeen: 0 },
-    id: pageBeaconIdForPath(pathname),
-    shared: 'read-write',
-    onMount: ({ setData }) => {
-      let cancelled = false;
-      let pulseId: ReturnType<typeof setInterval> | undefined;
-      let settleTimer: ReturnType<typeof setTimeout> | undefined;
-
-      void playhtml.ready.then(() => {
-        settleTimer = setTimeout(() => {
-          if (cancelled) return;
-          const pulse = () => {
-            setData((draft) => {
-              draft.lastSeen = Date.now();
-            });
-          };
-          pulse();
-          pulseId = setInterval(pulse, PULSE_MS);
-        }, 700);
-      });
-
-      return () => {
-        cancelled = true;
-        if (settleTimer) clearTimeout(settleTimer);
-        if (pulseId) clearInterval(pulseId);
-      };
-    },
+    defaultData: { byPath: {} },
+    id: CLASS_PAGE_PRESENCE_ID,
+    dataSource: classPagePresenceDataSource(),
+    onMount: ({ setData, getElement }) =>
+      startClassPagePresenceHeartbeat(setData, getElement, pathname),
   }),
   ({ data, ref }, { pathname }) => {
     const [now, setNow] = useState(() => Date.now());
     const [placement] = useState(pickPlacement);
-    const beaconId = pageBeaconIdForPath(pathname);
+
+    useEffect(() => {
+      let cancelled = false;
+
+      void playhtml.handleNavigation().then(() => {
+        const element = ref.current;
+        if (cancelled || !element) return;
+
+        playhtml.removePlayElement(element);
+        playhtml.setupPlayElement(element);
+      });
+
+      return () => {
+        cancelled = true;
+      };
+    }, [pathname, ref]);
 
     useEffect(() => {
       const id = window.setInterval(
@@ -120,7 +154,7 @@ const ClassHomeBeaconOrbShared = withSharedState<
       return () => clearInterval(id);
     }, []);
 
-    const home = isHomeBeaconLive(data.lastSeen, now);
+    const home = isHomeBeaconLive(presenceLastSeen(data, pathname), now);
     const style = {
       '--orb-top': placement.top,
       '--orb-left': placement.left,
@@ -129,10 +163,11 @@ const ClassHomeBeaconOrbShared = withSharedState<
     return (
       <span
         ref={ref as RefObject<HTMLSpanElement>}
-        id={beaconId}
         className={`home-beacon-orb${home ? ' is-home' : ''}`}
         style={style}
-        title={home ? 'someone is on this page right now' : 'this page is quiet'}
+        title={
+          home ? 'someone is on this page right now' : 'this page is quiet'
+        }
         aria-hidden="true"
       />
     );
@@ -141,8 +176,26 @@ const ClassHomeBeaconOrbShared = withSharedState<
 
 export function ClassHomeBeaconOrb(props: ClassHomeBeaconOrbProps) {
   const location = useLocation();
-  const pathname = props.pathname ?? location.pathname;
-  return <ClassHomeBeaconOrbShared pathname={pathname} />;
+  const pathname = normalizePath(props.pathname ?? location.pathname);
+
+  if (pathname === CLASS_PAGE_PRESENCE_PATH) {
+    const placement = pickPlacement();
+    const style = {
+      '--orb-top': placement.top,
+      '--orb-left': placement.left,
+    } as CSSProperties;
+
+    return (
+      <span
+        className="home-beacon-orb is-home"
+        style={style}
+        title="someone is on this page right now"
+        aria-hidden="true"
+      />
+    );
+  }
+
+  return <ClassHomeBeaconOrbShared key={pathname} pathname={pathname} />;
 }
 
 /** @deprecated Prefer ClassHomeBeaconOrb */

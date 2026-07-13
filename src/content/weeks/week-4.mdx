@@ -248,8 +248,6 @@ So you can use this to carry the same "identity" across different playhtml websi
 
 [Shared elements](https://playhtml.fun/docs/advanced/shared-elements/) let one page publish a source (`shared`) and other pages — on the **same domain** or another site — subscribe with `data-source="domain/path#elementId"`.
 
-You already use this in class: the Showcase owns `student-projects`, and week pages submit into it via `dataSource`. Each page also has a tiny glowing orb by the title — that's that page's own home beacon.
-
 Live porch lamp on this page (the source). Beside it, a same-page mirror reads the source for teaching — a real consumer on another page/site uses `data-source` (code below).
 
 <CodeDemo demo={<SharedLampSourceDemo />}>
@@ -286,47 +284,120 @@ Live porch lamp on this page (the source). Beside it, a same-page mirror reads t
 
 You can also connect across websites like spencer.place and playhtml.fun.
 
+Here is the real lamp connection between [spencer.place](https://spencer.place) and [playhtml.fun](https://playhtml.fun). Both images use the same `id` and the same `can-toggle` capability, but only spencer.place publishes the source:
+
+```html
+<!-- spencer.place: the source -->
+<img
+  id="lamp-akari"
+  class="lamp"
+  src="/assets/akari-22n.png"
+  can-toggle
+  shared
+/>
+```
+
+playhtml.fun connects to that source while keeping its own lamp image:
+
+```html
+<!-- playhtml.fun: a read-write consumer -->
+<img
+  id="lamp-akari"
+  class="lamp"
+  src="/lamps/Akari-1N.png"
+  can-toggle
+  data-source="spencer.place#lamp-akari"
+/>
+```
+
+`data-source` shares the lamp's PlayHTML state, not its HTML or `src`, so the two sites can represent the same on/off state with completely different images. Because the consumer does not use `data-source-read-only`, clicking either lamp updates both sites.
+
 ### Webring: is anyone home?
 
 Let's try making an example live webring where each site glows if the host is online.
 
-Each class page publishes its own **shared beacon** (`page-beacon-home`, `page-beacon-week-4`, …) that pulses `lastSeen` while that page is open. The webring below mirrors every class route with `data-source` — glow means someone is on that page right now.
+One shared registry lives inside the webring on this page (`#class-page-presence`). Every other class route connects to it with `data-source` and only updates its own path. Week 4 renders directly from that reactive registry instead of trying to subscribe to a separate source for every route.
 
-Look at the little orb by this week's title: that's _this_ page's beacon. Open `/` or another week in a second tab and watch that page's dot light up here.
+Look at the little orb by this week's title — it's writing into that registry. Open `/` or another week in a second tab and watch that page's webring dot light up here.
 
 ```html
-<!-- On each page (unique id per route) -->
-<div id="page-beacon-week-4" shared can-play></div>
+<!-- /week/4: the source and the visible webring -->
+<div id="class-page-presence" shared can-play>
+  <span data-path="/">home</span>
+  <span data-path="/week/4">week 4</span>
+  <span data-path="/showcase">showcase</span>
+</div>
+
 <script>
-  const beacon = document.getElementById('page-beacon-week-4');
-  beacon.defaultData = { lastSeen: 0 };
-  beacon.onMount = ({ setData }) => {
+  const webring = document.getElementById('class-page-presence');
+  webring.defaultData = { byPath: {} };
+
+  webring.updateElement = ({ element, data }) => {
+    const now = Date.now();
+    element.querySelectorAll('[data-path]').forEach((dot) => {
+      const lastSeen = data.byPath[dot.dataset.path] ?? 0;
+      dot.classList.toggle('is-home', now - lastSeen < 10000);
+    });
+  };
+
+  webring.onMount = ({ setData, requestUpdate }) => {
     const pulse = () =>
-      setData((d) => {
-        d.lastSeen = Date.now();
+      setData((data) => {
+        data.byPath['/week/4'] = Date.now();
       });
+
     pulse();
-    const id = setInterval(pulse, 4000);
-    return () => clearInterval(id);
+    const pulseTimer = setInterval(pulse, 4000);
+    const renderTimer = setInterval(requestUpdate, 1000);
+
+    return () => {
+      clearInterval(pulseTimer);
+      clearInterval(renderTimer);
+    };
   };
 </script>
 ```
+
+Every other route uses the same element ID and publishes into the Week 4 source:
+
+```html
+<!-- On the home page -->
+<span
+  id="class-page-presence"
+  data-source="class.playhtml.fun/week/4#class-page-presence"
+  can-play
+  hidden
+></span>
+
+<script>
+  const presence = document.getElementById('class-page-presence');
+  presence.defaultData = { byPath: {} };
+  presence.updateElement = () => {};
+
+  presence.onMount = ({ setData }) => {
+    const pulse = () =>
+      setData((data) => {
+        data.byPath['/'] = Date.now();
+      });
+
+    pulse();
+    const timer = setInterval(pulse, 4000);
+    return () => clearInterval(timer);
+  };
+</script>
+```
+
+Configure these properties before calling `playhtml.init()`. In a single-page app, also remount or restart the publisher when the pathname changes so its interval cannot keep pulsing the route you just left.
 
 Webring (home + every week + showcase):
 
 <CodeDemo demo={<WebringDemo />}>
 
 ```html
-<div data-source="host/#page-beacon-home" data-source-read-only can-play></div>
-<div
-  data-source="host/week/4#page-beacon-week-4"
-  data-source-read-only
-  can-play
-></div>
-<!-- …one consumer per class page -->
-<script>
-  // home = Date.now() - data.lastSeen < 12000 → add a glow class
-</script>
+<!-- A dot glows when its latest registry timestamp is under 10 seconds old. -->
+<span data-path="/" class="is-home">home</span>
+<span data-path="/week/4">week 4</span>
+<span data-path="/showcase">showcase</span>
 ```
 
 </CodeDemo>

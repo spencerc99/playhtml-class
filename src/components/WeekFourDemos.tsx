@@ -7,10 +7,13 @@ import { useEffect, useState, type RefObject } from 'react';
 import { CanPlayDemo, type CanPlayInit } from './CanPlayDemo';
 import {
   BEACON_FRESHNESS_POLL_MS,
+  CLASS_PAGE_PRESENCE_ID,
+  CLASS_PAGE_PRESENCE_PATH,
   isHomeBeaconLive,
-  pageBeaconIdForPath,
-  pageHomeBeaconDataSource,
-  type HomeBeaconData,
+  normalizePath,
+  presenceLastSeen,
+  startClassPagePresenceHeartbeat,
+  type ClassPagePresenceData,
 } from './HomeBeaconOrb';
 
 interface Profile {
@@ -643,19 +646,15 @@ export function SharedLampConsumerDemo() {
   );
 }
 
-// --- Webring: one beacon per class page ----------------------------------------
+// --- Webring: presence registry on this page -----------------------------------
 
-// Each route publishes a uniquely-id'd shared beacon. Remote dots subscribe with
-// dataSource using that same id (playhtml keys consumers by #fragment). The
-// current page's dot reads the title orb via getHandle — a second dataSource to
-// the same #id in this room would collide.
+// Week 4 owns one registry and renders directly from its reactive shared data.
+// Other routes push their heartbeat into this source through data-source.
 
 interface WebringMember {
   id: string;
   label: string;
   path: string;
-  dataSource?: string;
-  local?: boolean;
 }
 
 function discoverWeekNumbers(): number[] {
@@ -663,9 +662,7 @@ function discoverWeekNumbers(): number[] {
 }
 
 function webringMembers(): WebringMember[] {
-  const path =
-    typeof window !== 'undefined' ? window.location.pathname : '/week/4';
-  const pages: Array<{ id: string; label: string; path: string }> = [
+  return [
     { id: 'home', label: 'home', path: '/' },
     ...discoverWeekNumbers().map((n) => ({
       id: `week-${n}`,
@@ -674,76 +671,22 @@ function webringMembers(): WebringMember[] {
     })),
     { id: 'showcase', label: 'show', path: '/showcase' },
   ];
-
-  return pages.map((page) => {
-    const isLocal =
-      page.path === '/'
-        ? path === '/'
-        : path === page.path || path.startsWith(`${page.path}/`);
-    return {
-      ...page,
-      local: isLocal,
-      dataSource: isLocal ? undefined : pageHomeBeaconDataSource(page.path),
-    };
-  });
 }
 
-function WebringOrbVisual({
-  member,
-  home,
-}: {
-  member: WebringMember;
-  home: boolean;
-}) {
-  return (
-    <div
-      className={`week4-webring__orb${home ? ' is-home' : ''}`}
-      title={member.path}
-    >
-      <span className="orb">
-        <span className="dot" aria-hidden="true" />
-      </span>
-      <span className="name">{member.label}</span>
-    </div>
-  );
-}
-
-function WebringLocalOrb({ member }: { member: WebringMember }) {
-  const beaconId = pageBeaconIdForPath(member.path);
-  const [home, setHome] = useState(false);
-
-  useEffect(() => {
-    const tick = () => {
-      try {
-        const handle = playhtml.getHandle(beaconId) as {
-          getData?: () => HomeBeaconData;
-        };
-        setHome(isHomeBeaconLive(handle.getData?.()?.lastSeen ?? 0));
-      } catch {
-        setHome(false);
-      }
-    };
-    tick();
-    const id = window.setInterval(tick, BEACON_FRESHNESS_POLL_MS);
-    return () => clearInterval(id);
-  }, [beaconId]);
-
-  return <WebringOrbVisual member={member} home={home} />;
-}
-
-// Must use the beacon fragment as `id` so it matches data-source and getHandle.
-const WebringRemoteOrb = withSharedState<
-  HomeBeaconData,
-  never,
-  { member: WebringMember }
->(
-  ({ member }) => ({
-    defaultData: { lastSeen: 0 },
-    id: pageBeaconIdForPath(member.path),
-    dataSource: member.dataSource!,
-    dataSourceReadOnly: true,
-  }),
-  ({ data, ref }, { member }) => {
+export const WebringDemo = withSharedState<ClassPagePresenceData>(
+  {
+    defaultData: { byPath: {} },
+    id: CLASS_PAGE_PRESENCE_ID,
+    shared: 'read-write',
+    onMount: ({ setData, getElement }) =>
+      startClassPagePresenceHeartbeat(
+        setData,
+        getElement,
+        CLASS_PAGE_PRESENCE_PATH,
+      ),
+  },
+  ({ data, ref }) => {
+    const [members] = useState(webringMembers);
     const [now, setNow] = useState(() => Date.now());
 
     useEffect(() => {
@@ -754,59 +697,33 @@ const WebringRemoteOrb = withSharedState<
       return () => clearInterval(id);
     }, []);
 
-    const home = isHomeBeaconLive(data.lastSeen, now);
-
     return (
-      <div
-        ref={ref as RefObject<HTMLDivElement>}
-        className={`week4-webring__orb${home ? ' is-home' : ''}`}
-        title={member.path}
-      >
-        <span className="orb">
-          <span className="dot" aria-hidden="true" />
-        </span>
-        <span className="name">{member.label}</span>
-      </div>
-    );
-  },
-);
-
-function WebringMemberOrb({ member }: { member: WebringMember }) {
-  if (member.local || !member.dataSource) {
-    return (
-      <div className="week4-webring__slot">
-        <WebringLocalOrb member={member} />
-      </div>
-    );
-  }
-
-  return (
-    <div className="week4-webring__slot">
-      <WebringRemoteOrb member={member} />
-    </div>
-  );
-}
-
-export function WebringDemo() {
-  const [members, setMembers] = useState<WebringMember[]>([]);
-
-  useEffect(() => {
-    setMembers(webringMembers());
-  }, []);
-
-  if (members.length === 0) return null;
-
-  return (
-    <div className="week4-webring">
-      <div className="week4-webring__ring">
-        {members.map((member) => (
-          <WebringMemberOrb key={member.id} member={member} />
-        ))}
-      </div>
-      <p className="week4-webring__caption">
-        each dot is a class page — glow means someone is there
-      </p>
-      <style>{`
+      <div ref={ref as RefObject<HTMLDivElement>} className="week4-webring">
+        <div className="week4-webring__ring">
+          {members.map((member) => {
+            const home = isHomeBeaconLive(
+              presenceLastSeen(data, member.path),
+              now,
+            );
+            return (
+              <div key={member.id} className="week4-webring__slot">
+                <div
+                  className={`week4-webring__orb${home ? ' is-home' : ''}`}
+                  title={normalizePath(member.path)}
+                >
+                  <span className="orb">
+                    <span className="dot" aria-hidden="true" />
+                  </span>
+                  <span className="name">{member.label}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <p className="week4-webring__caption">
+          each dot is a class page — glow means someone is there
+        </p>
+        <style>{`
         .week4-webring {
           font-family: var(--font-body);
           width: min(100%, 22rem);
@@ -867,6 +784,7 @@ export function WebringDemo() {
           text-align: center;
         }
       `}</style>
-    </div>
-  );
-}
+      </div>
+    );
+  },
+);
