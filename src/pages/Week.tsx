@@ -5,6 +5,7 @@ import { useEffect, useRef, type ComponentType } from 'react';
 import { Link, useParams } from 'react-router';
 import { Attendance } from '../components/Attendance';
 import { FloatingChair } from '../components/FloatingChair';
+import { HomeBeaconOrb } from '../components/HomeBeaconOrb';
 import { ProjectSubmissions } from '../components/ProjectSubmissions';
 import { isWeekUnlocked } from '../weekSchedule';
 import { WEEK_PAGE_CHAIRS } from '../weekPageChairs';
@@ -231,9 +232,12 @@ export default function Week() {
             <p className="text-2xl font-bold uppercase tracking-[0.12em] text-white md:text-4xl">
               Week {weekNumber}
             </p>
-            <h1 className="mt-4 text-5xl font-extrabold uppercase leading-[0.9] text-white md:text-6xl">
-              {title}
-            </h1>
+            <div className="relative mt-4">
+              <HomeBeaconOrb />
+              <h1 className="text-5xl font-extrabold uppercase leading-[0.9] text-white md:text-6xl">
+                {title}
+              </h1>
+            </div>
             <p className="text-white/88 mt-5 max-w-3xl text-base leading-relaxed md:text-xl">
               {summary}
             </p>

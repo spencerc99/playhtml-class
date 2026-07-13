@@ -199,6 +199,18 @@ a:hover {
   width: 100%;
 }
 
+/* Keep inline demo rows (e.g. week 4 webring) horizontal when stacked in-column. */
+.code-demo__live .week4-webring__ring {
+  display: flex;
+  flex-flow: row wrap;
+}
+.code-demo__live .week4-webring__slot {
+  flex: 0 0 auto;
+}
+.code-demo__live .week4-webring__slot .live-html-demo {
+  width: auto;
+}
+
 /* On wide screens, break the live demo out of the content column and float it
    into the right margin, aligned to the top of its own code block. */
 @media (min-width: 1180px) {
@@ -688,6 +700,36 @@ a:hover {
 
 .home-page a {
   color: inherit;
+}
+
+/* Easter-egg mirror of /week/4#week4-home-beacon — glows when that page is live.
+   Position is randomized per visit via --orb-top / --orb-left. */
+.home-beacon-orb {
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 50%;
+  display: block;
+  height: 0.7rem;
+  left: var(--orb-left, 12%);
+  opacity: 0.55;
+  pointer-events: auto;
+  position: absolute;
+  top: var(--orb-top, 8%);
+  transition:
+    background 0.3s ease,
+    box-shadow 0.3s ease,
+    opacity 0.3s ease;
+  width: 0.7rem;
+  z-index: 2;
+}
+
+.home-beacon-orb.is-home {
+  background: #7dffb0;
+  border-color: rgba(125, 255, 176, 0.85);
+  box-shadow:
+    0 0 0.55rem rgba(125, 255, 176, 0.9),
+    0 0 1.25rem rgba(125, 255, 176, 0.45);
+  opacity: 1;
 }
 
 .week-page {

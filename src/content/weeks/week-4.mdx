@@ -6,7 +6,6 @@ export const meta = {
 import { CodeDemo } from '../../components/CodeDemo';
 import {
   GuestbookAdminDemo,
-  HomeBeaconDemo,
   PasswordLockDemo,
   SharedLampConsumerDemo,
   SharedLampSourceDemo,
@@ -30,10 +29,6 @@ import {
 ## Sharing (30 mins)
 
 ## Making Public Spaces on the Web
-
-- facilitating unexpected encounters
-- third spaces
-- max and 2nd place
 
 Seating spots along with protected backs provide safety for people to familiarize with a space. It's a balance between openness to other people and still feeling safe to be yourself.
 
@@ -76,6 +71,10 @@ The pluriverse is a concept popularized by anthropologist Arturo Escobar in [Des
 That's what I want to see from the internet! Thousands of interfaces and spaces and experiences that are completely different, not feeds under different names.
 
 ## Reading & Lecture Discussion (30 mins)
+
+- What are the different kinds of spaces and interactions that are essential to a healthy digital public space? Are there examples you've experienced? Are there examples where it's done the opposite?
+- In cities, we have local governments that are responsible for public spaces and are beholden to their constituents to do so. When they don't do their job, we can protest and fight for change. In digital space, it's hard to point to an equivalent. There are the major companies that control the majority of how people browse the web and different international institutions that dictate how the internet works (IETF, W3C, etc.). How do we maintain and ensure public digital space structurally?
+- One challenge with digital public space is that different websites are completely separate islands. This models encourages us to create new, siloed experiences rather than say hosting a pop-up in an existing space. As a result, digital public spaces are often very individual. How do we create spaces that are more integrated, connected, and encourage us to contribute back to the community?
 
 ## Code
 
@@ -188,17 +187,17 @@ Same guestbook as last week. Per-row **delete** buttons only appear once admin i
 
 Try it: add `?admin` to the URL, or press `⌘⇧A` / `Ctrl⇧A`. A delete button shows up on each note.
 
-### Lock a clear-everything control behind a password
+### Freeze signing behind a password
 
-Same obscurity idea, different shape: a dangerous **clear everything** control is on the page (blurred), and a hardcoded password reveals it. Here it wipes the guestbook above.
+Same obscurity idea, different shape: a **freeze signing** control is on the page (blurred), and a hardcoded password reveals it. Freezing is shared data on the guestbook — notes stay, but nobody can add new ones until you unfreeze.
 
 <CodeDemo demo={<PasswordLockDemo />}>
 
 ```html
 <div id="moderation">
   <div class="panel">
-    <p>Danger zone: wipe every guestbook note.</p>
-    <button type="button" id="clear-all">clear everything</button>
+    <p>Closed for the night: freeze signing on the guestbook.</p>
+    <button type="button" id="toggle-freeze">freeze signing</button>
   </div>
   <form id="gate">
     <input type="password" placeholder="password" />
@@ -218,10 +217,10 @@ Same obscurity idea, different shape: a dangerous **clear everything** control i
     }
   });
 
-  document.getElementById('clear-all').addEventListener('click', () => {
+  document.getElementById('toggle-freeze').addEventListener('click', () => {
     if (sessionStorage.getItem('unlocked') !== '1') return;
     playhtml.getHandle('guestbook').setData((draft) => {
-      draft.entries.splice(0, draft.entries.length);
+      draft.frozen = !draft.frozen;
     });
   });
 </script>
@@ -249,9 +248,9 @@ So you can use this to carry the same "identity" across different playhtml websi
 
 [Shared elements](https://playhtml.fun/docs/advanced/shared-elements/) let one page publish a source (`shared`) and other pages — on the **same domain** or another site — subscribe with `data-source="domain/path#elementId"`.
 
-You already use this in class: the Showcase owns `student-projects`, and week pages submit into it via `dataSource`.
+You already use this in class: the Showcase owns `student-projects`, and week pages submit into it via `dataSource`. Each page also has a tiny glowing orb by the title — that's that page's own home beacon.
 
-Live porch lamp on this page (the source). The mirror beside it is a **read-only consumer** of the same element via `data-source` — including across another path on this domain, or another site, with the same attribute.
+Live porch lamp on this page (the source). Beside it, a same-page mirror reads the source for teaching — a real consumer on another page/site uses `data-source` (code below).
 
 <CodeDemo demo={<SharedLampSourceDemo />}>
 
@@ -291,19 +290,16 @@ You can also connect across websites like spencer.place and playhtml.fun.
 
 Let's try making an example live webring where each site glows if the host is online.
 
-Each site publishes a small **shared beacon** that pulses `lastSeen` while the page is open. A webring widget mirrors those beacons with `data-source` and glows when the pulse is recent. Leave the page → pulses stop → glow fades.
+Each class page publishes its own **shared beacon** (`page-beacon-home`, `page-beacon-week-4`, …) that pulses `lastSeen` while that page is open. The webring below mirrors every class route with `data-source` — glow means someone is on that page right now.
 
-Beacon on this page (source + local presence count):
-
-<CodeDemo demo={<HomeBeaconDemo />}>
+Look at the little orb by this week's title: that's _this_ page's beacon. Open `/` or another week in a second tab and watch that page's dot light up here.
 
 ```html
-<div id="home-beacon" shared can-play></div>
+<!-- On each page (unique id per route) -->
+<div id="page-beacon-week-4" shared can-play></div>
 <script>
-  const beacon = document.getElementById('home-beacon');
+  const beacon = document.getElementById('page-beacon-week-4');
   beacon.defaultData = { lastSeen: 0 };
-  beacon.myDefaultAwareness = { here: true }; // local "who's on this page"
-
   beacon.onMount = ({ setData }) => {
     const pulse = () =>
       setData((d) => {
@@ -313,30 +309,23 @@ Beacon on this page (source + local presence count):
     const id = setInterval(pulse, 4000);
     return () => clearInterval(id);
   };
-
-  beacon.updateElementAwareness = ({ element, awareness }) => {
-    // optional: show how many people are on *this* page right now
-  };
 </script>
 ```
 
-</CodeDemo>
-
-Webring widget (one orb per site; this class site should glow while you're here):
+Webring (home + every week + showcase):
 
 <CodeDemo demo={<WebringDemo />}>
 
 ```html
-<!-- One read-only consumer per member site -->
+<div data-source="host/#page-beacon-home" data-source-read-only can-play></div>
 <div
-  data-source="yoursite.com#home-beacon"
+  data-source="host/week/4#page-beacon-week-4"
   data-source-read-only
   can-play
 ></div>
-<div data-source="afriend.com#home-beacon" data-source-read-only can-play></div>
+<!-- …one consumer per class page -->
 <script>
-  // home = Date.now() - data.lastSeen < 12000
-  // render favicon; add a glow class when home
+  // home = Date.now() - data.lastSeen < 12000 → add a glow class
 </script>
 ```
 
@@ -344,8 +333,6 @@ Webring widget (one orb per site; this class site should glow while you're here)
 
 ## Assignment / Readings
 
-- Finalize your site.
-- Optional: implement one custom event or shared behavior that interacts with others' sites.
-- Soft-admin stretch: add a `?admin` or Konami gate to something you moderate (guestbook deletes, clear canvas, etc.).
-- Webring stretch: publish a `#home-beacon` on your site and point a classmate's widget at it (or mirror theirs).
-- Read: `TKTKTKTKT`
+- Finalize your site!
+  - Try adding a `?admin` or shortcut gate to something you moderate or keep hidden from others
+  - Publish a shared element that others can use to detect & show when someone is on your website! Do something like a home beacon.

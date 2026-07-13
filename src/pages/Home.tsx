@@ -4,6 +4,7 @@
 import type { CSSProperties } from 'react';
 import { Link } from 'react-router';
 import { FloatingChair, FloatingChairProps } from '../components/FloatingChair';
+import { HomeBeaconOrb } from '../components/HomeBeaconOrb';
 import {
   formatUnlockDate,
   isWeekUnlocked,
@@ -95,13 +96,16 @@ export default function Home() {
             <br />
             Computation
           </a>
-          <h1 className={HOME_HERO_HEADING}>
-            Building
-            <br />
-            Benches
-            <br />
-            for the Web
-          </h1>
+          <div className="relative">
+            <HomeBeaconOrb />
+            <h1 className={HOME_HERO_HEADING}>
+              Building
+              <br />
+              Benches
+              <br />
+              for the Web
+            </h1>
+          </div>
           <p className="text-right text-xl font-bold uppercase leading-tight text-white md:text-2xl">
             Summer
             <br />
