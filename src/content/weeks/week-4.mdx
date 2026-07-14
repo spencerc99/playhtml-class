@@ -124,17 +124,19 @@ Same guestbook as last week. Per-row **delete** buttons only appear once admin i
     ) {
       event.preventDefault();
       unlock();
-      // toggle .is-admin / re-render so delete buttons show
+      playhtml.getHandle('guestbook').requestUpdate();
     }
   });
 
   playhtml.register('guestbook', {
-    defaultData: { entries: [] },
+    defaultData: { entries: [], frozen: false },
     view: ({ data, setData }) => {
       const admin = isAdmin();
+      const frozen = Boolean(data.frozen);
 
       const sign = (event) => {
         event.preventDefault();
+        if (frozen) return;
         const input = event.target.querySelector('input');
         const message = input.value.trim();
         if (!message) return;
@@ -158,9 +160,13 @@ Same guestbook as last week. Per-row **delete** buttons only appear once admin i
 
       return html`
         ${admin ? html`<div class="admin-bar">admin unlocked</div>` : null}
+        ${frozen ? html`<p>signing is frozen — closed for now</p>` : null}
         <form @submit=${sign}>
-          <input placeholder="leave a note..." />
-          <button type="submit">sign</button>
+          <input
+            placeholder=${frozen ? 'signing frozen…' : 'leave a note...'}
+            ?disabled=${frozen}
+          />
+          <button type="submit" ?disabled=${frozen}>sign</button>
         </form>
         <ul>
           ${repeat(
@@ -189,11 +195,23 @@ Try it: add `?admin` to the URL, or press `⌘⇧A` / `Ctrl⇧A`. A delete butto
 
 ### Freeze signing behind a password
 
-Same obscurity idea, different shape: a **freeze signing** control is on the page (blurred), and a hardcoded password reveals it. Freezing is shared data on the guestbook — notes stay, but nobody can add new ones until you unfreeze.
+Same obscurity idea, different shape: a **freeze signing** control is on the page (blurred), and a hardcoded password reveals it. Freezing is shared data on the guestbook — notes stay, but nobody can add new ones until you unfreeze. Add this after the guestbook above so it can control the registered `guestbook` element.
 
 <CodeDemo demo={<PasswordLockDemo />}>
 
 ```html
+<style>
+  #moderation .panel {
+    filter: blur(5px);
+    pointer-events: none;
+  }
+
+  #moderation.is-unlocked .panel {
+    filter: none;
+    pointer-events: auto;
+  }
+</style>
+
 <div id="moderation">
   <div class="panel">
     <p>Closed for the night: freeze signing on the guestbook.</p>
@@ -204,16 +222,21 @@ Same obscurity idea, different shape: a **freeze signing** control is on the pag
     <button type="submit">unlock</button>
   </form>
 </div>
+
 <script>
   const PASSWORD = 'bench'; // hardcoded on purpose — soft gate only
   const panel = document.getElementById('moderation');
+  panel.classList.toggle(
+    'is-unlocked',
+    sessionStorage.getItem('unlocked') === '1',
+  );
 
   document.getElementById('gate').addEventListener('submit', (event) => {
     event.preventDefault();
     const value = event.target.querySelector('input').value.trim();
     if (value === PASSWORD) {
       sessionStorage.setItem('unlocked', '1');
-      panel.classList.add('is-unlocked'); // CSS drops the blur
+      panel.classList.add('is-unlocked');
     }
   });
 
@@ -236,9 +259,13 @@ Real permissioning, tied to each person's unique ID, is on the roadmap which wil
 
 ## Connecting the Web
 
+By default, the web stops websites from talking to each other across domains for security reasons. [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS) is what prevents this by default.
+
 To really make public spaces on the web, we need to connect people across the web, not just within single websites. we were online (WWO) is the next evolution of playhtml. It's a browser extension that brings playhtml to every website you visit to turn the entire internet into a shared space.
 
 https://wewere.online
+
+Eventually, the goal is to have playhtml form a social layer across the entire internet.
 
 The benefit to playhtml websites is that people get a stable identitifer that travels with them across different websites, and it opens up the ability for actions on one site to affect another or for people to bring objects from one place to another.
 
@@ -254,12 +281,26 @@ Live porch lamp on this page (the source). Beside it, a same-page mirror reads t
 
 ```html
 <!-- Source: this page publishes the lamp -->
-<div id="porch-lamp" shared can-play>💡</div>
+<style>
+  #week4-porch-lamp.is-on button {
+    filter: brightness(1.4);
+    text-shadow: 0 0 1rem gold;
+  }
+</style>
+
+<div id="week4-porch-lamp" shared can-play>
+  <button type="button" aria-label="toggle porch lamp">💡</button>
+  <span class="label">off (shared)</span>
+</div>
+
 <script>
-  const lamp = document.getElementById('porch-lamp');
+  const lamp = document.getElementById('week4-porch-lamp');
   lamp.defaultData = { on: false };
   lamp.updateElement = ({ element, data }) => {
     element.classList.toggle('is-on', data.on);
+    element.querySelector('.label').textContent = data.on
+      ? 'on (shared)'
+      : 'off (shared)';
   };
   lamp.onClick = (_e, { data, setData }) => setData({ on: !data.on });
 </script>
@@ -270,17 +311,39 @@ Live porch lamp on this page (the source). Beside it, a same-page mirror reads t
 <CodeDemo demo={<SharedLampConsumerDemo />}>
 
 ```html
-<!-- Consumer: another page (or site) mirrors it -->
+<!-- Consumer: another page or site reads the live source above -->
+<style>
+  #week4-porch-lamp.is-on button {
+    filter: brightness(1.4);
+    text-shadow: 0 0 1rem hotpink;
+  }
+</style>
+
 <div
-  data-source="your-domain.com/week/4#porch-lamp"
+  id="week4-porch-lamp"
+  data-source="class.playhtml.fun/week/4#week4-porch-lamp"
   data-source-read-only
   can-play
 >
-  💡
+  <button type="button" aria-label="mirrored porch lamp">🪔</button>
+  <span class="label">off (mirror)</span>
 </div>
+
+<script>
+  const lamp = document.getElementById('week4-porch-lamp');
+  lamp.defaultData = { on: false };
+  lamp.updateElement = ({ element, data }) => {
+    element.classList.toggle('is-on', data.on);
+    element.querySelector('.label').textContent = data.on
+      ? 'on (mirror)'
+      : 'off (mirror)';
+  };
+</script>
 ```
 
 </CodeDemo>
+
+The source and consumer must use the same element `id` and data shape. Their HTML, CSS, and images can be completely different. A custom `can-play` consumer still defines `defaultData` and `updateElement`; `data-source` only tells it where the shared data comes from.
 
 You can also connect across websites like spencer.place and playhtml.fun.
 
@@ -310,7 +373,7 @@ playhtml.fun connects to that source while keeping its own lamp image:
 />
 ```
 
-`data-source` shares the lamp's PlayHTML state, not its HTML or `src`, so the two sites can represent the same on/off state with completely different images. Because the consumer does not use `data-source-read-only`, clicking either lamp updates both sites.
+`data-source` shares the lamp's PlayHTML state, not its HTML or `src`, so the two sites can represent the same on/off state with completely different images. Because `can-toggle` is a built-in behavior, PlayHTML supplies its data and interaction setup. Because the consumer does not use `data-source-read-only`, clicking either lamp updates both sites.
 
 ### Webring: is anyone home?
 
@@ -320,8 +383,24 @@ One shared registry lives inside the webring on this page (`#class-page-presence
 
 Look at the little orb by this week's title — it's writing into that registry. Open `/` or another week in a second tab and watch that page's webring dot light up here.
 
+<CodeDemo demo={<WebringDemo />}>
+
 ```html
 <!-- /week/4: the source and the visible webring -->
+<style>
+  #class-page-presence [data-path] {
+    opacity: 0.35;
+    transition:
+      opacity 0.2s ease,
+      text-shadow 0.2s ease;
+  }
+
+  #class-page-presence [data-path].is-home {
+    opacity: 1;
+    text-shadow: 0 0 0.7rem lime;
+  }
+</style>
+
 <div id="class-page-presence" shared can-play>
   <span data-path="/">home</span>
   <span data-path="/week/4">week 4</span>
@@ -343,6 +422,7 @@ Look at the little orb by this week's title — it's writing into that registry.
   webring.onMount = ({ setData, requestUpdate }) => {
     const pulse = () =>
       setData((data) => {
+        data.byPath ??= {};
         data.byPath['/week/4'] = Date.now();
       });
 
@@ -357,6 +437,8 @@ Look at the little orb by this week's title — it's writing into that registry.
   };
 </script>
 ```
+
+</CodeDemo>
 
 Every other route uses the same element ID and publishes into the Week 4 source:
 
@@ -377,6 +459,7 @@ Every other route uses the same element ID and publishes into the Week 4 source:
   presence.onMount = ({ setData }) => {
     const pulse = () =>
       setData((data) => {
+        data.byPath ??= {};
         data.byPath['/'] = Date.now();
       });
 
@@ -387,20 +470,7 @@ Every other route uses the same element ID and publishes into the Week 4 source:
 </script>
 ```
 
-Configure these properties before calling `playhtml.init()`. In a single-page app, also remount or restart the publisher when the pathname changes so its interval cannot keep pulsing the route you just left.
-
-Webring (home + every week + showcase):
-
-<CodeDemo demo={<WebringDemo />}>
-
-```html
-<!-- A dot glows when its latest registry timestamp is under 10 seconds old. -->
-<span data-path="/" class="is-home">home</span>
-<span data-path="/week/4">week 4</span>
-<span data-path="/showcase">showcase</span>
-```
-
-</CodeDemo>
+Every custom `can-play` element gets a unique `id`, `defaultData`, and either `updateElement` or `view` before `playhtml.init()` runs. In a single-page app, also remount or restart the publisher when the pathname changes so its interval cannot keep pulsing the route you just left.
 
 ## Assignment / Readings
 
