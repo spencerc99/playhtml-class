@@ -17,7 +17,7 @@ export const meta = {
 
 ## Showcase
 
-We will be showcasing your final projects in a live crit session. Please submit your project URL in the "showcase" tab to share your work wi`th the class.
+We will be showcasing your final projects in a live crit session. Please submit your project URL in the "showcase" tab to share your work with the class.
 
 Each person will have about 1 minute to present their project and 2 minutes to receive feedback from the class and our guest crit. Please be prepared to share your screen and walk us through your project.
 
@@ -30,7 +30,7 @@ Monday: [Xin Xin](xin-xin.info) is an artist currently making socially-engaged s
 
 Tuesday: [Nolen]
 
-### Let's create a web ring together!
+## Let's create a web ring together!
 
 What is a [web ring](https://en.wikipedia.org/wiki/Webring)? A web ring is a collection of websites that are linked together in a circular structure. Each site in the ring has a link to the next site, creating a continuous loop.
 
@@ -51,3 +51,205 @@ As the web grew exponentially in the mid-90s, the exact same problem emerged at 
 
 The webring solved this by turning the entire web into a collaborative directory. It took separate, isolated websites and stitched their `index.html` pages together into a decentralized loop.
 
+### What we are making
+
+Our class ring is both a directory and a shared toy:
+
+1. Everyone submits a safe set of details about their project: a name, URL, invitation, emoji or image, and glow color.
+2. The Showcase arranges those projects into a full-screen ring of circular charms.
+3. Optionally, a charm in the ring can be connected to an element on its owner's site. Touching either copy updates the other through PlayHTML.
+
+No participant code runs on the class website. The class page only saves the submitted details and subscribes to the shared PlayHTML state. Everyone remains the host of their own HTML, CSS, images, and scripts.
+
+### The shared-element mental model
+
+A PlayHTML [shared element](https://playhtml.fun/docs/advanced/shared-elements/) has one **source** and one or more **consumers**:
+
+```text
+your-project.example                         class Showcase
+
+<img id="my-ring-charm"                     a circular charm
+     shared                                  data-source=
+     can-play>            ← { active } →      "your-project.example#my-ring-charm"
+```
+
+The source and consumer share **state**, not HTML. Your source can be an image, button, flower, lamp, or any other element. The class ring can represent that same state with its own circular design.
+
+The circle image submitted to the class is the **consumer element**. The object on your own site is the **source element**. They can use different images and styles while sharing one tiny piece of state: `{ active: false }` or `{ active: true }`.
+
+Two values must agree:
+
+- The exact page URL where the source is published
+- The source's stable `id`
+
+Both sides use `can-play` and the same `{ active }` data shape. What “active” looks like on your site is completely yours to decide.
+
+### Step 1: Choose a charm
+
+Choose one small element on your project that can act as an invitation or tiny souvenir from your site. It could be:
+
+- a porch light that turns on and off
+- a seed that grows when it is watered
+- a record, wheel, moon, or plate that spins
+- a small image or symbol that already belongs to your project
+
+Try to choose an interaction that makes sense in the world of your site, rather than adding an effect only because it is available.
+
+### Step 2: Publish and script the source on your site
+
+The `id` should be unique on the page and should not change after you submit it. Start with this complete example:
+
+```html
+<img
+  id="my-ring-charm"
+  shared
+  can-play
+  src="/images/porch-light.png"
+  alt="Turn my porch light on or off"
+/>
+
+<script type="module">
+  import { playhtml } from 'https://unpkg.com/playhtml';
+
+  const charm = document.querySelector('#my-ring-charm');
+
+  // This is the small data contract shared with the class circle.
+  charm.defaultData = { active: false };
+
+  // Decide what changes the shared state on your site.
+  charm.onClick = (_event, { setData }) => {
+    setData((draft) => {
+      draft.active = !draft.active;
+    });
+  };
+
+  // Decide how that state appears on your site.
+  charm.updateElement = ({ element, data }) => {
+    element.classList.toggle('is-active', data.active);
+  };
+
+  playhtml.init();
+</script>
+```
+
+The class ring knows only whether the charm is active. Your CSS decides what that means locally:
+
+```css
+#my-ring-charm {
+  cursor: pointer;
+  filter: grayscale(1);
+  transition:
+    filter 300ms,
+    transform 300ms;
+}
+
+/* Glow, grow, spin, reveal something, play an animation—this is your effect. */
+#my-ring-charm.is-active {
+  filter: grayscale(0) drop-shadow(0 0 18px gold);
+  transform: scale(1.08) rotate(8deg);
+}
+```
+
+The source does not have to be an image. You can put `shared can-play` on a button, lamp, drawing, or container as long as it uses the same `{ active }` data.
+
+If your project already calls `playhtml.init()`, do not call it a second time. Add the `defaultData`, `onClick`, and `updateElement` setup before your existing initialization.
+
+### Step 3: Connect the state to another interaction (optional)
+
+The source does not have to toggle itself. For example, a separate doorbell can update the shared porch light:
+
+```js
+await playhtml.ready;
+
+const light = playhtml.getHandle('my-ring-charm', 'can-play');
+
+document.querySelector('#doorbell').addEventListener('click', () => {
+  light.setData((draft) => {
+    draft.active = !draft.active;
+  });
+});
+```
+
+You could set `active` in response to finishing a game, opening a door, watering a plant, or any interaction meaningful to your project. That script executes only on your site. The class receives the resulting boolean state, not the script.
+
+### Step 4: Publish before submitting
+
+Deploy your latest project and visit the public URL yourself. Confirm that:
+
+- the charm is visible
+- interacting with it works after a refresh
+- its `id` is stable and unique
+- the page loads PlayHTML without console errors
+
+The shared-element page URL must be the exact deployed page containing the source. For example, use `https://garden.example/porch` if the charm lives on `/porch`, not merely `https://garden.example`.
+
+### Step 5: Add your project to the ring
+
+Use the submission form at the bottom of this page or on the Showcase page.
+
+First, add the project details:
+
+- your name
+- project title and full public URL
+- category and short invitation
+- an emoji, glow color, and optional circle image URL—the circle image is the shared element visitors will touch in the class ring
+
+To make the circle live, open **Live-link an element** and add:
+
+1. **Element page URL** — the exact public page containing the source
+2. **Stable element ID** — for example, `my-ring-charm`
+
+The form will show a generated snippet as you fill this out. You can use that snippet as a starting point or compare it with the element already on your site.
+
+### Step 6: Test the connection
+
+1. Open your deployed project in one browser tab.
+2. Open the class Showcase in another tab.
+3. Find your circular charm in the ring.
+4. Activate the source using the interaction you designed on your site.
+5. Watch the ring copy update, then interact with the ring copy and look back at your site.
+
+Changes can take a moment to travel. For the clearest class demonstration, place the two windows side by side.
+
+### What is and is not shared
+
+| Your site controls            | PlayHTML shares                  | The class site controls            |
+| ----------------------------- | -------------------------------- | ---------------------------------- |
+| HTML and semantic meaning     | One `active` boolean             | The submitted circular image       |
+| Images and local animation    | Live updates in either direction | The circle's active glow           |
+| CSS and surrounding interface |                                  | Expanded project card              |
+| Your additional JavaScript    |                                  | Safe rendering and responsive ring |
+
+This separation is important: sharing state lets the sites relate to each other without making every site look or behave the same.
+
+### Troubleshooting together
+
+If the two copies do not connect, check these in order:
+
+1. **Is the project deployed?** A localhost URL cannot act as the public source for the class Showcase.
+2. **Is the page URL exact?** Paths are part of the PlayHTML room. `/` and `/porch` are different rooms.
+3. **Does the ID match?** IDs are case-sensitive. `my-ring-charm` and `My-Ring-Charm` are different.
+4. **Does the source use the same contract?** It needs `can-play`, `defaultData = { active: false }`, and an update that preserves `active` as a boolean.
+5. **Is `shared` present?** The source element on the participant's site needs the `shared` attribute.
+6. **Does PlayHTML initialize once?** Look for import or initialization errors in the browser console.
+7. **Did an old value get submitted?** If the page or ID changed, submit a corrected project entry.
+
+### Teaching plan (35–45 minutes)
+
+**5 minutes — Frame the ring.** Show the old web ring diagram, then explain how ours adds a shared object between independent sites.
+
+**5 minutes — Demonstrate source and consumer.** Put one toggling image on a sample site and its circular consumer on the Showcase side by side. Ask the class what is shared and what remains different.
+
+**10 minutes — Make a charm.** Everyone chooses one meaningful object, gives it a stable ID, adds `shared can-play`, and decides what the shared `active` state means on their site.
+
+**10 minutes — Publish and submit.** Students deploy first, then complete the project form and optional live-link fields.
+
+**5 minutes — Test in pairs.** Partners visit and touch each other's sites while watching the class ring. Debug using the checklist above.
+
+**5–10 minutes — Walk the ring.** Expand each new circle, visit a few projects, and discuss how the same state takes on a different meaning in each visual world.
+
+Questions for the group:
+
+- What did you choose to let travel between your site and the ring?
+- Does touching the object from another website change how public or private it feels?
+- What other shared state could connect our sites without turning them into one platform?
