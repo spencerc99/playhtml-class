@@ -1,54 +1,53 @@
 export const meta = {
   title: 'Party!',
+  chairs: true,
 };
+
+<img src="/persian-rug.png" width="100%" />
 
 ## Activities
 
-- Final crit and discussion
-- Town showcase / celebration
+- Crit and feedback:
+  - Introduce our guest crit!
+- Create a web ring together
+- What's next?
+  - Showcase
+  - Other resources
+- QA and group photo
 
 ## Showcase
 
-Student projects will appear here as they are submitted throughout the class.
+We will be showcasing your final projects in a live crit session. Please submit your project URL in the "showcase" tab to share your work wi`th the class.
 
-## Examples
+Each person will have about 1 minute to present their project and 2 minutes to receive feedback from the class and our guest crit. Please be prepared to share your screen and walk us through your project.
 
-### Example 1: add open graph tags before sharing the final project
+## Guest Crits
 
-```html
-<head>
-  <meta property="og:title" content="My Internet Bench" />
-  <meta
-    property="og:description"
-    content="A shared web space for notes, movement, and hanging out."
-  />
-  <meta property="og:image" content="https://example.com/social-card.png" />
-</head>
+Monday: [Xin Xin](xin-xin.info) is an artist currently making socially-engaged software that explores the possibilities of reshaping language and power relations. As an organizer, Xin co-founded voidLab, a LA-based intersectional feminist collective dedicated to women, trans, and queer folks. They were the Director for Processing Community Day 2019 and they serve on the Processing Foundation Board.
+
+- [Together Net](https://xin-xin.info/projects/2021/02/15/togethernet.html)
+- [Consentful Protocol](https://xin-xin.info/projects/2021/02/15/consentfulProtocol.html)
+
+Tuesday: [Nolen]
+
+### Let's create a web ring together!
+
+What is a [web ring](https://en.wikipedia.org/wiki/Webring)? A web ring is a collection of websites that are linked together in a circular structure. Each site in the ring has a link to the next site, creating a continuous loop.
+
+![A diagram of a web ring](/images/Webringwork.png)
+
+When the internet was first created, Tim Berners-Lee created a rule for web servers: every folder needed a default homepage named `index.html`. He borrowed the word "index" from the back of a library book, where instead of looking at a confusing, cold list of raw computer files, visitors were greeted by a warm, curated table of contents.
+
+If there's no `index.html` file in a folder, the web server will display a list of all the files in that folder.
+
+```shell
+/var/www/public_html/
+├── images/
+├── notes.txt
+└── project_v1_final.html
 ```
 
-### Example 2: create a simple project card
+As the web grew exponentially in the mid-90s, the exact same problem emerged at a global scale. The internet was now full of millions of isolated `index.html` files, but there was no "master index" connecting them. Search engines like Yahoo! were trying to build hand-curated, top-down directories, but they couldn't keep up with the explosion of personal homepages.
 
-```tsx
-interface ProjectCardProps {
-  title: string;
-  url: string;
-  description: string;
-}
+The webring solved this by turning the entire web into a collaborative directory. It took separate, isolated websites and stitched their `index.html` pages together into a decentralized loop.
 
-export function ProjectCard({ title, url, description }: ProjectCardProps) {
-  return (
-    <a href={url} target="_blank" rel="noopener noreferrer">
-      <h3>{title}</h3>
-      <p>{description}</p>
-    </a>
-  );
-}
-```
-
-## Submit Your Final Project
-
-Paste your site URL below to submit.
-
-## Live Crit
-
-Submitted projects will appear here for live review.

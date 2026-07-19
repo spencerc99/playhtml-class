@@ -852,58 +852,141 @@ a:hover {
 }
 
 .project-submissions__list {
-  border-bottom: 1px solid rgba(224, 0, 0, 0.22);
-  border-top: 1px solid rgba(224, 0, 0, 0.22);
+  display: grid;
+  gap: clamp(1rem, 2.5vw, 1.5rem);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.project-submissions__row + .project-submissions__row {
-  border-top: 1px solid rgba(224, 0, 0, 0.16);
+.project-submissions__card {
+  min-width: 0;
 }
 
-.project-submissions__row-link {
-  align-items: center;
+.project-submissions__card-link {
+  background: rgba(255, 255, 255, 0.94);
+  border: 2px solid rgba(224, 0, 0, 0.28);
+  border-radius: 1.2rem 0.7rem 1.35rem 0.8rem;
   color: #4b312c;
-  display: grid;
-  gap: 0.75rem;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  min-height: 3.5rem;
-  padding: 0.75rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
   text-decoration: none;
   transition:
-    background 0.15s ease,
-    color 0.15s ease;
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
 }
 
-.project-submissions__row-link:hover {
-  background: rgba(224, 0, 0, 0.06);
-  color: var(--red);
+.project-submissions__card-link:hover {
+  border-color: var(--red);
+  box-shadow: 6px 7px 0 rgba(224, 0, 0, 0.14);
+  transform: translateY(-0.2rem) rotate(-0.25deg);
 }
 
-.project-submissions__row-link:focus-visible {
-  box-shadow: inset 0 0 0 2px var(--red);
+.project-submissions__card-link:focus-visible {
+  box-shadow: 0 0 0 4px rgba(224, 0, 0, 0.16);
   outline: none;
 }
 
-.project-submissions__row-title {
+.project-submissions__card-preview {
+  align-items: center;
+  aspect-ratio: 16 / 8;
+  background:
+    radial-gradient(circle at 25% 25%, #ffffff 0 7%, transparent 8%),
+    linear-gradient(135deg, #f4c7bf, #f8e9ca 55%, #cfdae9);
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.project-submissions__card-fallback,
+.project-submissions__card-favicon {
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(224, 0, 0, 0.18);
+  border-radius: 1rem;
+  box-shadow: 0 6px 18px rgba(76, 30, 24, 0.14);
+  height: 4rem;
+  position: absolute;
+  width: 4rem;
+}
+
+.project-submissions__card-fallback {
+  align-items: center;
+  color: var(--red);
+  display: flex;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  justify-content: center;
+}
+
+.project-submissions__card-favicon {
+  object-fit: contain;
+  padding: 0.65rem;
+  z-index: 1;
+}
+
+.project-submissions__card-host {
+  background: rgba(255, 255, 255, 0.86);
+  border-radius: 999px;
+  bottom: 0.75rem;
+  color: #70534c;
+  font-size: 0.72rem;
+  left: 0.75rem;
+  max-width: calc(100% - 1.5rem);
+  overflow: hidden;
+  padding: 0.3rem 0.6rem;
+  position: absolute;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-submissions__card-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 1rem 1.1rem 1.15rem;
+}
+
+.project-submissions__card-category {
+  color: #785a52;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.55rem;
+  text-transform: uppercase;
+}
+
+.project-submissions__card-heading {
+  align-items: start;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.project-submissions__card-title {
   color: var(--red);
   font-family: var(--font-display);
-  font-size: 1.2rem;
+  font-size: 1.35rem;
+  line-height: 1.08;
   overflow-wrap: anywhere;
   text-transform: uppercase;
 }
 
-.project-submissions__row-student {
+.project-submissions__card-student {
   color: #70534c;
   font-size: 0.9rem;
-  white-space: nowrap;
+  margin-top: auto;
+  padding-top: 1.4rem;
 }
 
-.project-submissions__row-arrow {
+.project-submissions__card-arrow {
   color: var(--red);
   font-family: var(--font-display);
+  font-size: 1.15rem;
 }
 
 .project-submissions__form-panel {
@@ -966,6 +1049,7 @@ a:hover {
 }
 
 .project-submissions__field--url,
+.project-submissions__field--category,
 .project-submissions__actions {
   grid-column: 1 / -1;
 }
@@ -1003,6 +1087,10 @@ a:hover {
   border-color: var(--red);
   box-shadow: 0 0 0 4px rgba(224, 0, 0, 0.12);
   outline: none;
+}
+
+.project-submissions__select {
+  cursor: pointer;
 }
 
 .project-submissions__actions {
@@ -1131,6 +1219,7 @@ a:hover {
   }
 
   .project-submissions__field--url,
+  .project-submissions__field--category,
   .project-submissions__actions,
   .project-submissions__mine {
     grid-column: auto;
@@ -1144,26 +1233,11 @@ a:hover {
   .project-submissions__submit {
     width: 100%;
   }
-
-  .project-submissions__row-link {
-    align-items: start;
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-
-  .project-submissions__row-student {
-    grid-column: 1;
-    grid-row: 2;
-  }
-
-  .project-submissions__row-arrow {
-    grid-column: 2;
-    grid-row: 1 / span 2;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .project-submissions__input,
-  .project-submissions__row-link,
+  .project-submissions__card-link,
   .project-submissions__submit,
   .project-submissions__mine-link {
     transition: none;

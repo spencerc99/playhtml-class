@@ -16,6 +16,7 @@ interface ProjectSubmission {
   submittedBy?: string;
   title: string;
   url: string;
+  category?: ProjectCategory;
   submittedAt: number;
 }
 
@@ -35,6 +36,32 @@ interface SubmitStatus {
 const PROJECTS_ELEMENT_ID = 'student-projects';
 const MAX_NAME_LENGTH = 80;
 const MAX_TITLE_LENGTH = 120;
+const PROJECT_CATEGORIES = [
+  { value: 'inspiration', label: 'Inspiration' },
+  { value: 'experiments', label: 'Experiments' },
+  { value: 'web-benches', label: 'Web benches' },
+] as const;
+
+type ProjectCategory = (typeof PROJECT_CATEGORIES)[number]['value'];
+
+function projectCategoryLabel(category?: ProjectCategory): string {
+  return (
+    PROJECT_CATEGORIES.find((option) => option.value === category)?.label ??
+    'Experiments'
+  );
+}
+
+function projectHostname(projectUrl: string): string {
+  try {
+    return new URL(projectUrl).hostname.replace(/^www\./, '');
+  } catch {
+    return projectUrl;
+  }
+}
+
+function projectFaviconUrl(projectUrl: string): string {
+  return new URL('/favicon.ico', projectUrl).href;
+}
 
 function projectDataSource(): string {
   return `${window.location.host}/showcase#${PROJECTS_ELEMENT_ID}`;
@@ -72,6 +99,7 @@ export const ProjectSubmissions = withSharedState<
     const [name, setName] = useState(() => cursors.name?.trim() ?? '');
     const [title, setTitle] = useState('');
     const [url, setUrl] = useState('');
+    const [category, setCategory] = useState<ProjectCategory | ''>('');
     const [status, setStatus] = useState<SubmitStatus | null>(null);
 
     useEffect(() => {
@@ -96,7 +124,7 @@ export const ProjectSubmissions = withSharedState<
       const trimmedName = name.trim();
       const trimmedTitle = title.trim();
 
-      if (!trimmedName || !trimmedTitle || !url.trim()) {
+      if (!trimmedName || !trimmedTitle || !url.trim() || !category) {
         setStatus({
           message: 'Fill out every field before submitting.',
           tone: 'error',
@@ -128,6 +156,7 @@ export const ProjectSubmissions = withSharedState<
         submittedBy: playerId,
         title: trimmedTitle.slice(0, MAX_TITLE_LENGTH),
         url: normalizedUrl,
+        category,
         submittedAt: Date.now(),
       };
 
@@ -136,6 +165,7 @@ export const ProjectSubmissions = withSharedState<
       });
       setTitle('');
       setUrl('');
+      setCategory('');
       setStatus({
         message: 'Submitted — your project is now in the Showcase.',
         tone: 'success',
@@ -159,24 +189,51 @@ export const ProjectSubmissions = withSharedState<
             ) : (
               <ul className="project-submissions__list">
                 {projects.map((project) => (
-                  <li key={project.id} className="project-submissions__row">
+                  <li key={project.id} className="project-submissions__card">
                     <a
-                      className="project-submissions__row-link"
+                      className="project-submissions__card-link"
                       href={project.url}
                       target="_blank"
                       rel="noreferrer"
                     >
-                      <span className="project-submissions__row-title">
-                        {project.title}
+                      <span className="project-submissions__card-preview">
+                        <span
+                          className="project-submissions__card-fallback"
+                          aria-hidden="true"
+                        >
+                          {projectHostname(project.url).charAt(0).toUpperCase()}
+                        </span>
+                        <img
+                          className="project-submissions__card-favicon"
+                          src={projectFaviconUrl(project.url)}
+                          alt=""
+                          loading="lazy"
+                          onError={(event) => {
+                            event.currentTarget.hidden = true;
+                          }}
+                        />
+                        <span className="project-submissions__card-host">
+                          {projectHostname(project.url)}
+                        </span>
                       </span>
-                      <span className="project-submissions__row-student">
-                        by {project.name}
-                      </span>
-                      <span
-                        className="project-submissions__row-arrow"
-                        aria-hidden="true"
-                      >
-                        ↗
+                      <span className="project-submissions__card-body">
+                        <span className="project-submissions__card-category">
+                          {projectCategoryLabel(project.category)}
+                        </span>
+                        <span className="project-submissions__card-heading">
+                          <span className="project-submissions__card-title">
+                            {project.title}
+                          </span>
+                          <span
+                            className="project-submissions__card-arrow"
+                            aria-hidden="true"
+                          >
+                            ↗
+                          </span>
+                        </span>
+                        <span className="project-submissions__card-student">
+                          by {project.name}
+                        </span>
                       </span>
                     </a>
                   </li>
@@ -250,6 +307,28 @@ export const ProjectSubmissions = withSharedState<
                   setStatus(null);
                 }}
               />
+            </label>
+
+            <label className="project-submissions__field project-submissions__field--category">
+              <span className="project-submissions__label">Category</span>
+              <select
+                className="project-submissions__input project-submissions__select"
+                value={category}
+                required
+                onChange={(event) => {
+                  setCategory(event.target.value as ProjectCategory | '');
+                  setStatus(null);
+                }}
+              >
+                <option value="" disabled>
+                  Choose a category
+                </option>
+                {PROJECT_CATEGORIES.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </label>
 
             <div className="project-submissions__actions">
