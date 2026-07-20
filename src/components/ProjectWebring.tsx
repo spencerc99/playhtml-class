@@ -359,13 +359,10 @@ export function ProjectWebring({
     previewOverride.html === editorDraft.html &&
     previewOverride.css === editorDraft.css,
   );
-  const canEditSelected = Boolean(
-    !pluginEmbed &&
-    selected &&
-    playerId &&
-    onUpdateProject &&
-    (selected.submittedBy === playerId || isBuiltInProjectId(selected.id)),
+  const ownsSelected = Boolean(
+    !pluginEmbed && selected && playerId && selected.submittedBy === playerId,
   );
+  const canEditSelected = ownsSelected && Boolean(onUpdateProject);
   const webringSizing = ringSizing(safeRingProjects.length);
 
   const changeZoom = (amount: number) => {
@@ -605,25 +602,31 @@ export function ProjectWebring({
                         Enter {projectHostname(selected.url)}{' '}
                         <span aria-hidden="true">↗</span>
                       </a>
-                      {canEditSelected ? (
-                        <button
-                          className="project-webring__edit-object"
-                          type="button"
-                          onClick={() => beginEditing(selected)}
-                        >
-                          {isBuiltInProjectId(selected.id)
-                            ? 'Try editing this example'
-                            : 'Edit this object'}
-                        </button>
-                      ) : null}
-                      {!pluginEmbed && selected.submittedBy === playerId ? (
-                        <a
-                          className="project-webring__edit-details"
-                          href="/showcase#your-submissions"
-                          target="_top"
-                        >
-                          Edit project + thumbnail
-                        </a>
+                      {ownsSelected ? (
+                        <div className="project-webring__owner-controls">
+                          <p className="project-webring__owner-label">
+                            <strong>Owner controls</strong>
+                            <span>Only visible to you</span>
+                          </p>
+                          <div>
+                            {canEditSelected ? (
+                              <button
+                                className="project-webring__edit-object"
+                                type="button"
+                                onClick={() => beginEditing(selected)}
+                              >
+                                Edit object HTML + CSS
+                              </button>
+                            ) : null}
+                            <a
+                              className="project-webring__edit-details"
+                              href="/showcase#your-submissions"
+                              target="_top"
+                            >
+                              Edit project details
+                            </a>
+                          </div>
+                        </div>
                       ) : null}
                     </article>
                   ) : (

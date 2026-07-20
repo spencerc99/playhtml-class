@@ -8,7 +8,6 @@ import {
   createBuiltInReservedIds,
   DEFAULT_SHARED_OBJECT_HTML,
   defaultSharedObjectCss,
-  isBuiltInProjectId,
   mergeBuiltInProjects,
   normalizeProjectSharedObject,
   type ProjectSharedObject,
@@ -118,11 +117,7 @@ export const ProjectPlayground = withSharedState<
 
       setData((draft) => {
         const project = draft.projects[projectId];
-        if (
-          !project ||
-          (!isBuiltInProjectId(projectId) && project.submittedBy !== playerId)
-        )
-          return;
+        if (!project || project.submittedBy !== playerId) return;
         project.sharedObject = {
           ...normalizeProjectSharedObject(project.sharedObject, project.id),
           ...patch,
