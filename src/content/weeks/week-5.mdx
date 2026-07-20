@@ -132,61 +132,78 @@ Please let us know soon if you would like to participate, especially if your pro
 
 We will dedicate 15 minutes of our class time to collecting feedback from students, please take a moment to fill out the [reflection form](https://orienting.sfpc.study/is-where-we/reflect-together/final-reflections.html) now. Your feedback is important to us and will help us improve the class for future students.
 
-
 ### QA & Other Resources
 
 Here are some resources that may be helpful as you continue to develop your projects:
 
-This is the final chance for you
-
-- What's next? (45 mins):
-  - Physical Showcase (5 mins)
-  - Reflection Form (15 mins)
-  - QA & Other Resources (20 mins)
+Anything else you want to share with the class?
 
 ## Let's also create a shared space!
 
-The Showcase is not only a list of links. Every submission creates a live object in one shared room. It begins as a red stool, but its owner can change its HTML and CSS from the class site.
+Another way we can make the web ring more dynamic is to create a shared space where we can all interact with each other. This can be done by creating a shared element on each site that is connected to the same state. This way, when one person interacts with their element, it will update the state for everyone else in the ring.
 
 PlayHTML [shared elements](https://playhtml.fun/docs/advanced/shared-elements/) have:
 
-- a **source** with a permanent `id` and `shared`
-- a **consumer** that points to `domain/path#id` with `data-source`
-- matching capabilities on both elements
+- a **source** on the participant's site
+- a **consumer** in the class Showcase
+- the same PlayHTML capability on both sides
 
 They share state, but they do not need the same HTML, image, CSS, or layout.
 
-For our class ring, the direction is:
+The documentation can be reduced to three rules:
 
-```text
-your submission
-      ↓
-class.playhtml.fun creates a permanent source object
-      ↓
-your own website can subscribe to that object
+1. A source has a stable `id`, `shared`, and one or more PlayHTML capabilities.
+2. A consumer points to `domain/optional-path#elementId` with `data-source`.
+3. Every capability you want to share must exist on both source and consumer. Their tags, children, classes, and styling may be completely different.
+
+Here is the basic example from the PlayHTML docs:
+
+```html
+<!-- Source on thissite.com -->
+<div id="couch" shared can-move>🛋️</div>
+
+<!-- Consumer on anothersite.com -->
+<div data-source="thissite.com#couch" can-move>🪑</div>
 ```
 
-### 1. Submit the three required fields
+The source is a couch and the consumer is a chair. Their markup looks different, but their `can-move` position is shared.
 
-The form clearly marks every input. Only these are required:
+Our ring follows the same pattern:
 
-1. Your name
-2. Project title
-3. A complete `https://` or `http://` project URL
+```html
+<!-- Source on the participant's site -->
+<img id="my-ring-charm" shared can-toggle src="/lamp.png" alt="A lamp" />
 
-The invitation, fallback emoji, glow color, and thumbnail image URL are optional. There is no category field, source URL field, capability menu, or ID field to invent.
-
-### 2. Receive a permanent shared ID
-
-When the submission is created, the class site generates a unique ID such as:
-
-```text
-bench-night-garden-a1b2c3d4
+<!-- Consumer created safely by the class Showcase -->
+<img
+  data-source="student.example#my-ring-charm"
+  can-toggle
+  src="https://student.example/circle.png"
+  alt=""
+/>
 ```
 
-The ID belongs to that submission, cannot be edited, and is never reused by another entry. It is visible under **Your submissions**, in the object's detail card, and in the object editor.
+The **circle image submitted in the form is the consumer element**. The participant keeps complete control over the source element and code on their own site.
 
-The class playground publishes this source:
+### 1. Match the source capabilities
+
+The capability is the kind of state shared between the two sites. It is not the visual style.
+
+| Capability   | Shared state        | Participant can customize                          |
+| ------------ | ------------------- | -------------------------------------------------- |
+| `can-toggle` | on or off           | colors, images, visibility, sound, local animation |
+| `can-spin`   | rotation            | what spins and what the rotation means             |
+| `can-grow`   | scale               | what grows and how the surrounding page responds   |
+| `can-hover`  | live hover presence | what responds when someone hovers either copy      |
+| `can-move`   | dragged position    | the object, its appearance, and its surroundings   |
+
+For example, two students can both use `can-toggle`: one might light a lamp while another reveals a secret garden. The shared contract is the same; the effect is not. The form asks for the capability because the Showcase must put that matching attribute on the circle consumer—not to prescribe the participant's design.
+
+PlayHTML itself also supports `can-mirror`, `can-duplicate`, and custom `can-play`. We do not infer those from a submission because they carry DOM structure, duplication targets, or a custom data schema and renderer. Participants may use them freely on their own sites. Bringing them into the Showcase requires a specific, reviewed adapter rather than executing submitted code.
+
+### 2. Add a source to your site
+
+This is the smallest complete toggle example:
 
 ```html
 <img
