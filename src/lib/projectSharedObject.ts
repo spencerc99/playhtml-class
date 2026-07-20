@@ -199,10 +199,10 @@ export function createProjectAppearanceSharedObject(
   };
 }
 
-function faviconSharedObjectCss(sharedId: string): string {
+function faviconSharedObjectCss(sharedId: string, accentColor: string): string {
   return `#${sharedId} {
   cursor: pointer;
-  filter: drop-shadow(0 0.55em 0.45em rgba(39, 75, 158, 0.2));
+  filter: drop-shadow(0 0.55em 0.45em color-mix(in srgb, ${accentColor} 20%, transparent));
   transition: filter 220ms ease, transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
@@ -214,12 +214,12 @@ function faviconSharedObjectCss(sharedId: string): string {
 
 #${sharedId}:hover,
 #${sharedId}:focus-visible {
-  filter: drop-shadow(0 0.8em 0.6em rgba(39, 75, 158, 0.36));
+  filter: drop-shadow(0 0.8em 0.6em color-mix(in srgb, ${accentColor} 36%, transparent));
   transform: translateY(-5%) rotate(4deg) scale(1.06);
 }
 
 #${sharedId}.toggled {
-  filter: drop-shadow(0 0 1.1em rgba(39, 75, 158, 0.58));
+  filter: drop-shadow(0 0 1.1em color-mix(in srgb, ${accentColor} 58%, transparent));
   transform: rotate(-9deg) scale(1.14);
 }`;
 }
@@ -230,7 +230,9 @@ const DOCS_SHARED_OBJECT_HTML =
 const PLAYHTML_SHARED_OBJECT_HTML =
   '<img class="starter-favicon" src="https://playhtml.fun/icon.png" alt="PlayHTML favicon" />';
 
-const BUILT_IN_STARTER_VERSION = 6;
+const BUILT_IN_STARTER_VERSION = 7;
+const PLAYHTML_DOCS_ACCENT_COLOR = '#274b9e';
+const PLAYHTML_ACCENT_COLOR = '#ffad42';
 
 const BUILT_IN_PROJECT_DEFINITIONS = [
   {
@@ -257,10 +259,13 @@ const BUILT_IN_PROJECT_DEFINITIONS = [
     url: 'https://playhtml.fun/docs/',
     description: 'Examples and references for every PlayHTML capability.',
     emoji: '📖',
-    accentColor: '#274b9e',
+    accentColor: PLAYHTML_DOCS_ACCENT_COLOR,
     imageUrl: 'https://playhtml.fun/docs/icon.png',
     html: DOCS_SHARED_OBJECT_HTML,
-    css: faviconSharedObjectCss('bench-playhtml-docs'),
+    css: faviconSharedObjectCss(
+      'bench-playhtml-docs',
+      PLAYHTML_DOCS_ACCENT_COLOR,
+    ),
     submittedAt: -2,
   },
   {
@@ -272,10 +277,10 @@ const BUILT_IN_PROJECT_DEFINITIONS = [
     url: 'https://playhtml.fun/',
     description: 'The playful library connecting all of these shared objects.',
     emoji: '🌐',
-    accentColor: '#ffad42',
+    accentColor: PLAYHTML_ACCENT_COLOR,
     imageUrl: 'https://playhtml.fun/icon.png',
     html: PLAYHTML_SHARED_OBJECT_HTML,
-    css: faviconSharedObjectCss('bench-playhtml'),
+    css: faviconSharedObjectCss('bench-playhtml', PLAYHTML_ACCENT_COLOR),
     submittedAt: -1,
   },
 ] as const;
