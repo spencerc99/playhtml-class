@@ -40,7 +40,7 @@ if (!document.querySelector('[data-class-webring-widget]')) {
   const registryDataEvent = 'class-webring:registry-data';
   const registryDataRequestEvent = 'class-webring:request-data';
   const declaredIconCache = new Map();
-  const maximumCompactProjects = 12;
+  const maximumCompactProjects = 7;
   let expanded = false;
   let latestProjects = [];
 
@@ -409,6 +409,12 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     return shuffledItems;
   }
 
+  function positionCompactElement(element, slotIndex, slotCount) {
+    const angle = (slotIndex / slotCount) * Math.PI * 2 - Math.PI / 2;
+    element.style.left = `${50 + Math.cos(angle) * 38}%`;
+    element.style.top = `${50 + Math.sin(angle) * 38}%`;
+  }
+
   function renderExpandable() {
     const projects = demoMode
       ? demoProjects
@@ -430,21 +436,52 @@ if (!document.querySelector('[data-class-webring-widget]')) {
         maximumCompactProjects,
       );
       const waitingProjects = randomizedProjects.slice(maximumCompactProjects);
+      const hasProjectPool = waitingProjects.length > 0;
+      const slotCount = compactProjects.length + (hasProjectPool ? 1 : 0);
+      const poolSlotIndex = hasProjectPool ? Math.floor(slotCount / 2) : -1;
+      const projectSlotIndexes = Array.from(
+        { length: slotCount },
+        (_, index) => index,
+      ).filter((index) => index !== poolSlotIndex);
       let replacementSlots = shuffle(compactProjects.map((_, index) => index));
+      const compactCircles = [];
 
       compactProjects.forEach((project, index) => {
-        const angle =
-          (index / Math.max(compactProjects.length, 1)) * Math.PI * 2;
         const circle = makeExpandableCircle(
           project,
           'class-webring-widget__circle class-webring-widget__circle--mini',
         );
-        circle.style.left = `${50 + Math.cos(angle) * 35}%`;
-        circle.style.top = `${50 + Math.sin(angle) * 35}%`;
+        positionCompactElement(circle, projectSlotIndexes[index], slotCount);
         miniOrbit.append(circle);
+        compactCircles.push(circle);
       });
-      miniOrbit.addEventListener('animationiteration', (event) => {
-        if (event.target !== miniOrbit || waitingProjects.length === 0) return;
+
+      let projectPool = null;
+      if (hasProjectPool) {
+        projectPool = document.createElement('div');
+        projectPool.className = 'class-webring-widget__pool';
+        projectPool.setAttribute('role', 'status');
+        projectPool.setAttribute(
+          'aria-label',
+          `${waitingProjects.length} other project links`,
+        );
+
+        const poolCount = document.createElement('strong');
+        poolCount.textContent = `+${waitingProjects.length}`;
+        const poolLabel = document.createElement('span');
+        poolLabel.textContent = 'others';
+        projectPool.append(poolCount, poolLabel);
+        positionCompactElement(projectPool, poolSlotIndex, slotCount);
+        miniOrbit.append(projectPool);
+      }
+
+      let swappingProject = false;
+      async function swapCompactProject() {
+        if (swappingProject || waitingProjects.length === 0 || !projectPool)
+          return;
+
+        swappingProject = true;
+        miniOrbit.classList.add('is-swapping');
 
         if (replacementSlots.length === 0) {
           replacementSlots = shuffle(compactProjects.map((_, index) => index));
@@ -452,33 +489,99 @@ if (!document.querySelector('[data-class-webring-widget]')) {
 
         const replacementIndex = replacementSlots.shift();
         const arrivingProject = waitingProjects.shift();
-        if (replacementIndex === undefined || !arrivingProject) return;
+        if (replacementIndex === undefined || !arrivingProject) {
+          miniOrbit.classList.remove('is-swapping');
+          swappingProject = false;
+          return;
+        }
 
         const departingProject = compactProjects[replacementIndex];
-        const departingCircle = miniOrbit.children[replacementIndex];
+        const departingCircle = compactCircles[replacementIndex];
+        const departingBounds = departingCircle.getBoundingClientRect();
+        const poolBounds = projectPool.getBoundingClientRect();
+        const offsetToPool = {
+          x:
+            poolBounds.left +
+            poolBounds.width / 2 -
+            (departingBounds.left + departingBounds.width / 2),
+          y:
+            poolBounds.top +
+            poolBounds.height / 2 -
+            (departingBounds.top + departingBounds.height / 2),
+        };
+        projectPool.classList.add('is-receiving');
+
+        const departure = departingCircle.animate(
+          [
+            { opacity: 1, transform: 'translate(0, 0) scale(1)' },
+            {
+              opacity: 0,
+              transform: `translate(${offsetToPool.x}px, ${offsetToPool.y}px) scale(0.16)`,
+            },
+          ],
+          {
+            duration: 650,
+            easing: 'cubic-bezier(.55, 0, .8, .35)',
+            fill: 'forwards',
+          },
+        );
+        await departure.finished.catch(() => undefined);
+
         const arrivingCircle = makeExpandableCircle(
           arrivingProject,
           'class-webring-widget__circle class-webring-widget__circle--mini',
         );
-        arrivingCircle.style.left = departingCircle.style.left;
-        arrivingCircle.style.top = departingCircle.style.top;
+        positionCompactElement(
+          arrivingCircle,
+          projectSlotIndexes[replacementIndex],
+          slotCount,
+        );
         departingCircle.replaceWith(arrivingCircle);
+        compactCircles[replacementIndex] = arrivingCircle;
         compactProjects[replacementIndex] = arrivingProject;
         waitingProjects.push(departingProject);
+
+        const arrivingBounds = arrivingCircle.getBoundingClientRect();
+        const offsetFromPool = {
+          x:
+            poolBounds.left +
+            poolBounds.width / 2 -
+            (arrivingBounds.left + arrivingBounds.width / 2),
+          y:
+            poolBounds.top +
+            poolBounds.height / 2 -
+            (arrivingBounds.top + arrivingBounds.height / 2),
+        };
+        const arrival = arrivingCircle.animate(
+          [
+            {
+              opacity: 0,
+              transform: `translate(${offsetFromPool.x}px, ${offsetFromPool.y}px) scale(0.16)`,
+            },
+            { opacity: 1, transform: 'translate(0, 0) scale(1)' },
+          ],
+          {
+            duration: 720,
+            easing: 'cubic-bezier(.18, .7, .22, 1)',
+          },
+        );
+        await arrival.finished.catch(() => undefined);
+
+        projectPool.classList.remove('is-receiving');
+        miniOrbit.classList.remove('is-swapping');
+        swappingProject = false;
+      }
+
+      miniOrbit.addEventListener('animationiteration', (event) => {
+        if (event.target !== miniOrbit) return;
+        void swapCompactProject();
       });
 
       const toggle = document.createElement('button');
       toggle.className = 'class-webring-widget__toggle';
       toggle.type = 'button';
       toggle.setAttribute('aria-expanded', 'false');
-      const toggleLabel = document.createElement('span');
-      toggleLabel.textContent = label;
-      const projectCount = document.createElement('small');
-      projectCount.textContent =
-        projects.length > maximumCompactProjects
-          ? `+${projects.length - maximumCompactProjects} more places`
-          : `${projects.length} ${projects.length === 1 ? 'place' : 'places'}`;
-      toggle.append(toggleLabel, projectCount);
+      toggle.textContent = label;
       toggle.addEventListener('click', () => {
         expanded = true;
         renderExpandable();
@@ -560,9 +663,9 @@ if (!document.querySelector('[data-class-webring-widget]')) {
       right: .65rem;
     }
     .class-webring-widget__miniature {
-      height: 12rem;
+      height: 14rem;
       position: relative;
-      width: 12rem;
+      width: 14rem;
     }
     .class-webring-widget__mini-orbit {
       animation: class-webring-spin 45s linear infinite;
@@ -586,16 +689,6 @@ if (!document.querySelector('[data-class-webring-widget]')) {
       top: 50%;
       transform: translate(-50%, -50%);
       width: 5.5rem;
-    }
-    .class-webring-widget__toggle small {
-      color: #e00000;
-      display: block;
-      font-family: inherit;
-      font-size: .58rem;
-      font-style: normal;
-      line-height: 1;
-      margin-top: .35rem;
-      text-transform: uppercase;
     }
     .class-webring-widget--expandable.is-expanded {
       inset: 0;
@@ -648,10 +741,46 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     }
     .class-webring-widget__circle--mini {
       animation: class-webring-counter-spin 45s linear infinite;
-      font-size: 1.3rem;
-      height: 3.35rem;
-      margin: -1.675rem 0 0 -1.675rem;
-      width: 3.35rem;
+      font-size: 1.15rem;
+      height: 3rem;
+      margin: -1.5rem 0 0 -1.5rem;
+      width: 3rem;
+    }
+    .class-webring-widget__pool {
+      align-items: center;
+      animation: class-webring-counter-spin 45s linear infinite;
+      background: rgba(255,255,255,.9);
+      border: 2px dashed rgba(224,0,0,.55);
+      border-radius: 50%;
+      box-shadow: 0 0 1rem rgba(224,0,0,.14);
+      color: #e00000;
+      display: flex;
+      flex-direction: column;
+      height: 3.2rem;
+      justify-content: center;
+      margin: -1.6rem 0 0 -1.6rem;
+      pointer-events: none;
+      position: absolute;
+      width: 3.2rem;
+    }
+    .class-webring-widget__pool strong {
+      font-size: .78rem;
+      font-weight: 400;
+      line-height: .8;
+    }
+    .class-webring-widget__pool span {
+      font-size: .46rem;
+      letter-spacing: .06em;
+      line-height: 1;
+      margin-top: .28rem;
+      text-transform: uppercase;
+    }
+    .class-webring-widget__mini-orbit.is-swapping,
+    .class-webring-widget__mini-orbit.is-swapping .class-webring-widget__circle--mini {
+      animation-play-state: paused;
+    }
+    .class-webring-widget__pool.is-receiving {
+      animation: class-webring-pool-pulse 1.37s ease-in-out both;
     }
     .class-webring-widget__circle img {
       border-radius: inherit;
@@ -690,12 +819,21 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     }
     @keyframes class-webring-spin { to { transform: rotate(360deg); } }
     @keyframes class-webring-counter-spin { to { transform: rotate(-360deg); } }
+    @keyframes class-webring-pool-pulse {
+      0%, 100% { box-shadow: 0 0 1rem rgba(224,0,0,.14); transform: scale(1); }
+      48% { box-shadow: 0 0 1.8rem .45rem rgba(224,0,0,.34); transform: scale(1.18); }
+    }
     @media (max-width: 520px) {
-      .class-webring-widget__miniature { height: 10.5rem; width: 10.5rem; }
+      .class-webring-widget__miniature { height: 12.5rem; width: 12.5rem; }
       .class-webring-widget__circle--mini {
-        height: 2.8rem;
-        margin: -1.4rem 0 0 -1.4rem;
-        width: 2.8rem;
+        height: 2.65rem;
+        margin: -1.325rem 0 0 -1.325rem;
+        width: 2.65rem;
+      }
+      .class-webring-widget__pool {
+        height: 2.85rem;
+        margin: -1.425rem 0 0 -1.425rem;
+        width: 2.85rem;
       }
     }
     @media (prefers-reduced-motion: reduce) {
