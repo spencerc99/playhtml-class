@@ -66,11 +66,11 @@ a:hover {
   max-width: 48rem;
 }
 
-.week-content> :first-child {
+.week-content > :first-child {
   margin-top: 0;
 }
 
-.week-content>*+* {
+.week-content > * + * {
   margin-top: 1.25rem;
 }
 
@@ -112,7 +112,7 @@ a:hover {
   list-style: decimal;
 }
 
-.week-content li+li {
+.week-content li + li {
   margin-top: 0.35rem;
 }
 
@@ -769,12 +769,12 @@ a:hover {
 // Lift content above the ::before texture. Exclude floating chairs: they need
 // absolute positioning for layout + can-move dragging, which a blanket
 // `position: relative` here would silently override.
-.week-page>*:not(.floating-chair) {
+.week-page > *:not(.floating-chair) {
   position: relative;
   z-index: 1;
 }
 
-.week-page .week-content>h2 {
+.week-page .week-content > h2 {
   border-top: 2px solid rgba(255, 255, 255, 0.75);
   color: #fff;
   display: block;
@@ -791,6 +791,99 @@ a:hover {
   background-position: center;
   background-size: cover;
   font-family: var(--font-body);
+  overflow: clip;
+}
+
+.webring-demo-page {
+  background: #2f2927;
+  color: #fff8ed;
+  min-height: 100svh;
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+.webring-demo-page__header {
+  align-items: end;
+  display: flex;
+  gap: 2rem;
+  justify-content: space-between;
+  margin: 0 auto 1.2rem;
+  max-width: 92rem;
+}
+
+.webring-demo-page__header p {
+  color: #ffb9a5;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  margin: 0 0 0.45rem;
+  text-transform: uppercase;
+}
+
+.webring-demo-page__header h1 {
+  font-size: clamp(1.8rem, 5vw, 4.5rem);
+  line-height: 0.9;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.webring-demo-page__header a {
+  color: #fff;
+  flex: 0 0 auto;
+}
+
+.webring-demo-page__instructions {
+  align-items: center;
+  display: grid;
+  gap: 0.8rem 2rem;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 1.2fr);
+  margin: 0 auto 1rem;
+  max-width: 92rem;
+}
+
+.webring-demo-page__instructions p {
+  color: #dfd0c7;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.webring-demo-page__instructions code {
+  background: #171312;
+  border: 1px solid #5d4d48;
+  border-radius: 0.6rem;
+  color: #ffd4c8;
+  font-size: 0.72rem;
+  overflow-x: auto;
+  padding: 0.7rem 0.8rem;
+  white-space: nowrap;
+}
+
+.webring-demo-page__frame {
+  background: #fff;
+  border: 0;
+  border-radius: 1rem;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
+  display: block;
+  height: min(68svh, 48rem);
+  margin: 0 auto;
+  max-width: 92rem;
+  width: 100%;
+}
+
+@media (max-width: 700px) {
+  .webring-demo-page__header {
+    align-items: start;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .webring-demo-page__instructions {
+    grid-template-columns: 1fr;
+  }
+
+  .webring-demo-page__frame {
+    height: 72svh;
+  }
 }
 
 .showcase-page__eyebrow {
@@ -824,6 +917,727 @@ a:hover {
   font-family: var(--font-body);
   margin-top: 3.5rem;
   width: 100%;
+}
+
+.project-submissions--showcase {
+  margin-top: 0;
+}
+
+.project-playground-frame {
+  background: #f8efe3;
+  border: 0;
+  display: block;
+  height: 100svh;
+  width: 100%;
+}
+
+.project-playground-page,
+.project-playground {
+  height: 100svh;
+  margin: 0;
+  overflow: hidden;
+  width: 100%;
+}
+
+/* The class webring is a full-screen field of small, linked worlds. */
+.project-webring {
+  align-items: center;
+  background:
+    radial-gradient(
+      circle at 50% 48%,
+      rgba(255, 255, 255, 0.86) 0 9%,
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 16% 18%,
+      rgba(255, 186, 153, 0.28),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 84% 78%,
+      rgba(111, 180, 196, 0.24),
+      transparent 30%
+    ),
+    #f8efe3;
+  display: flex;
+  font-family: var(--font-display);
+  isolation: isolate;
+  justify-content: center;
+  min-height: 100svh;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.project-webring__wash {
+  background-image:
+    radial-gradient(circle, rgba(224, 0, 0, 0.15) 0 1px, transparent 1.5px),
+    url('/shirt-light-texture-dithered-playhtml-class-bg.png');
+  background-size:
+    2.8rem 2.8rem,
+    cover;
+  inset: 0;
+  opacity: 0.22;
+  pointer-events: none;
+  position: absolute;
+}
+
+.project-webring__orbit {
+  inset: clamp(3rem, 7vw, 5rem);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  z-index: 2;
+}
+
+.project-webring__item {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  left: var(--ring-x);
+  position: absolute;
+  top: var(--ring-y);
+  transform: translate(-50%, -50%);
+  transition:
+    left 0.55s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.3s ease,
+    top 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.project-webring__node {
+  align-items: center;
+  animation: ring-float 4.6s var(--ring-delay) ease-in-out infinite;
+  background: transparent;
+  border: 0;
+  color: #30231f;
+  cursor: pointer;
+  display: flex;
+  height: clamp(5.75rem, 12vw, 11rem);
+  justify-content: center;
+  padding: 0;
+  position: relative;
+  width: clamp(5.75rem, 12vw, 11rem);
+}
+
+.project-webring__node:hover,
+.project-webring__node:focus-visible {
+  outline: none;
+}
+
+.project-webring__item.is-selected .project-webring__node {
+  outline: 2px dashed var(--ring-accent);
+  outline-offset: 0.45rem;
+}
+
+.project-webring__node-markup {
+  align-items: center;
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  width: 100%;
+}
+
+.project-webring__node-markup > * {
+  max-height: 100%;
+  max-width: 100%;
+}
+
+.project-webring__node-label {
+  appearance: none;
+  background: rgba(255, 255, 255, 0.9);
+  border: 0;
+  border-radius: 999px;
+  color: #5e403b;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: clamp(0.58rem, 1.2vw, 0.76rem);
+  letter-spacing: 0.05em;
+  line-height: 1;
+  max-width: 8rem;
+  overflow: hidden;
+  padding: 0.3rem 0.5rem;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  transition:
+    background 160ms ease,
+    transform 160ms ease;
+  white-space: nowrap;
+}
+
+.project-webring__node-label:hover {
+  background: #ffffff;
+  transform: translateY(-0.08rem);
+}
+
+.project-webring__node-label:focus-visible {
+  outline: 2px solid var(--ring-accent);
+  outline-offset: 2px;
+}
+
+.project-webring--expanded .project-webring__item:not(.is-selected) {
+  opacity: 0.58;
+}
+
+.project-webring__center {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  max-height: min(58svh, 34rem);
+  max-width: min(46vw, 34rem);
+  position: relative;
+  width: 100%;
+  z-index: 3;
+}
+
+.project-webring__welcome {
+  color: #5e403b;
+  text-align: center;
+}
+
+.project-webring__welcome p {
+  color: var(--red);
+  font-family: var(--font-display);
+  font-size: clamp(0.7rem, 1.3vw, 0.92rem);
+  letter-spacing: 0.16em;
+  margin: 0 0 0.65rem;
+  text-transform: uppercase;
+}
+
+.project-webring__welcome h1 {
+  color: var(--red);
+  font-size: clamp(2.7rem, 7.2vw, 7.5rem);
+  letter-spacing: -0.045em;
+  line-height: 0.78;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.project-webring__welcome span,
+.project-webring__welcome strong {
+  display: block;
+}
+
+.project-webring__welcome span {
+  font-size: clamp(0.8rem, 1.4vw, 1rem);
+  margin-top: 1.2rem;
+}
+
+.project-webring__welcome strong {
+  color: var(--red);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  margin-top: 0.45rem;
+  text-transform: uppercase;
+}
+
+.project-webring__detail {
+  animation: ring-detail-in 0.36s cubic-bezier(0.2, 0.8, 0.2, 1);
+  background: rgba(255, 255, 255, 0.96);
+  border: 3px solid var(--ring-accent);
+  border-radius: 48% 52% 45% 55% / 48% 43% 57% 52%;
+  box-shadow: 10px 13px 0
+    color-mix(in srgb, var(--ring-accent) 24%, transparent);
+  color: #553d37;
+  max-width: 31rem;
+  padding: clamp(2rem, 5vw, 3.8rem);
+  position: relative;
+  text-align: center;
+  width: 100%;
+}
+
+.project-webring__detail-emoji {
+  display: block;
+  font-size: clamp(2rem, 5vw, 3.6rem);
+  margin-bottom: 0.65rem;
+}
+
+.project-webring__detail-kicker {
+  color: #765b54;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  margin: 0 0 0.65rem;
+  text-transform: uppercase;
+}
+
+.project-webring__detail h2 {
+  color: var(--ring-accent);
+  font-size: clamp(2rem, 5vw, 4.3rem);
+  line-height: 0.88;
+  margin: 0;
+  overflow-wrap: anywhere;
+  text-transform: uppercase;
+}
+
+.project-webring__detail > p:not(.project-webring__detail-kicker) {
+  font-size: clamp(0.86rem, 1.5vw, 1rem);
+  line-height: 1.5;
+  margin: 1rem auto;
+  max-width: 24rem;
+}
+
+.project-webring__detail > a {
+  background: var(--ring-accent);
+  border-radius: 999px;
+  color: #fff;
+  display: inline-flex;
+  font-family: var(--font-display);
+  font-size: 0.84rem;
+  gap: 0.45rem;
+  margin-top: 0.35rem;
+  padding: 0.72rem 1rem;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.project-webring__shared-id {
+  background: #f6eee3;
+  border-radius: 0.45rem;
+  color: #5e403b;
+  display: block;
+  font-size: 0.68rem;
+  margin: 0.85rem auto 0;
+  max-width: 100%;
+  overflow: hidden;
+  padding: 0.4rem 0.55rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-webring__edit-object {
+  background: transparent;
+  border: 1px solid var(--ring-accent);
+  border-radius: 999px;
+  color: var(--ring-accent);
+  cursor: pointer;
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  margin: 0.7rem auto 0;
+  padding: 0.55rem 0.8rem;
+  text-transform: uppercase;
+}
+
+.project-webring__detail > a.project-webring__edit-details {
+  background: transparent;
+  border: 1px solid var(--ring-accent);
+  color: var(--ring-accent);
+  display: table;
+  font-size: 0.7rem;
+  margin: 0.45rem auto 0;
+  padding: 0.5rem 0.75rem;
+}
+
+.project-webring__detail small {
+  color: #765b54;
+  display: block;
+  font-size: 0.7rem;
+  line-height: 1.35;
+  margin: 0.8rem auto 0;
+  max-width: 18rem;
+}
+
+.project-webring__close {
+  align-items: center;
+  background: #fff;
+  border: 2px solid var(--ring-accent);
+  border-radius: 50%;
+  color: var(--ring-accent);
+  cursor: pointer;
+  display: flex;
+  font-size: 1.4rem;
+  height: 2.4rem;
+  justify-content: center;
+  position: absolute;
+  right: 0.8rem;
+  top: 0.8rem;
+  width: 2.4rem;
+}
+
+.project-webring__empty {
+  color: #765b54;
+  max-width: 28rem;
+  padding: 2rem;
+  position: relative;
+  text-align: center;
+  z-index: 1;
+}
+
+.project-webring__empty > img {
+  display: block;
+  margin: 0 auto;
+  width: min(9rem, 45vw);
+}
+
+.project-webring__empty h2 {
+  color: var(--red);
+  font-size: clamp(2.6rem, 8vw, 5rem);
+  line-height: 0.9;
+  margin: 0.5rem 0;
+  text-transform: uppercase;
+}
+
+.project-webring__editor {
+  animation: ring-editor-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  background: #fffaf5;
+  border-left: 3px solid var(--red);
+  box-shadow: -18px 0 45px rgba(68, 34, 27, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  height: 100%;
+  overflow-y: auto;
+  padding: clamp(1rem, 3vw, 1.6rem);
+  position: absolute;
+  right: 0;
+  top: 0;
+  transition:
+    opacity 0.22s ease,
+    transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
+    visibility 0.32s;
+  width: min(46rem, 100%);
+  z-index: 1000;
+}
+
+.project-webring--previewing .project-webring__editor {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(102%);
+  visibility: hidden;
+}
+
+.project-webring__editor > header,
+.project-webring__editor-snippet > div {
+  align-items: start;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.project-webring__editor > header p,
+.project-webring__editor > header h2 {
+  margin: 0;
+}
+
+.project-webring__editor > header p,
+.project-webring__editor-id > span,
+.project-webring__editor-snippet span {
+  color: #765b54;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.project-webring__editor > header h2 {
+  color: var(--red);
+  font-size: clamp(1.8rem, 5vw, 3rem);
+  line-height: 0.9;
+}
+
+.project-webring__editor > header > button {
+  background: transparent;
+  border: 0;
+  color: var(--red);
+  cursor: pointer;
+  font-size: 2rem;
+}
+
+.project-webring__editor-id,
+.project-webring__editor-snippet {
+  background: #342b29;
+  border-radius: 0.8rem;
+  color: #fff8ed;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.85rem;
+}
+
+.project-webring__editor-id > span,
+.project-webring__editor-snippet span {
+  color: #ffb9a5;
+}
+
+.project-webring__editor-id code {
+  overflow-wrap: anywhere;
+}
+
+.project-webring__editor-id small {
+  color: #d7c8c2;
+  line-height: 1.35;
+}
+
+.project-code-editor {
+  background: #2d2725;
+  border: 1px solid #463d3a;
+  border-radius: 0.8rem;
+  box-shadow: 0 12px 30px rgba(52, 43, 41, 0.16);
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  min-height: 25rem;
+  overflow: hidden;
+}
+
+.project-code-editor__loading {
+  align-items: center;
+  background: #2d2725;
+  border: 1px solid #463d3a;
+  border-radius: 0.8rem;
+  color: #fffaf5;
+  display: flex;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  justify-content: center;
+  min-height: 25rem;
+}
+
+.project-code-editor__toolbar,
+.project-code-editor__footer {
+  align-items: center;
+  color: #cfc5bf;
+  display: flex;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  justify-content: space-between;
+}
+
+.project-code-editor__toolbar {
+  background: #26211f;
+  border-bottom: 1px solid #463d3a;
+  min-height: 2.7rem;
+  padding: 0 0.7rem 0 0;
+}
+
+.project-code-editor__tabs {
+  align-self: stretch;
+  display: flex;
+}
+
+.project-code-editor__tabs button {
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: #a99d97;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  min-width: 4.5rem;
+  padding: 0.7rem 1rem 0.6rem;
+}
+
+.project-code-editor__tabs button:hover {
+  color: #fffaf5;
+}
+
+.project-code-editor__tabs button.is-active {
+  background: #332d2a;
+  border-bottom-color: #ff654d;
+  color: #fffaf5;
+}
+
+.project-code-editor__tabs button:focus-visible {
+  box-shadow: inset 0 0 0 2px #ff806c;
+  outline: none;
+}
+
+.project-code-editor__state {
+  align-items: center;
+  display: flex;
+  font-size: 0.65rem;
+  gap: 0.35rem;
+  text-transform: uppercase;
+}
+
+.project-code-editor__state i {
+  background: #ffad42;
+  border-radius: 50%;
+  height: 0.45rem;
+  width: 0.45rem;
+}
+
+.project-code-editor__surface {
+  flex: 1 1 auto;
+  height: clamp(19rem, 48vh, 32rem);
+  min-height: 19rem;
+  text-align: left;
+}
+
+.project-code-editor__surface.ace_editor {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  line-height: 1.55;
+}
+
+.project-code-editor__footer {
+  background: #26211f;
+  border-top: 1px solid #463d3a;
+  font-size: 0.62rem;
+  gap: 1rem;
+  padding: 0.55rem 0.75rem;
+}
+
+.project-code-editor__footer kbd {
+  color: #fffaf5;
+  font: inherit;
+}
+
+.project-webring__editor-live {
+  color: #70534c;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.project-webring__editor-live code {
+  color: var(--red);
+}
+
+.project-webring__editor-actions {
+  align-items: center;
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: auto auto minmax(0, 1fr);
+}
+
+.project-webring__editor-actions button,
+.project-webring__preview-bar button {
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  padding: 0.55rem 0.8rem;
+  text-transform: uppercase;
+}
+
+.project-webring__preview-object {
+  background: #fffaf5;
+  color: var(--red);
+}
+
+.project-webring__save-object {
+  background: var(--red);
+  color: #fff;
+}
+
+.project-webring__editor-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.36;
+}
+
+.project-webring__editor-actions > span {
+  color: #70534c;
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
+.project-webring__preview-bar {
+  align-items: center;
+  animation: ring-detail-in 0.24s ease-out;
+  background: rgba(52, 43, 41, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 1rem;
+  bottom: 1.1rem;
+  box-shadow: 0 12px 35px rgba(52, 43, 41, 0.28);
+  color: #fffaf5;
+  display: flex;
+  gap: 0.65rem;
+  left: 50%;
+  max-width: calc(100% - 2rem);
+  padding: 0.7rem;
+  position: absolute;
+  transform: translateX(-50%);
+  z-index: 1100;
+}
+
+.project-webring__preview-bar > div {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  margin-right: 0.4rem;
+}
+
+.project-webring__preview-bar strong {
+  color: #ffad42;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.project-webring__preview-bar span {
+  color: #d7c8c2;
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
+
+.project-webring__preview-bar button {
+  background: transparent;
+  color: #fffaf5;
+  white-space: nowrap;
+}
+
+.project-webring__preview-bar button:last-child {
+  background: var(--red);
+  border-color: var(--red);
+}
+
+.project-webring__editor-snippet button,
+.project-webring__reset-object {
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  padding: 0.45rem 0.65rem;
+  text-transform: uppercase;
+}
+
+.project-webring__editor-snippet button {
+  color: #fff8ed;
+}
+
+.project-webring__editor-snippet > code {
+  font-size: 0.68rem;
+  line-height: 1.45;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.project-webring__reset-object {
+  color: var(--red);
+  margin-right: auto;
+}
+
+@keyframes ring-float {
+  0%,
+  100% {
+    margin-top: -0.2rem;
+  }
+  50% {
+    margin-top: 0.35rem;
+  }
+}
+
+@keyframes ring-detail-in {
+  from {
+    opacity: 0;
+    transform: scale(0.86) rotate(-2deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+@keyframes ring-editor-in {
+  from {
+    opacity: 0;
+    transform: translateX(2rem);
+  }
 }
 
 .project-submissions--form {
@@ -1001,7 +1815,9 @@ a:hover {
 }
 
 .project-submissions--showcase .project-submissions__form-panel {
-  margin-top: 4.5rem;
+  margin: clamp(4rem, 8vw, 8rem) auto;
+  max-width: min(72rem, calc(100% - 2rem));
+  scroll-margin-top: 2rem;
 }
 
 .project-submissions__intro {
@@ -1049,15 +1865,178 @@ a:hover {
 }
 
 .project-submissions__field--url,
-.project-submissions__field--category,
+.project-submissions__field--wide,
 .project-submissions__actions {
   grid-column: 1 / -1;
 }
 
-.project-submissions__label {
+.project-submissions__textarea {
+  min-height: 6rem;
+  resize: vertical;
+}
+
+.project-submissions__appearance {
+  border: 1px dashed rgba(224, 0, 0, 0.3);
+  border-radius: 1rem;
+  display: grid;
+  gap: 1rem;
+  grid-column: 1 / -1;
+  grid-template-columns: 0.4fr 0.45fr minmax(0, 2fr);
+  margin: 0.25rem 0 0;
+  padding: 1rem;
+}
+
+.project-submissions__section-label {
+  color: var(--red);
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  padding: 0 0.4rem;
+  text-transform: uppercase;
+}
+
+.project-submissions__color {
+  background: #fffaf5;
+  border: 2px solid rgba(224, 0, 0, 0.28);
+  border-radius: 0.7rem;
+  cursor: pointer;
+  height: 3rem;
+  padding: 0.28rem;
+  width: 100%;
+}
+
+.project-emoji-picker {
+  position: relative;
+}
+
+.project-emoji-picker__trigger {
+  align-items: center;
+  background: #fffaf5;
+  border: 2px solid rgba(224, 0, 0, 0.28);
+  border-radius: 0.7rem;
   color: #4b312c;
+  cursor: pointer;
+  display: grid;
+  font: inherit;
+  gap: 0.35rem;
+  grid-template-columns: 1fr auto;
+  min-height: 3rem;
+  padding: 0.35rem 0.65rem;
+  text-align: left;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+  width: 100%;
+}
+
+.project-emoji-picker__trigger:hover,
+.project-emoji-picker__trigger[aria-expanded='true'] {
+  background: #fff;
+  border-color: var(--red);
+}
+
+.project-emoji-picker__trigger:focus-visible {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px rgba(224, 0, 0, 0.12);
+  outline: none;
+}
+
+.project-emoji-picker__value {
+  align-items: center;
+  background: #f9eee6;
+  border-radius: 0.45rem;
+  display: flex;
+  font-size: 1.35rem;
+  height: 2.1rem;
+  justify-content: center;
+  width: 2.1rem;
+}
+
+.project-emoji-picker__chevron {
+  font-family: var(--font-display);
+  font-size: 0.67rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.project-emoji-picker__chevron {
+  color: var(--red);
+}
+
+.project-emoji-picker__popover {
+  background: #fff;
+  border: 2px solid var(--red);
+  border-radius: 0.85rem;
+  box-shadow: 8px 10px 0 rgba(224, 0, 0, 0.16);
+  left: 0;
+  overflow: hidden;
+  position: absolute;
+  top: calc(100% + 0.55rem);
+  width: min(22rem, calc(100vw - 4rem));
+  z-index: 20;
+}
+
+.project-emoji-picker__popover .EmojiPickerReact {
+  --epr-bg-color: #fffaf5;
+  --epr-category-label-bg-color: rgba(255, 250, 245, 0.92);
+  --epr-highlight-color: #e00000;
+  --epr-hover-bg-color: #f9ded7;
+  border: 0;
+}
+
+.project-emoji-picker__loading {
+  align-items: center;
+  color: #70534c;
+  display: flex;
+  font-size: 0.8rem;
+  height: 22.5rem;
+  justify-content: center;
+}
+
+.project-submissions__generated {
+  align-items: center;
+  background: #f9eee6;
+  border: 1px dashed rgba(224, 0, 0, 0.32);
+  border-radius: 1rem;
+  display: grid;
+  gap: 1rem;
+  grid-column: 1 / -1;
+  grid-template-columns: 5rem minmax(0, 1fr);
+  padding: 1rem;
+}
+
+.project-submissions__generated img {
+  display: block;
+  width: 100%;
+}
+
+.project-submissions__generated h3 {
+  color: var(--red);
+  font-size: 1rem;
+  letter-spacing: 0.06em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.project-submissions__generated p {
+  color: #70534c;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  margin: 0.4rem 0 0;
+}
+
+.project-submissions__generated code {
+  color: var(--red);
+}
+
+.project-submissions__label {
+  align-items: center;
+  color: #4b312c;
+  display: flex;
   font-family: var(--font-display);
   font-size: 0.88rem;
+  gap: 0.45rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -1129,6 +2108,30 @@ a:hover {
   outline-offset: 2px;
 }
 
+.project-submissions__cancel,
+.project-submissions__edit,
+.project-submissions__remove {
+  background: transparent;
+  border: 1px solid rgba(224, 0, 0, 0.38);
+  border-radius: 999px;
+  color: var(--red);
+  cursor: pointer;
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.project-submissions__cancel {
+  min-height: 3rem;
+  padding: 0.65rem 1rem;
+}
+
+.project-submissions__cancel:hover,
+.project-submissions__edit:hover,
+.project-submissions__remove:hover {
+  background: rgba(224, 0, 0, 0.07);
+}
+
 .project-submissions__status {
   color: #70534c;
   flex: 1 1 12rem;
@@ -1163,30 +2166,113 @@ a:hover {
   text-transform: uppercase;
 }
 
+.project-submissions__mine-copy {
+  color: #70534c;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  margin: -0.35rem 0 0.9rem;
+  max-width: 38rem;
+}
+
 .project-submissions__mine-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem;
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
+.project-submissions__mine-item {
+  align-items: start;
+  background: #fffaf5;
+  border: 1px solid rgba(224, 0, 0, 0.24);
+  border-radius: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  min-width: 0;
+  padding: 0.9rem;
+}
+
+.project-submissions__edit,
+.project-submissions__remove {
+  font-size: 0.7rem;
+  padding: 0.45rem 0.65rem;
+}
+
+.project-submissions__remove {
+  border-color: rgba(87, 61, 56, 0.34);
+  color: #70534c;
+}
+
 .project-submissions__mine-link {
   align-items: center;
-  background: #fffaf5;
-  border: 1px solid rgba(224, 0, 0, 0.28);
-  border-radius: 999px;
   color: var(--red);
   display: inline-flex;
   font-family: var(--font-display);
   gap: 0.35rem;
-  padding: 0.5rem 0.85rem;
+  padding: 0;
   text-decoration: none;
   text-transform: uppercase;
   transition:
     background 0.15s ease,
     transform 0.15s ease;
+}
+
+.project-submissions__mine-id {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-width: 100%;
+}
+
+.project-submissions__mine-id span {
+  color: #80645d;
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.project-submissions__mine-id code {
+  background: #f0e5dc;
+  border-radius: 0.4rem;
+  color: #5e403b;
+  font-size: 0.68rem;
+  overflow: hidden;
+  padding: 0.35rem 0.45rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-submissions__mine-code {
+  color: #70534c;
+  font-size: 0.7rem;
+  max-width: 100%;
+}
+
+.project-submissions__mine-code summary {
+  cursor: pointer;
+}
+
+.project-submissions__mine-code > code {
+  background: #342b29;
+  border-radius: 0.55rem;
+  color: #fff8ed;
+  display: block;
+  line-height: 1.45;
+  margin-top: 0.5rem;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 0.65rem;
+  white-space: pre;
+}
+
+.project-submissions__mine-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
 }
 
 .project-submissions__mine-link:hover {
@@ -1201,8 +2287,104 @@ a:hover {
 }
 
 @media (max-width: 700px) {
+  .project-webring {
+    min-height: 100svh;
+  }
+
+  .project-webring__orbit {
+    inset: 4.5rem 1.35rem 6.5rem;
+  }
+
+  .project-webring__node {
+    height: clamp(5rem, 22vw, 7.5rem);
+    width: clamp(5rem, 22vw, 7.5rem);
+  }
+
+  .project-webring__node-label {
+    font-size: 0.5rem;
+    max-width: clamp(3.25rem, 18vw, 5rem);
+    padding: 0.24rem 0.38rem;
+  }
+
+  .project-webring__center {
+    max-height: 58svh;
+    max-width: min(66vw, 24rem);
+  }
+
+  .project-webring__welcome h1 {
+    font-size: clamp(2.4rem, 15vw, 4.5rem);
+  }
+
+  .project-webring__welcome span {
+    font-size: 0.7rem;
+  }
+
+  .project-webring__detail {
+    border-radius: 2rem 1.2rem 2.4rem 1.4rem;
+    max-height: 56svh;
+    overflow-y: auto;
+    padding: 1.65rem 1.25rem;
+  }
+
+  .project-webring__detail-emoji {
+    font-size: 2rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .project-webring__detail h2 {
+    font-size: clamp(1.65rem, 9vw, 2.7rem);
+  }
+
+  .project-webring__detail > p:not(.project-webring__detail-kicker) {
+    font-size: 0.78rem;
+    margin: 0.7rem auto;
+  }
+
+  .project-webring__detail small {
+    display: none;
+  }
+
+  .project-webring__close {
+    height: 2rem;
+    right: 0.5rem;
+    top: 0.5rem;
+    width: 2rem;
+  }
+
+  .project-webring__editor {
+    border-left: 0;
+    width: 100%;
+  }
+
+  .project-webring__editor-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .project-webring__editor-actions > span {
+    grid-column: 1 / -1;
+  }
+
+  .project-webring__preview-bar {
+    align-items: stretch;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: calc(100% - 1.4rem);
+  }
+
+  .project-webring__preview-bar > div {
+    grid-column: 1 / -1;
+  }
+
+  .project-webring__preview-bar span {
+    white-space: normal;
+  }
+
   .project-submissions {
     margin-top: 2.75rem;
+  }
+
+  .project-submissions--showcase {
+    margin-top: 0;
   }
 
   .project-submissions__form-panel {
@@ -1219,10 +2401,23 @@ a:hover {
   }
 
   .project-submissions__field--url,
-  .project-submissions__field--category,
+  .project-submissions__field--wide,
   .project-submissions__actions,
   .project-submissions__mine {
     grid-column: auto;
+  }
+
+  .project-submissions__appearance {
+    grid-template-columns: 1fr;
+  }
+
+  .project-submissions__appearance,
+  .project-submissions__generated {
+    grid-column: auto;
+  }
+
+  .project-submissions__generated {
+    grid-template-columns: 4rem minmax(0, 1fr);
   }
 
   .project-submissions__actions {
@@ -1236,6 +2431,13 @@ a:hover {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .project-webring__item,
+  .project-webring__node,
+  .project-webring__detail {
+    animation: none;
+    transition: none;
+  }
+
   .project-submissions__input,
   .project-submissions__card-link,
   .project-submissions__submit,

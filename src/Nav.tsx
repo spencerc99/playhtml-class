@@ -41,6 +41,10 @@ const NAV_TEXT_STYLE = {
 export default function Nav() {
   const location = useLocation();
 
+  if (location.pathname === '/webring-demo') {
+    return null;
+  }
+
   return (
     <nav
       className={`fixed bottom-0 left-1/2 z-50 flex -translate-x-1/2 translate-y-3 items-center whitespace-nowrap ${NAV_GAP_CLASS} transition-transform duration-200 hover:translate-y-0`}

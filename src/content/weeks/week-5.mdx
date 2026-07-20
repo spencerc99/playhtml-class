@@ -7,47 +7,210 @@ export const meta = {
 
 ## Activities
 
-- Crit and feedback:
+- Crit and feedback (1hr):
   - Introduce our guest crit!
-- Create a web ring together
-- What's next?
-  - Showcase
-  - Other resources
-- QA and group photo
+- What's a web ring? (45 mins):
+  - Create a web ring together
+  - Create a shared space
+- What's next? (45 mins):
+  - Physical Showcase (5 mins)
+  - Reflection Form (15 mins)
+  - QA & Other Resources (20 mins)
+- Goodbye & Group photo (5 mins)
 
 ## Showcase
 
-We will be showcasing your final projects in a live crit session. Please submit your project URL in the "showcase" tab to share your work wi`th the class.
+We will be showcasing your final projects in a live crit session. Please submit your project URL in the "showcase" tab to share your work with the class.
 
 Each person will have about 1 minute to present their project and 2 minutes to receive feedback from the class and our guest crit. Please be prepared to share your screen and walk us through your project.
 
-## Guest Crits
+### Guest Crits
 
-Monday: [Xin Xin](xin-xin.info) is an artist currently making socially-engaged software that explores the possibilities of reshaping language and power relations. As an organizer, Xin co-founded voidLab, a LA-based intersectional feminist collective dedicated to women, trans, and queer folks. They were the Director for Processing Community Day 2019 and they serve on the Processing Foundation Board.
+Monday: Nolen
+
+Tuesday: [Xin Xin](https://xin-xin.info) is an artist currently making socially-engaged software that explores the possibilities of reshaping language and power relations. As an organizer, Xin co-founded voidLab, a LA-based intersectional feminist collective dedicated to women, trans, and queer folks. They were the Director for Processing Community Day 2019 and they serve on the Processing Foundation Board.
 
 - [Together Net](https://xin-xin.info/projects/2021/02/15/togethernet.html)
 - [Consentful Protocol](https://xin-xin.info/projects/2021/02/15/consentfulProtocol.html)
 
-Tuesday: [Nolen]
+## What's a web ring?
 
-### Let's create a web ring together!
-
-What is a [web ring](https://en.wikipedia.org/wiki/Webring)? A web ring is a collection of websites that are linked together in a circular structure. Each site in the ring has a link to the next site, creating a continuous loop.
+What is a [web ring](https://en.wikipedia.org/wiki/Webring)? A web ring is a collection of websites linked together in a circular structure. Each site points to another site, creating a continuous loop.
 
 ![A diagram of a web ring](/images/Webringwork.png)
 
-When the internet was first created, Tim Berners-Lee created a rule for web servers: every folder needed a default homepage named `index.html`. He borrowed the word "index" from the back of a library book, where instead of looking at a confusing, cold list of raw computer files, visitors were greeted by a warm, curated table of contents.
+When the **World Wide Web** was young, it was conceived as a distributed system for connecting information across different computers. [Tim Berners-Lee’s 1989 proposal](https://www.w3.org/History/1989/proposal.html) addressed a problem at CERN: documents, projects, and institutional knowledge were scattered across incompatible systems. Hyperlinks allowed one addressable resource to point to another without placing everything in a central database.
 
-If there's no `index.html` file in a folder, the web server will display a list of all the files in that folder.
+[![A recreation of the first website in an early line-mode browser](https://home.cern/wp-content/uploads/2026/05/Screenshot-World-Wide-Web-project-small-2-1024x619.png)](https://info.cern.ch/)
 
-```shell
-/var/www/public_html/
-├── images/
-├── notes.txt
-└── project_v1_final.html
+This is why some servers were designed to return `index.html` when someone visits a directory, and if no index file exsits, the server may generate a directory listing. For example, if you visit `https://example.com/public/`, the server may return `https://example.com/public/index.html` if it exists. If not, it may return a list of files in that directory:
+
+```text
+Index of /notes/
+
+week-01.html
+week-02.html
+reading-list.pdf
 ```
 
-As the web grew exponentially in the mid-90s, the exact same problem emerged at a global scale. The internet was now full of millions of isolated `index.html` files, but there was no "master index" connecting them. Search engines like Yahoo! were trying to build hand-curated, top-down directories, but they couldn't keep up with the explosion of personal homepages.
+One of the most important aspects of the early Web was the [hyperlink](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a), which made connecting and linking resources possiblebut. However, it did not guarantee visibility. Someone had to discover a page, decide it mattered, and link to it. Therefore, many websites were isolated and difficult to find.
 
-The webring solved this by turning the entire web into a collaborative directory. It took separate, isolated websites and stitched their `index.html` pages together into a decentralized loop.
+[Yahoo emerged in 1994.](https://web.stanford.edu/class/e145/2007_fall/materials/Yahoo_1995_STVPCase.pdf) It was initially a human-curated directory rather than a modern crawler-based search engine.
 
+[![Yahoo in 1994, organized as a hierarchy of categories](/images/yahoo-1994.png)](https://www.webdesignmuseum.org/gallery/yahoo-1994)
+
+Yahoo presented the Web as categories such as Art, Business, Computers, and Politics. [View the archived interface.](https://www.webdesignmuseum.org/gallery/yahoo-1994)
+
+Directories and search engines solved discovery by creating centralized maps of the Web. This made navigation easier, but also concentrated power: directories decided what belonged in each category, while search engines decided what appeared first.
+
+A **web ring** instead, linked independently operated sites around a shared subject. [An early example, EUROPa, appeared in 1994; Sage Weil later developed a centrally managed system that made rings easier to maintain.](https://crln.acrl.org/index.php/crlnews/article/view/22105/28059) Participating sites usually included navigation like this:
+
+```html
+<nav>
+  <a href="/previous">← Previous</a>
+  <a href="/members">All sites</a>
+  <a href="/next">Next →</a>
+</nav>
+```
+
+Unlike a search engine, a web ring made curation explicit. Joining a web ring means meeting neighboring sites, sharing visitors, and presenting oneself as part of a community. Rings were not completely decentralized: a ringmaster could control membership, and abandoned sites could break navigation. But still they offered a different politics of discovery sites.
+
+A contemporary example is the [XXIIVV Webring](https://github.com/xxiivv/webring), which connects artists’ and developers’ hand-built personal websites.
+
+## Let's create a web ring together!
+
+The easiest way to create a web ring is to have a page that contains links to all the other sites in the ring. Each site in the ring would have a link back to the main page, creating a circular structure.
+
+However, this is not as visually interesting or dynamic as we would like it to be, as they are completely ad-hoc and static. If we wish to create a more dynamic and visually interesting web ring, we can instead create a database of all the sites in the ring, and then use that database to generate a dynamic plugin that displays all the sites in the ring. This way, we can easily add or remove sites from the ring, and the page will automatically update to reflect those changes, by using playhtml.
+
+1. We will first need to add those sites to our database (the data is stored in playhtml's database).
+
+2. Then we can use the `class-webring.js` script to display the sites in the ring on our page. The script will automatically generate a dynamic plugin that displays all the sites in the ring, and it will update automatically when new sites are added or removed.
+
+```html
+<script
+  type="module"
+  src="https://class.playhtml.fun/class-webring.js?embed=plugin"
+></script>
+```
+
+3. Each site is displayed with its favicon. The embed first looks for every icon declared in the site's `<link rel="icon">` tags. It then tries conventional `.ico`, `.png`, `.jpg`, `.jpeg`, `.gif`, `.svg`, and Apple touch-icon paths, followed by a favicon cache, the submitted circle image, and finally the project's emoji.
+
+### What's a favicon?
+
+A **favicon** is a small icon that represents a website. It is typically displayed in the browser's address bar, next to the page title in tabs, and in bookmarks. Favicons help users quickly identify and navigate to their favorite websites.
+
+In our web ring, we use favicons to represent each site. A site can declare the exact icon it wants:
+
+```html
+<link rel="icon" href="/images/my-tiny-chair.png" type="image/png" />
+```
+
+The script will prefer that declared URL whenever it can read the site's HTML.
+
+There is one browser limitation: JavaScript may display a cross-origin image, but it may not read a cross-origin HTML page unless that page opts into CORS. When CORS blocks the HTML request, the static embed cannot inspect its `<link>` tags. That is why the conventional filenames and favicon cache remain necessary fallbacks. Reading every declaration regardless of CORS would require a server-side favicon resolver or proxy.
+
+You can use ICO, PNG, JPG, GIF, or SVG. Declaring the icon in your HTML is more reliable than depending only on a conventional filename:
+
+```html
+<link rel="icon" href="/favicon.ico" type="image/x-icon" />
+```
+
+## Let's also create a shared space!
+
+We had the idea that people can all be in the "same room". In the submission form, every submission creates a live object in our canvas. It fall back as a red stool, but the submitter can also change its HTML and CSS from the class site.
+
+PlayHTML [shared elements](https://playhtml.fun/docs/advanced/shared-elements/) have:
+
+- a **source** with a permanent `id` and `shared`
+- a **consumer** that points to `domain/path#id` with `data-source`
+- matching capabilities on both elements
+
+They share state, but they do not need the same HTML, image, CSS, or layout.
+
+For our class ring, the direction is:
+
+- your submission
+- class.playhtml.fun creates a permanent source object
+- your own website can subscribe to that object
+
+### 1. Add/Edit a submission!
+
+In the submission form, add/edit:
+
+1. Your project details and public URL
+2. A short invitation to the site
+3. The emoji, glow color, and optional **circle image URL** for the consumer
+
+### 2. Add a consumer to your site
+
+This is the smallest complete toggle example:
+
+```html
+<div
+  id="your-permanent-id"
+  data-source="class.playhtml.fun/playground#your-permanent-id"
+  can-toggle
+>
+  <img src="/lamp.png" alt="Turn the lamp on or off" />
+</div>
+
+<style>
+  #your-permanent-id {
+    filter: grayscale(1);
+    transition: 300ms;
+  }
+
+  /* PlayHTML adds .toggled when the shared state is on. */
+  #your-permanent-id.toggled {
+    filter: grayscale(0) drop-shadow(0 0 20px gold);
+  }
+</style>
+
+<script type="module">
+  import { playhtml } from 'https://unpkg.com/playhtml';
+
+  playhtml.init();
+</script>
+```
+
+Replace both instances of `your-permanent-id` with the permanent shared ID shown after you submit. Keep `data-source` on your site; the class playground already owns the `shared` source.
+
+You can continue editing the HTML, images, CSS, and scripts on your site after joining the ring. Update your submission when its project details, public URL, or thumbnail change.
+
+### 3. Test both directions
+
+1. Open your deployed site in one window.
+2. Open the class Showcase in another window.
+3. Interact with the consumer on your site and watch the class object update.
+4. Interact with the class object and watch your consumer update.
+
+If it does not connect, check:
+
+- Did you replace both instances of `your-permanent-id` with the ID from your submission?
+- Does `data-source` still point to `class.playhtml.fun/playground#` followed by that exact ID?
+- Do source and consumer use the same capability?
+- Did you leave `shared` off the consumer on your site?
+- Does the page initialize PlayHTML once?
+
+## What's Next?
+
+This is the last week of class! We want to make sure you have time to reflect on your experience and share some thoughts with us. Before we say goodbye, there are a couple of things we would like to share with you:
+
+### Physical Showcase
+
+SFPC is organizing a public summer showcase at the National Academy of Design in Midtown Manhattan from **August 20–22**, with a public reception on **August 21**. This is an opportunity to present work developed in our class alongside projects from other SFPC courses.
+
+The showcase can include websites, interactive projects, videos, writing, images, performances, printed matter, or physical objects. SFPC will provide our class with a display desk, and a limited number of Windows computer terminals and shared projection equipment are also available. **Digital work and project information are due August 3.** Physical work can be dropped off on **August 18, from 10am–6pm**, and must be picked up on **August 24 or 25**.
+
+Please let us know soon if you have specific things or ways to participate other than a class site like to participate, especially if your project involves a performance, sound, projection, unusual installation, or other technical requirements.
+
+### Reflection Form
+
+We will dedicate 15 minutes of our class time to collecting feedback from students, please take a moment to fill out the [reflection form](https://orienting.sfpc.study/is-where-we/reflect-together/final-reflections.html) now. Your feedback is important to us and will help us improve the class for future students.
+
+### QA & Other Resources
+
+Here are some resources that may be helpful as you continue to develop your projects:
+
+Anything else you want to share with the class?

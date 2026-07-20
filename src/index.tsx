@@ -13,11 +13,15 @@ import { BrowserRouter, useLocation } from 'react-router';
 // pathname prop changes). Must live inside the router to read useLocation.
 function PlayWithLocation() {
   const { pathname } = useLocation();
+  const isPlaygroundFrame = pathname === '/playground';
 
   return (
     <PlayProvider
       initOptions={{
-        cursors: { enabled: true },
+        // The playground is normally an iframe. It still syncs shared objects,
+        // but skips a redundant presence socket and uses PlayHTML's stable
+        // presence identity for editor ownership instead.
+        cursors: { enabled: !isPlaygroundFrame },
       }}
       pathname={pathname}
     >

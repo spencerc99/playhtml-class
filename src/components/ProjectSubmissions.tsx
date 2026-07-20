@@ -9,19 +9,36 @@ import {
   type FormEvent,
   type RefObject,
 } from 'react';
+import {
+  createBuiltInProjects,
+  createBuiltInReservedIds,
+  createSharedObjectId,
+  DEFAULT_SHARED_OBJECT_HTML,
+  defaultSharedObjectCss,
+  mergeBuiltInProjects,
+  normalizeProjectSharedObject,
+  sharedObjectConsumerSnippet,
+} from '../lib/projectSharedObject';
+import { ProjectEmojiPicker } from './ProjectEmojiPicker';
+import { ProjectPlaygroundFrame } from './ProjectPlaygroundFrame';
+import { type RingProject } from './ProjectWebring';
 
-interface ProjectSubmission {
+interface ProjectSubmission extends RingProject {
   id: string;
   name: string;
   submittedBy?: string;
   title: string;
   url: string;
-  category?: ProjectCategory;
+  description?: string;
+  emoji?: string;
+  accentColor?: string;
+  imageUrl?: string;
   submittedAt: number;
 }
 
 interface ProjectSubmissionData {
   projects: Record<string, ProjectSubmission>;
+  reservedSharedIds?: Record<string, true>;
 }
 
 interface ProjectSubmissionsProps {
@@ -34,34 +51,15 @@ interface SubmitStatus {
 }
 
 const PROJECTS_ELEMENT_ID = 'student-projects';
+const REGISTRY_DATA_EVENT = 'class-webring:registry-data';
+const REGISTRY_DATA_REQUEST_EVENT = 'class-webring:request-data';
+// Change this to "read-only" after the submission window closes.
+const PROJECT_REGISTRY_PERMISSIONS = 'read-write' as const;
 const MAX_NAME_LENGTH = 80;
 const MAX_TITLE_LENGTH = 120;
-const PROJECT_CATEGORIES = [
-  { value: 'inspiration', label: 'Inspiration' },
-  { value: 'experiments', label: 'Experiments' },
-  { value: 'web-benches', label: 'Web benches' },
-] as const;
-
-type ProjectCategory = (typeof PROJECT_CATEGORIES)[number]['value'];
-
-function projectCategoryLabel(category?: ProjectCategory): string {
-  return (
-    PROJECT_CATEGORIES.find((option) => option.value === category)?.label ??
-    'Experiments'
-  );
-}
-
-function projectHostname(projectUrl: string): string {
-  try {
-    return new URL(projectUrl).hostname.replace(/^www\./, '');
-  } catch {
-    return projectUrl;
-  }
-}
-
-function projectFaviconUrl(projectUrl: string): string {
-  return new URL('/favicon.ico', projectUrl).href;
-}
+const MAX_DESCRIPTION_LENGTH = 240;
+const MAX_EMOJI_LENGTH = 12;
+const DEFAULT_ACCENT_COLOR = '#f05a47';
 
 function projectDataSource(): string {
   return `${window.location.host}/showcase#${PROJECTS_ELEMENT_ID}`;
@@ -87,19 +85,29 @@ export const ProjectSubmissions = withSharedState<
   ProjectSubmissionsProps
 >(
   ({ variant }) => ({
-    defaultData: { projects: {} },
+    defaultData: {
+      projects: createBuiltInProjects(),
+      reservedSharedIds: createBuiltInReservedIds(),
+    },
     id: PROJECTS_ELEMENT_ID,
     ...(variant === 'showcase'
-      ? { shared: 'read-write' }
+      ? { shared: PROJECT_REGISTRY_PERMISSIONS }
       : { dataSource: projectDataSource() }),
   }),
   ({ data, setData, ref }, { variant }) => {
     const { cursors, getMyPlayerIdentity, hasSynced } = usePlayContext();
+    const builtInsSeeded = useRef(false);
     const nameEdited = useRef(false);
     const [name, setName] = useState(() => cursors.name?.trim() ?? '');
     const [title, setTitle] = useState('');
     const [url, setUrl] = useState('');
-    const [category, setCategory] = useState<ProjectCategory | ''>('');
+    const [description, setDescription] = useState('');
+    const [emoji, setEmoji] = useState('🪑');
+    const [accentColor, setAccentColor] = useState(DEFAULT_ACCENT_COLOR);
+    const [imageUrl, setImageUrl] = useState('');
+    const [editingProjectId, setEditingProjectId] = useState<string | null>(
+      null,
+    );
     const [status, setStatus] = useState<SubmitStatus | null>(null);
 
     useEffect(() => {
@@ -110,9 +118,71 @@ export const ProjectSubmissions = withSharedState<
       }
     }, [cursors.name]);
 
-    const projects = Object.values(data.projects).sort(
-      (left, right) => right.submittedAt - left.submittedAt,
-    );
+    useEffect(() => {
+      if (variant !== 'showcase' || !hasSynced || builtInsSeeded.current)
+        return;
+
+      builtInsSeeded.current = true;
+      setData((draft) => {
+        draft.reservedSharedIds ??= {};
+        for (const [id, project] of Object.entries(createBuiltInProjects())) {
+          if (
+            !draft.projects[id] ||
+            draft.projects[id].starterVersion !== project.starterVersion
+          ) {
+            draft.projects[id] = project;
+          }
+          draft.reservedSharedIds[project.sharedObject.id] = true;
+        }
+      });
+    }, [hasSynced, setData, variant]);
+
+    useEffect(() => {
+      if (variant !== 'showcase') return;
+
+      const publishRegistryData = () => {
+        const projects = mergeBuiltInProjects(data.projects);
+        window.dispatchEvent(
+          new CustomEvent(REGISTRY_DATA_EVENT, {
+            detail: { data: { ...data, projects } },
+          }),
+        );
+      };
+
+      window.addEventListener(REGISTRY_DATA_REQUEST_EVENT, publishRegistryData);
+      publishRegistryData();
+      return () => {
+        window.removeEventListener(
+          REGISTRY_DATA_REQUEST_EVENT,
+          publishRegistryData,
+        );
+      };
+    }, [data, variant]);
+
+    const projectRecord: Record<string, ProjectSubmission> =
+      mergeBuiltInProjects(
+        data.projects && typeof data.projects === 'object'
+          ? data.projects
+          : undefined,
+      );
+    const projects = Object.values(projectRecord)
+      .filter(
+        (project) =>
+          project &&
+          typeof project === 'object' &&
+          typeof project.id === 'string' &&
+          typeof project.name === 'string' &&
+          typeof project.title === 'string' &&
+          Boolean(normalizeProjectUrl(project.url)),
+      )
+      .map((project) => ({
+        ...project,
+        id: project.id.slice(0, 100),
+        name: project.name.slice(0, MAX_NAME_LENGTH),
+        title: project.title.slice(0, MAX_TITLE_LENGTH),
+        url: normalizeProjectUrl(project.url)!,
+      }))
+      .sort((left, right) => right.submittedAt - left.submittedAt);
     const playerId = getMyPlayerIdentity()?.publicKey;
     const myProjects = playerId
       ? projects.filter((project) => project.submittedBy === playerId)
@@ -124,9 +194,9 @@ export const ProjectSubmissions = withSharedState<
       const trimmedName = name.trim();
       const trimmedTitle = title.trim();
 
-      if (!trimmedName || !trimmedTitle || !url.trim() || !category) {
+      if (!trimmedName || !trimmedTitle || !url.trim()) {
         setStatus({
-          message: 'Fill out every field before submitting.',
+          message: 'Fill out the three fields marked *.',
           tone: 'error',
         });
         return;
@@ -142,6 +212,17 @@ export const ProjectSubmissions = withSharedState<
         return;
       }
 
+      const normalizedImageUrl = imageUrl.trim()
+        ? normalizeProjectUrl(imageUrl)
+        : undefined;
+      if (imageUrl.trim() && !normalizedImageUrl) {
+        setStatus({
+          message: 'The circle image must be a full http:// or https:// URL.',
+          tone: 'error',
+        });
+        return;
+      }
+
       if (!playerId) {
         setStatus({
           message: 'Your PlayHTML identity is still loading. Try again.',
@@ -150,24 +231,122 @@ export const ProjectSubmissions = withSharedState<
         return;
       }
 
+      const existingProject = editingProjectId
+        ? myProjects.find((project) => project.id === editingProjectId)
+        : undefined;
+      if (editingProjectId && !existingProject) {
+        setStatus({
+          message:
+            'This submission no longer belongs to your PlayHTML identity.',
+          tone: 'error',
+        });
+        return;
+      }
+
+      const projectId = existingProject?.id ?? crypto.randomUUID();
+      const unavailableSharedIds = projects.map(
+        (project) =>
+          normalizeProjectSharedObject(project.sharedObject, project.id).id,
+      );
+      unavailableSharedIds.push(...Object.keys(data.reservedSharedIds ?? {}));
+      const sharedObject = existingProject
+        ? normalizeProjectSharedObject(
+            existingProject.sharedObject,
+            existingProject.id,
+          )
+        : (() => {
+            const id = createSharedObjectId(trimmedTitle, unavailableSharedIds);
+            return {
+              id,
+              html: DEFAULT_SHARED_OBJECT_HTML,
+              css: defaultSharedObjectCss(id),
+            };
+          })();
       const submission: ProjectSubmission = {
-        id: crypto.randomUUID(),
+        id: projectId,
         name: trimmedName.slice(0, MAX_NAME_LENGTH),
         submittedBy: playerId,
         title: trimmedTitle.slice(0, MAX_TITLE_LENGTH),
         url: normalizedUrl,
-        category,
-        submittedAt: Date.now(),
+        description: description.trim().slice(0, MAX_DESCRIPTION_LENGTH),
+        emoji: emoji.trim().slice(0, MAX_EMOJI_LENGTH) || '🪑',
+        accentColor,
+        imageUrl: normalizedImageUrl ?? undefined,
+        sharedObject,
+        submittedAt: existingProject?.submittedAt ?? Date.now(),
       };
 
       setData((draft) => {
         draft.projects[submission.id] = submission;
+        draft.reservedSharedIds ??= {};
+        draft.reservedSharedIds[sharedObject.id] = true;
       });
       setTitle('');
       setUrl('');
-      setCategory('');
+      setDescription('');
+      setEmoji('🪑');
+      setAccentColor(DEFAULT_ACCENT_COLOR);
+      setImageUrl('');
+      setEditingProjectId(null);
       setStatus({
-        message: 'Submitted — your project is now in the Showcase.',
+        message: existingProject
+          ? 'Saved — your ring entry has been updated.'
+          : `Submitted — your permanent shared ID is ${sharedObject.id}. Select your stool above to customize it.`,
+        tone: 'success',
+      });
+    };
+
+    const editProject = (project: ProjectSubmission) => {
+      nameEdited.current = true;
+      setEditingProjectId(project.id);
+      setName(project.name);
+      setTitle(project.title);
+      setUrl(project.url);
+      setDescription(project.description ?? '');
+      setEmoji(project.emoji ?? '🪑');
+      setAccentColor(project.accentColor ?? DEFAULT_ACCENT_COLOR);
+      setImageUrl(project.imageUrl ?? '');
+      setStatus(null);
+      document.querySelector('#submit-project')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    };
+
+    const cancelEditing = () => {
+      setEditingProjectId(null);
+      setTitle('');
+      setUrl('');
+      setDescription('');
+      setEmoji('🪑');
+      setAccentColor(DEFAULT_ACCENT_COLOR);
+      setImageUrl('');
+      setStatus(null);
+    };
+
+    const removeProject = (project: ProjectSubmission) => {
+      if (!playerId || project.submittedBy !== playerId) {
+        setStatus({
+          message: 'This submission does not belong to your PlayHTML identity.',
+          tone: 'error',
+        });
+        return;
+      }
+
+      if (!window.confirm(`Remove “${project.title}” from the ring?`)) return;
+
+      setData((draft) => {
+        const currentProject = draft.projects[project.id];
+        if (currentProject?.submittedBy === playerId) {
+          delete draft.projects[project.id];
+        }
+      });
+
+      if (editingProjectId === project.id) {
+        cancelEditing();
+      }
+      setStatus({
+        message: 'Removed — the live ring will update automatically.',
         tone: 'success',
       });
     };
@@ -178,79 +357,19 @@ export const ProjectSubmissions = withSharedState<
         id={PROJECTS_ELEMENT_ID}
         className={`project-submissions project-submissions--${variant}`}
       >
-        {variant === 'showcase' ? (
-          <div className="project-submissions__collection">
-            {projects.length === 0 ? (
-              <p className="project-submissions__empty">
-                {hasSynced
-                  ? 'No projects yet — submit the first one below.'
-                  : 'Loading projects…'}
-              </p>
-            ) : (
-              <ul className="project-submissions__list">
-                {projects.map((project) => (
-                  <li key={project.id} className="project-submissions__card">
-                    <a
-                      className="project-submissions__card-link"
-                      href={project.url}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <span className="project-submissions__card-preview">
-                        <span
-                          className="project-submissions__card-fallback"
-                          aria-hidden="true"
-                        >
-                          {projectHostname(project.url).charAt(0).toUpperCase()}
-                        </span>
-                        <img
-                          className="project-submissions__card-favicon"
-                          src={projectFaviconUrl(project.url)}
-                          alt=""
-                          loading="lazy"
-                          onError={(event) => {
-                            event.currentTarget.hidden = true;
-                          }}
-                        />
-                        <span className="project-submissions__card-host">
-                          {projectHostname(project.url)}
-                        </span>
-                      </span>
-                      <span className="project-submissions__card-body">
-                        <span className="project-submissions__card-category">
-                          {projectCategoryLabel(project.category)}
-                        </span>
-                        <span className="project-submissions__card-heading">
-                          <span className="project-submissions__card-title">
-                            {project.title}
-                          </span>
-                          <span
-                            className="project-submissions__card-arrow"
-                            aria-hidden="true"
-                          >
-                            ↗
-                          </span>
-                        </span>
-                        <span className="project-submissions__card-student">
-                          by {project.name}
-                        </span>
-                      </span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        ) : null}
+        {variant === 'showcase' ? <ProjectPlaygroundFrame /> : null}
 
-        <div className="project-submissions__form-panel">
+        <div className="project-submissions__form-panel" id="submit-project">
           <div className="project-submissions__intro">
-            <p className="project-submissions__eyebrow">Add to the class</p>
+            <p className="project-submissions__eyebrow">
+              {editingProjectId ? 'Keep shaping it' : 'Add to the class'}
+            </p>
             <h2 className="project-submissions__form-title">
-              Submit your project
+              {editingProjectId ? 'Edit your project' : 'Submit your project'}
             </h2>
             <p className="project-submissions__form-copy">
-              Share the live URL so everyone can visit what you made.
+              Fields marked <strong>*</strong> are required. Submitting reserves
+              a permanent shared ID and places a red stool in the room above.
             </p>
           </div>
 
@@ -260,7 +379,9 @@ export const ProjectSubmissions = withSharedState<
             onSubmit={handleSubmit}
           >
             <label className="project-submissions__field">
-              <span className="project-submissions__label">Your name</span>
+              <span className="project-submissions__label">
+                Your name <span aria-hidden="true">*</span>
+              </span>
               <input
                 className="project-submissions__input"
                 type="text"
@@ -278,7 +399,9 @@ export const ProjectSubmissions = withSharedState<
             </label>
 
             <label className="project-submissions__field">
-              <span className="project-submissions__label">Project title</span>
+              <span className="project-submissions__label">
+                Project title <span aria-hidden="true">*</span>
+              </span>
               <input
                 className="project-submissions__input"
                 type="text"
@@ -294,7 +417,9 @@ export const ProjectSubmissions = withSharedState<
             </label>
 
             <label className="project-submissions__field project-submissions__field--url">
-              <span className="project-submissions__label">Project URL</span>
+              <span className="project-submissions__label">
+                Project URL <span aria-hidden="true">*</span>
+              </span>
               <input
                 className="project-submissions__input"
                 type="url"
@@ -309,32 +434,85 @@ export const ProjectSubmissions = withSharedState<
               />
             </label>
 
-            <label className="project-submissions__field project-submissions__field--category">
-              <span className="project-submissions__label">Category</span>
-              <select
-                className="project-submissions__input project-submissions__select"
-                value={category}
-                required
+            <label className="project-submissions__field project-submissions__field--wide">
+              <span className="project-submissions__label">
+                Short invitation
+              </span>
+              <textarea
+                className="project-submissions__input project-submissions__textarea"
+                value={description}
+                maxLength={MAX_DESCRIPTION_LENGTH}
+                placeholder="What kind of place are you inviting us into?"
                 onChange={(event) => {
-                  setCategory(event.target.value as ProjectCategory | '');
+                  setDescription(event.target.value);
                   setStatus(null);
                 }}
-              >
-                <option value="" disabled>
-                  Choose a category
-                </option>
-                {PROJECT_CATEGORIES.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              />
             </label>
+
+            <fieldset className="project-submissions__appearance">
+              <legend className="project-submissions__section-label">
+                Ring thumbnail
+              </legend>
+              <div className="project-submissions__field project-submissions__field--emoji">
+                <span className="project-submissions__label">Emoji</span>
+                <ProjectEmojiPicker value={emoji} onChange={setEmoji} />
+              </div>
+              <label className="project-submissions__field project-submissions__field--color">
+                <span className="project-submissions__label">Glow</span>
+                <input
+                  className="project-submissions__color"
+                  type="color"
+                  value={accentColor}
+                  onChange={(event) => setAccentColor(event.target.value)}
+                />
+              </label>
+              <label className="project-submissions__field project-submissions__field--image">
+                <span className="project-submissions__label">
+                  Thumbnail image URL
+                </span>
+                <input
+                  className="project-submissions__input"
+                  type="url"
+                  inputMode="url"
+                  value={imageUrl}
+                  placeholder="https://your-site.example/charm.png"
+                  onChange={(event) => {
+                    setImageUrl(event.target.value);
+                    setStatus(null);
+                  }}
+                />
+              </label>
+            </fieldset>
+
+            <div className="project-submissions__generated">
+              <img src="/red-stool.png" alt="" />
+              <div>
+                <h3>We create this stool for you</h3>
+                <p>
+                  We generate a unique, permanent <code>id</code> and host its
+                  source at <code>class.playhtml.fun/playground</code>. It
+                  starts as this red stool with <code>shared</code>,{' '}
+                  <code>can-toggle</code>, and <code>can-play</code>. After
+                  submitting, select it in the room to edit its HTML and CSS.
+                </p>
+              </div>
+            </div>
 
             <div className="project-submissions__actions">
               <button className="project-submissions__submit" type="submit">
-                Submit project <span aria-hidden="true">→</span>
+                {editingProjectId ? 'Save changes' : 'Submit project'}{' '}
+                <span aria-hidden="true">→</span>
               </button>
+              {editingProjectId ? (
+                <button
+                  className="project-submissions__cancel"
+                  type="button"
+                  onClick={cancelEditing}
+                >
+                  Cancel editing
+                </button>
+              ) : null}
               <p
                 className={
                   status
@@ -349,23 +527,63 @@ export const ProjectSubmissions = withSharedState<
           </form>
 
           {myProjects.length > 0 ? (
-            <div className="project-submissions__mine">
+            <div className="project-submissions__mine" id="your-submissions">
               <p className="project-submissions__mine-title">
                 Your submissions
               </p>
+              <p className="project-submissions__mine-copy">
+                Return here with the same PlayHTML identity to change your
+                project details, emoji, glow, or thumbnail image.
+              </p>
               <ul className="project-submissions__mine-list">
-                {myProjects.map((project) => (
-                  <li key={project.id}>
-                    <a
-                      className="project-submissions__mine-link"
-                      href={project.url}
-                      target="_blank"
-                      rel="noreferrer"
+                {myProjects.map((project) => {
+                  const sharedObject = normalizeProjectSharedObject(
+                    project.sharedObject,
+                    project.id,
+                  );
+
+                  return (
+                    <li
+                      className="project-submissions__mine-item"
+                      key={project.id}
                     >
-                      {project.title} <span aria-hidden="true">↗</span>
-                    </a>
-                  </li>
-                ))}
+                      <a
+                        className="project-submissions__mine-link"
+                        href={project.url}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {project.title} <span aria-hidden="true">↗</span>
+                      </a>
+                      <div className="project-submissions__mine-id">
+                        <span>Permanent shared ID</span>
+                        <code>{sharedObject.id}</code>
+                      </div>
+                      <details className="project-submissions__mine-code">
+                        <summary>Code for your website</summary>
+                        <code>
+                          {sharedObjectConsumerSnippet(sharedObject.id)}
+                        </code>
+                      </details>
+                      <div className="project-submissions__mine-actions">
+                        <button
+                          className="project-submissions__edit"
+                          type="button"
+                          onClick={() => editProject(project)}
+                        >
+                          Edit project + thumbnail
+                        </button>
+                        <button
+                          className="project-submissions__remove"
+                          type="button"
+                          onClick={() => removeProject(project)}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ) : null}

@@ -23,9 +23,11 @@
 ### Task 1: Shared Submission Component
 
 **Files:**
+
 - Create: `src/components/ProjectSubmissions.tsx`
 
 **Interfaces:**
+
 - Consumes: `withSharedState`, `usePlayContext`, and the current browser host.
 - Produces: `ProjectSubmissions({ variant: 'form' | 'showcase' })`.
 
@@ -115,10 +117,12 @@ git commit -m "Add shared project submissions"
 ### Task 2: Route Placement and Showcase Integration
 
 **Files:**
+
 - Modify: `src/pages/Week.tsx`
 - Modify: `src/pages/Showcase.tsx`
 
 **Interfaces:**
+
 - Consumes: `ProjectSubmissions({ variant })` from Task 1.
 - Produces: week-page submission forms and the canonical Showcase source.
 
@@ -153,9 +157,11 @@ git commit -m "Connect submissions to class pages"
 ### Task 3: Submission and Showcase Styling
 
 **Files:**
+
 - Modify: `src/App.scss`
 
 **Interfaces:**
+
 - Consumes: `project-submissions__*` classes rendered by Task 1.
 - Produces: responsive form, feedback, empty state, and card-grid presentation.
 
@@ -183,9 +189,11 @@ git commit -m "Style project submissions and showcase"
 ### Task 4: Real Browser Verification
 
 **Files:**
+
 - Modify only files from Tasks 1-3 if browser evidence identifies a defect.
 
 **Interfaces:**
+
 - Consumes: the complete feature running through Vite and real PlayHTML.
 - Produces: evidence that a submission written on one route appears and persists
   on another route.
@@ -195,7 +203,7 @@ git commit -m "Style project submissions and showcase"
 Run:
 
 ```bash
-bun run dev --host 127.0.0.1
+bun run dev
 ```
 
 Expected: Vite serves the isolated worktree without a compile error.
