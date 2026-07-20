@@ -7,6 +7,14 @@ export interface ProjectSharedObject {
   id: string;
 }
 
+interface ProjectAppearance {
+  accentColor?: string;
+  emoji?: string;
+  imageUrl?: string;
+  title: string;
+  url: string;
+}
+
 export interface BuiltInRingProject {
   accentColor: string;
   description: string;
@@ -28,6 +36,40 @@ export const MAX_SHARED_HTML_LENGTH = 8000;
 export const MAX_SHARED_CSS_LENGTH = 12_000;
 
 const SHARED_ID_PATTERN = /^[A-Za-z][\w.:-]{0,79}$/;
+
+function escapeHtml(value: string): string {
+  return value.replaceAll(/["&'<>]/g, (character) => {
+    const entities: Record<string, string> = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    };
+    return entities[character];
+  });
+}
+
+function safeHttpUrl(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:'
+      ? url.href
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function projectFaviconUrl(projectUrl: string): string | undefined {
+  const normalizedUrl = safeHttpUrl(projectUrl);
+  if (!normalizedUrl) return undefined;
+
+  const { hostname } = new URL(normalizedUrl);
+  return `https://icons.duckduckgo.com/ip3/${encodeURIComponent(hostname)}.ico`;
+}
 
 function slugify(value: string): string {
   return (
@@ -93,6 +135,72 @@ export function defaultSharedObjectCss(sharedId: string): string {
   filter: drop-shadow(0 0 24px rgba(224, 0, 0, 0.62));
   transform: rotate(-8deg) scale(1.14);
 }`;
+}
+
+export function createProjectAppearanceSharedObject(
+  sharedId: string,
+  appearance: ProjectAppearance,
+): ProjectSharedObject {
+  const emoji = escapeHtml(appearance.emoji?.trim().slice(0, 12) || '🪑');
+  const faviconUrl = projectFaviconUrl(appearance.url);
+  const imageUrl = safeHttpUrl(appearance.imageUrl);
+  const title = escapeHtml(appearance.title.slice(0, 120));
+  const accentColor =
+    typeof appearance.accentColor === 'string' &&
+    /^#[\da-f]{6}$/i.test(appearance.accentColor)
+      ? appearance.accentColor
+      : '#f05a47';
+  const images = [
+    imageUrl
+      ? `<img class="starter-project-icon" src="${escapeHtml(imageUrl)}" alt="" onerror="this.remove()" />`
+      : '',
+    faviconUrl
+      ? `<img class="starter-project-icon" src="${escapeHtml(faviconUrl)}" alt="" onerror="this.remove()" />`
+      : '',
+  ].join('');
+
+  return {
+    id: sharedId,
+    html: `<div class="starter-project-appearance" aria-label="${title}"><span aria-hidden="true">${emoji}</span>${images}</div>`,
+    css: `#${sharedId} {
+  cursor: pointer;
+  filter: drop-shadow(0 0.65em 0.55em color-mix(in srgb, ${accentColor} 36%, transparent));
+  transition: filter 220ms ease, transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+#${sharedId} .starter-project-appearance {
+  align-items: center;
+  aspect-ratio: 1;
+  background: color-mix(in srgb, ${accentColor} 10%, white);
+  border: 1px solid color-mix(in srgb, ${accentColor} 35%, transparent);
+  border-radius: 50%;
+  display: flex;
+  font-size: clamp(1.6rem, 5vw, 4.5rem);
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  width: 72%;
+}
+
+#${sharedId} .starter-project-icon {
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  position: absolute;
+  width: 100%;
+}
+
+#${sharedId}:hover,
+#${sharedId}:focus-visible {
+  filter: drop-shadow(0 0.9em 0.7em color-mix(in srgb, ${accentColor} 55%, transparent));
+  transform: translateY(-5%) rotate(4deg) scale(1.06);
+}
+
+#${sharedId}.toggled {
+  filter: drop-shadow(0 0 1.15em color-mix(in srgb, ${accentColor} 72%, transparent));
+  transform: rotate(-9deg) scale(1.14);
+}`,
+  };
 }
 
 function faviconSharedObjectCss(sharedId: string): string {

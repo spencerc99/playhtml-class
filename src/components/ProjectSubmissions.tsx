@@ -10,18 +10,20 @@ import {
   useEffect,
   useRef,
   useState,
+  type CSSProperties,
   type FormEvent,
   type RefObject,
 } from 'react';
 import {
   createBuiltInProjects,
   createBuiltInReservedIds,
+  createProjectAppearanceSharedObject,
   createSharedObjectId,
   DEFAULT_SHARED_OBJECT_HTML,
-  defaultSharedObjectCss,
   isBuiltInProjectId,
   mergeBuiltInProjects,
   normalizeProjectSharedObject,
+  projectFaviconUrl,
   sharedObjectConsumerSnippet,
 } from '../lib/projectSharedObject';
 import { ProjectEmojiPicker } from './ProjectEmojiPicker';
@@ -83,6 +85,62 @@ function normalizeProjectUrl(value: string): string | null {
   } catch {
     return null;
   }
+}
+
+function ProjectAppearancePreview({
+  accentColor,
+  emoji,
+  imageUrl,
+  title,
+  url,
+}: {
+  accentColor: string;
+  emoji: string;
+  imageUrl: string;
+  title: string;
+  url: string;
+}) {
+  const faviconUrl = projectFaviconUrl(url);
+  const normalizedImageUrl = normalizeProjectUrl(imageUrl) ?? undefined;
+  const imageSources = [faviconUrl, normalizedImageUrl].filter(
+    (source, index, sources): source is string =>
+      Boolean(source) && sources.indexOf(source) === index,
+  );
+  const [sourceIndex, setSourceIndex] = useState(0);
+
+  useEffect(() => {
+    setSourceIndex(0);
+  }, [faviconUrl, normalizedImageUrl]);
+
+  const imageSource = imageSources[sourceIndex];
+
+  return (
+    <div className="project-submissions__generated">
+      <div
+        className="project-submissions__generated-icon"
+        style={{ '--preview-accent': accentColor } as CSSProperties}
+      >
+        <span aria-hidden="true">{emoji.trim() || '🪑'}</span>
+        {imageSource ? (
+          <img
+            key={imageSource}
+            src={imageSource}
+            alt=""
+            referrerPolicy="no-referrer"
+            onError={() => setSourceIndex((current) => current + 1)}
+          />
+        ) : null}
+      </div>
+      <div>
+        <h3>{title.trim() || 'Your project'} in the ring</h3>
+        <p>
+          This preview follows the same favicon, ring icon, then emoji order as
+          the widget. Submitting also creates this as an editable shared object
+          in the full-screen room.
+        </p>
+      </div>
+    </div>
+  );
 }
 
 export const ProjectSubmissions = withSharedState<
@@ -257,19 +315,27 @@ export const ProjectSubmissions = withSharedState<
           normalizeProjectSharedObject(project.sharedObject, project.id).id,
       );
       unavailableSharedIds.push(...Object.keys(data.reservedSharedIds ?? {}));
-      const sharedObject = existingProject
+      const existingSharedObject = existingProject
         ? normalizeProjectSharedObject(
             existingProject.sharedObject,
             existingProject.id,
           )
-        : (() => {
-            const id = createSharedObjectId(trimmedTitle, unavailableSharedIds);
-            return {
-              id,
-              html: DEFAULT_SHARED_OBJECT_HTML,
-              css: defaultSharedObjectCss(id),
-            };
-          })();
+        : undefined;
+      const sharedId =
+        existingSharedObject?.id ??
+        createSharedObjectId(trimmedTitle, unavailableSharedIds);
+      const normalizedEmoji = emoji.trim().slice(0, MAX_EMOJI_LENGTH) || '🪑';
+      const sharedObject =
+        existingSharedObject &&
+        existingSharedObject.html !== DEFAULT_SHARED_OBJECT_HTML
+          ? existingSharedObject
+          : createProjectAppearanceSharedObject(sharedId, {
+              accentColor,
+              emoji: normalizedEmoji,
+              imageUrl: normalizedImageUrl ?? undefined,
+              title: trimmedTitle,
+              url: normalizedUrl,
+            });
       const submission: ProjectSubmission = {
         id: projectId,
         name: trimmedName.slice(0, MAX_NAME_LENGTH),
@@ -277,7 +343,7 @@ export const ProjectSubmissions = withSharedState<
         title: trimmedTitle.slice(0, MAX_TITLE_LENGTH),
         url: normalizedUrl,
         description: description.trim().slice(0, MAX_DESCRIPTION_LENGTH),
-        emoji: emoji.trim().slice(0, MAX_EMOJI_LENGTH) || '🪑',
+        emoji: normalizedEmoji,
         accentColor,
         imageUrl: normalizedImageUrl ?? undefined,
         sharedObject,
@@ -299,7 +365,7 @@ export const ProjectSubmissions = withSharedState<
       setStatus({
         message: existingProject
           ? 'Saved — your ring entry has been updated.'
-          : `Submitted — your permanent shared ID is ${sharedObject.id}. Select your stool above to customize it.`,
+          : 'Submitted — your project is live in the ring. Select it above to customize its HTML and CSS.',
         tone: 'success',
       });
     };
@@ -379,8 +445,9 @@ export const ProjectSubmissions = withSharedState<
               {editingProjectId ? 'Edit your project' : 'Submit your project'}
             </h2>
             <p className="project-submissions__form-copy">
-              Fields marked <strong>*</strong> are required. Submitting reserves
-              a permanent shared ID and places a red stool in the room above.
+              Fields marked <strong>*</strong> are required. Submitting adds
+              your project to the ring and creates an editable shared object in
+              the room above.
             </p>
           </div>
 
@@ -502,19 +569,13 @@ export const ProjectSubmissions = withSharedState<
               </label>
             </fieldset>
 
-            <div className="project-submissions__generated">
-              <img src="/red-stool.png" alt="" />
-              <div>
-                <h3>We create this stool for you</h3>
-                <p>
-                  We generate a unique, permanent <code>id</code> and host its
-                  source at <code>class.playhtml.fun/playground</code>. It
-                  starts as this red stool with <code>shared</code>,{' '}
-                  <code>can-toggle</code>, and <code>can-play</code>. After
-                  submitting, select it in the room to edit its HTML and CSS.
-                </p>
-              </div>
-            </div>
+            <ProjectAppearancePreview
+              accentColor={accentColor}
+              emoji={emoji}
+              imageUrl={imageUrl}
+              title={title}
+              url={url}
+            />
 
             <div className="project-submissions__actions">
               <button

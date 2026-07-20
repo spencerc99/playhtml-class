@@ -14,6 +14,7 @@ import {
   type KeyboardEvent,
 } from 'react';
 import {
+  createProjectAppearanceSharedObject,
   DEFAULT_SHARED_OBJECT_HTML,
   defaultSharedObjectCss,
   isBuiltInProjectId,
@@ -103,6 +104,22 @@ function safeProjects(projects: RingProject[]): RingProject[] {
 
     const id = safeText(project.id, 100, `project-${index}`);
 
+    const normalizedSharedObject = normalizeProjectSharedObject(
+      project.sharedObject,
+      id,
+    );
+    const sharedObject =
+      !isBuiltInProjectId(id) &&
+      normalizedSharedObject.html === DEFAULT_SHARED_OBJECT_HTML
+        ? createProjectAppearanceSharedObject(normalizedSharedObject.id, {
+            accentColor: project.accentColor,
+            emoji: project.emoji,
+            imageUrl: project.imageUrl,
+            title,
+            url,
+          })
+        : normalizedSharedObject;
+
     return [
       {
         id,
@@ -120,7 +137,7 @@ function safeProjects(projects: RingProject[]): RingProject[] {
         submittedAt:
           typeof project.submittedAt === 'number' ? project.submittedAt : index,
         submittedBy: safeText(project.submittedBy, 180) || undefined,
-        sharedObject: normalizeProjectSharedObject(project.sharedObject, id),
+        sharedObject,
       },
     ];
   });
