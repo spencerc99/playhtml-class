@@ -9,7 +9,11 @@ import {
   type FormEvent,
   type RefObject,
 } from 'react';
-import { ProjectWebring, type RingProject } from './ProjectWebring';
+import {
+  ProjectWebring,
+  type RingCapability,
+  type RingProject,
+} from './ProjectWebring';
 
 interface ProjectSubmission extends RingProject {
   id: string;
@@ -23,7 +27,10 @@ interface ProjectSubmission extends RingProject {
   accentColor?: string;
   imageUrl?: string;
   sharedElement?: {
+    capability?: RingCapability;
     dataSource: string;
+    elementId?: string;
+    pageUrl?: string;
   };
   submittedAt: number;
 }
@@ -47,6 +54,13 @@ const MAX_TITLE_LENGTH = 120;
 const MAX_DESCRIPTION_LENGTH = 240;
 const MAX_EMOJI_LENGTH = 12;
 const DEFAULT_ACCENT_COLOR = '#f05a47';
+const RING_CAPABILITIES = [
+  { value: 'toggle', label: 'Toggle (on/off)' },
+  { value: 'spin', label: 'Spin (drag)' },
+  { value: 'grow', label: 'Grow (click)' },
+  { value: 'hover', label: 'Hover (live presence)' },
+  { value: 'move', label: 'Move (drag position)' },
+] as const;
 const PROJECT_CATEGORIES = [
   { value: 'inspiration', label: 'Inspiration' },
   { value: 'experiments', label: 'Experiments' },
@@ -76,6 +90,7 @@ function normalizeProjectUrl(value: string): string | null {
 function normalizeSharedElement(
   pageUrl: string,
   elementId: string,
+  capability: RingCapability,
 ): ProjectSubmission['sharedElement'] | null {
   if (!pageUrl.trim() && !elementId.trim()) return undefined;
   if (!pageUrl.trim() || !elementId.trim()) return null;
@@ -89,7 +104,35 @@ function normalizeSharedElement(
     source.pathname === '/' ? '' : source.pathname.replace(/\/$/, '');
 
   return {
+    capability,
     dataSource: `${source.host}${path}#${elementId.trim()}`,
+    elementId: elementId.trim(),
+    pageUrl: source.href,
+  };
+}
+
+function sharedElementFields(
+  sharedElement?: ProjectSubmission['sharedElement'],
+) {
+  if (!sharedElement) {
+    return { elementId: '', pageUrl: '' };
+  }
+
+  if (sharedElement.pageUrl && sharedElement.elementId) {
+    return {
+      elementId: sharedElement.elementId,
+      pageUrl: sharedElement.pageUrl,
+    };
+  }
+
+  const hashIndex = sharedElement.dataSource.lastIndexOf('#');
+  if (hashIndex < 1) {
+    return { elementId: '', pageUrl: '' };
+  }
+
+  return {
+    elementId: sharedElement.dataSource.slice(hashIndex + 1),
+    pageUrl: `https://${sharedElement.dataSource.slice(0, hashIndex)}`,
   };
 }
 
@@ -118,6 +161,11 @@ export const ProjectSubmissions = withSharedState<
     const [imageUrl, setImageUrl] = useState('');
     const [sharedPageUrl, setSharedPageUrl] = useState('');
     const [sharedElementId, setSharedElementId] = useState('');
+    const [sharedCapability, setSharedCapability] =
+      useState<RingCapability>('toggle');
+    const [editingProjectId, setEditingProjectId] = useState<string | null>(
+      null,
+    );
     const [status, setStatus] = useState<SubmitStatus | null>(null);
 
     useEffect(() => {
@@ -191,6 +239,7 @@ export const ProjectSubmissions = withSharedState<
       const sharedElement = normalizeSharedElement(
         sharedPageUrl,
         sharedElementId,
+        sharedCapability,
       );
       if (sharedElement === null) {
         setStatus({
@@ -209,8 +258,20 @@ export const ProjectSubmissions = withSharedState<
         return;
       }
 
+      const existingProject = editingProjectId
+        ? myProjects.find((project) => project.id === editingProjectId)
+        : undefined;
+      if (editingProjectId && !existingProject) {
+        setStatus({
+          message:
+            'This submission no longer belongs to your PlayHTML identity.',
+          tone: 'error',
+        });
+        return;
+      }
+
       const submission: ProjectSubmission = {
-        id: crypto.randomUUID(),
+        id: existingProject?.id ?? crypto.randomUUID(),
         name: trimmedName.slice(0, MAX_NAME_LENGTH),
         submittedBy: playerId,
         title: trimmedTitle.slice(0, MAX_TITLE_LENGTH),
@@ -221,7 +282,7 @@ export const ProjectSubmissions = withSharedState<
         accentColor,
         imageUrl: normalizedImageUrl ?? undefined,
         sharedElement,
-        submittedAt: Date.now(),
+        submittedAt: existingProject?.submittedAt ?? Date.now(),
       };
 
       setData((draft) => {
@@ -236,10 +297,52 @@ export const ProjectSubmissions = withSharedState<
       setImageUrl('');
       setSharedPageUrl('');
       setSharedElementId('');
+      setSharedCapability('toggle');
+      setEditingProjectId(null);
       setStatus({
-        message: 'Submitted — your project is now in the Showcase.',
+        message: existingProject
+          ? 'Saved — your ring entry has been updated.'
+          : 'Submitted — your project is now in the Showcase.',
         tone: 'success',
       });
+    };
+
+    const editProject = (project: ProjectSubmission) => {
+      const sharedFields = sharedElementFields(project.sharedElement);
+
+      nameEdited.current = true;
+      setEditingProjectId(project.id);
+      setName(project.name);
+      setTitle(project.title);
+      setUrl(project.url);
+      setCategory(project.category ?? 'experiments');
+      setDescription(project.description ?? '');
+      setEmoji(project.emoji ?? '🌱');
+      setAccentColor(project.accentColor ?? DEFAULT_ACCENT_COLOR);
+      setImageUrl(project.imageUrl ?? '');
+      setSharedPageUrl(sharedFields.pageUrl);
+      setSharedElementId(sharedFields.elementId);
+      setSharedCapability(project.sharedElement?.capability ?? 'toggle');
+      setStatus(null);
+      document.querySelector('#submit-project')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    };
+
+    const cancelEditing = () => {
+      setEditingProjectId(null);
+      setTitle('');
+      setUrl('');
+      setCategory('');
+      setDescription('');
+      setEmoji('🌱');
+      setAccentColor(DEFAULT_ACCENT_COLOR);
+      setImageUrl('');
+      setSharedPageUrl('');
+      setSharedElementId('');
+      setSharedCapability('toggle');
+      setStatus(null);
     };
 
     return (
@@ -254,9 +357,11 @@ export const ProjectSubmissions = withSharedState<
 
         <div className="project-submissions__form-panel" id="submit-project">
           <div className="project-submissions__intro">
-            <p className="project-submissions__eyebrow">Add to the class</p>
+            <p className="project-submissions__eyebrow">
+              {editingProjectId ? 'Keep shaping it' : 'Add to the class'}
+            </p>
             <h2 className="project-submissions__form-title">
-              Submit your project
+              {editingProjectId ? 'Edit your project' : 'Submit your project'}
             </h2>
             <p className="project-submissions__form-copy">
               Share your live URL, then give its circle a tiny personality. All
@@ -404,9 +509,9 @@ export const ProjectSubmissions = withSharedState<
               </legend>
               <p className="project-submissions__shared-copy">
                 The circle image above becomes the shared element in our ring.
-                Connect it to an element on your site using one shared
-                <code>{` { active } `}</code>value, then make the active state
-                look and behave however you want on your own site.
+                Choose the same PlayHTML capability as the source on your site.
+                This declares what state is shared; your own HTML, CSS, and
+                scripts still control what the effect looks and means like.
               </p>
               <label className="project-submissions__field project-submissions__field--shared-url">
                 <span className="project-submissions__label">
@@ -440,28 +545,37 @@ export const ProjectSubmissions = withSharedState<
                   }}
                 />
               </label>
+              <label className="project-submissions__field project-submissions__field--shared-capability">
+                <span className="project-submissions__label">
+                  Capability on your source
+                </span>
+                <select
+                  className="project-submissions__input project-submissions__select"
+                  value={sharedCapability}
+                  onChange={(event) =>
+                    setSharedCapability(event.target.value as RingCapability)
+                  }
+                >
+                  {RING_CAPABILITIES.map((capability) => (
+                    <option key={capability.value} value={capability.value}>
+                      {capability.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
               {sharedElementId ? (
                 <div className="project-submissions__snippet">
                   <span>Paste this into your site:</span>
-                  <code>{`<img id="${sharedElementId}" shared can-play src="/your-image.png" alt="" />
+                  <code>{`<img id="${sharedElementId}" shared can-${sharedCapability} src="/your-image.png" alt="" />
 <script type="module">
   import { playhtml } from "https://unpkg.com/playhtml";
-
-  const charm = document.querySelector("#${sharedElementId}");
-  charm.defaultData = { active: false };
-  charm.onClick = (_event, { setData }) => {
-    setData((draft) => { draft.active = !draft.active; });
-  };
-  charm.updateElement = ({ element, data }) => {
-    element.classList.toggle("is-active", data.active);
-  };
-
   playhtml.init();
 </script>`}</code>
                   <small>
                     Replace the example image with your own element. Customize
-                    <code>.is-active</code> with any CSS or script you want. The
-                    class site receives only the boolean state, never your code.
+                    its markup and local styling however you want. The class
+                    circle uses the same <code>can-{sharedCapability}</code>{' '}
+                    state but never receives or executes your code.
                   </small>
                 </div>
               ) : null}
@@ -469,8 +583,18 @@ export const ProjectSubmissions = withSharedState<
 
             <div className="project-submissions__actions">
               <button className="project-submissions__submit" type="submit">
-                Submit project <span aria-hidden="true">→</span>
+                {editingProjectId ? 'Save changes' : 'Submit project'}{' '}
+                <span aria-hidden="true">→</span>
               </button>
+              {editingProjectId ? (
+                <button
+                  className="project-submissions__cancel"
+                  type="button"
+                  onClick={cancelEditing}
+                >
+                  Cancel editing
+                </button>
+              ) : null}
               <p
                 className={
                   status
@@ -491,7 +615,10 @@ export const ProjectSubmissions = withSharedState<
               </p>
               <ul className="project-submissions__mine-list">
                 {myProjects.map((project) => (
-                  <li key={project.id}>
+                  <li
+                    className="project-submissions__mine-item"
+                    key={project.id}
+                  >
                     <a
                       className="project-submissions__mine-link"
                       href={project.url}
@@ -500,6 +627,13 @@ export const ProjectSubmissions = withSharedState<
                     >
                       {project.title} <span aria-hidden="true">↗</span>
                     </a>
+                    <button
+                      className="project-submissions__edit"
+                      type="button"
+                      onClick={() => editProject(project)}
+                    >
+                      Edit
+                    </button>
                   </li>
                 ))}
               </ul>

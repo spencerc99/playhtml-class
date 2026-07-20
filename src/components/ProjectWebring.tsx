@@ -1,8 +1,16 @@
 // ABOUTME: Full-viewport, responsive orbit built from submitted class projects.
 // ABOUTME: Optional PlayHTML consumers mirror safe built-in behaviors from student sites.
 
-import { CanPlayElement } from '@playhtml/react';
+import {
+  CanGrowElement,
+  CanHoverElement,
+  CanMoveElement,
+  CanSpinElement,
+  CanToggleElement,
+} from '@playhtml/react';
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+
+export type RingCapability = 'grow' | 'hover' | 'move' | 'spin' | 'toggle';
 
 export interface RingProject {
   id: string;
@@ -16,6 +24,7 @@ export interface RingProject {
   imageUrl?: string;
   submittedAt: number;
   sharedElement?: {
+    capability?: RingCapability;
     dataSource: string;
   };
 }
@@ -61,12 +70,22 @@ function safeSharedElement(value: unknown): RingProject['sharedElement'] {
   if (!value || typeof value !== 'object') return undefined;
 
   const candidate = value as Record<string, unknown>;
+  const capability = candidate.capability;
   const dataSource = candidate.dataSource;
+  const safeCapability: RingCapability =
+    capability === 'spin' ||
+    capability === 'grow' ||
+    capability === 'hover' ||
+    capability === 'move'
+      ? capability
+      : 'toggle';
   const validDataSource =
     typeof dataSource === 'string' &&
     /^[\w.-]+(?::\d+)?(?:\/[^\s#]*)?#[A-Za-z][\w.:-]{0,79}$/.test(dataSource);
 
-  return validDataSource ? { dataSource } : undefined;
+  return validDataSource
+    ? { capability: safeCapability, dataSource }
+    : undefined;
 }
 
 function safeProjects(projects: RingProject[]): RingProject[] {
@@ -146,17 +165,14 @@ function RingNode({
   onSelect: () => void;
   project: RingProject;
 }) {
-  const renderNode = (active: boolean, toggleActive?: () => void) => (
+  const renderNode = (active: boolean) => (
     <button
       id={`ring-node-${project.id}`}
       className={`project-webring__node${active ? ' is-active' : ''}`}
       type="button"
       aria-label={`Meet ${project.title} by ${project.name}`}
       aria-pressed={active}
-      onClick={() => {
-        toggleActive?.();
-        onSelect();
-      }}
+      onClick={onSelect}
     >
       <span className="project-webring__node-fallback" aria-hidden="true">
         {project.emoji || '✦'}
@@ -180,19 +196,42 @@ function RingNode({
 
   if (!project.sharedElement) return renderNode(false);
 
+  if (project.sharedElement.capability === 'spin') {
+    return (
+      <CanSpinElement dataSource={project.sharedElement.dataSource}>
+        {renderNode(false)}
+      </CanSpinElement>
+    );
+  }
+
+  if (project.sharedElement.capability === 'grow') {
+    return (
+      <CanGrowElement dataSource={project.sharedElement.dataSource}>
+        {renderNode(false)}
+      </CanGrowElement>
+    );
+  }
+
+  if (project.sharedElement.capability === 'hover') {
+    return (
+      <CanHoverElement dataSource={project.sharedElement.dataSource}>
+        {renderNode(false)}
+      </CanHoverElement>
+    );
+  }
+
+  if (project.sharedElement.capability === 'move') {
+    return (
+      <CanMoveElement dataSource={project.sharedElement.dataSource}>
+        {renderNode(false)}
+      </CanMoveElement>
+    );
+  }
+
   return (
-    <CanPlayElement<{ active: boolean }>
-      defaultData={{ active: false }}
-      dataSource={project.sharedElement.dataSource}
-    >
-      {({ data, setData }) =>
-        renderNode(Boolean(data.active), () =>
-          setData((draft) => {
-            draft.active = !draft.active;
-          }),
-        )
-      }
-    </CanPlayElement>
+    <CanToggleElement dataSource={project.sharedElement.dataSource}>
+      {({ data }) => renderNode(Boolean(data.on))}
+    </CanToggleElement>
   );
 }
 
