@@ -1,21 +1,28 @@
 // ABOUTME: Connects the fullscreen object playground to the Showcase registry.
 // ABOUTME: Owners can update their hosted object's HTML and CSS from the ring.
 
-import { usePlayContext, withSharedState } from '@playhtml/react';
+import { playhtml, usePlayContext, withSharedState } from '@playhtml/react';
 import { type RefObject } from 'react';
 import {
+  createBuiltInProjects,
+  createBuiltInReservedIds,
   DEFAULT_SHARED_OBJECT_HTML,
   defaultSharedObjectCss,
+  isBuiltInProjectId,
+  mergeBuiltInProjects,
+  normalizeProjectSharedObject,
   type ProjectSharedObject,
 } from '../lib/projectSharedObject';
 import { ProjectWebring, type RingProject } from './ProjectWebring';
 
 interface ProjectRegistryData {
   projects: Record<string, RingProject>;
+  reservedSharedIds?: Record<string, true>;
 }
 
 interface ProjectPlaygroundProps {
   demo?: boolean;
+  pluginEmbed?: boolean;
 }
 
 const DEMO_NAMES = [
@@ -84,27 +91,42 @@ export const ProjectPlayground = withSharedState<
   ProjectPlaygroundProps
 >(
   ({ demo }) => ({
-    defaultData: { projects: {} },
+    defaultData: {
+      projects: createBuiltInProjects(),
+      reservedSharedIds: createBuiltInReservedIds(),
+    },
     id: demo ? 'demo-projects' : 'playground-projects',
     ...(demo ? {} : { dataSource: projectDataSource() }),
   }),
-  ({ data, setData, ref }, { demo = false }) => {
+  ({ data, setData, ref }, { demo = false, pluginEmbed = false }) => {
     const { getMyPlayerIdentity, hasSynced } = usePlayContext();
-    const playerId = getMyPlayerIdentity()?.publicKey;
-    const projectRecord =
-      data.projects && typeof data.projects === 'object' ? data.projects : {};
+    const playerId =
+      getMyPlayerIdentity()?.publicKey ??
+      (hasSynced ? playhtml.presence.getMyIdentity().publicKey : undefined);
+    const projectRecord = mergeBuiltInProjects(
+      data.projects && typeof data.projects === 'object'
+        ? data.projects
+        : undefined,
+    );
     const projects = demo ? DEMO_PROJECTS : Object.values(projectRecord);
 
     const updateProject = (
       projectId: string,
-      sharedObject: ProjectSharedObject,
+      patch: Partial<Pick<ProjectSharedObject, 'css' | 'html'>>,
     ) => {
       if (!playerId || demo) return;
 
       setData((draft) => {
         const project = draft.projects[projectId];
-        if (!project || project.submittedBy !== playerId) return;
-        project.sharedObject = sharedObject;
+        if (
+          !project ||
+          (!isBuiltInProjectId(projectId) && project.submittedBy !== playerId)
+        )
+          return;
+        project.sharedObject = {
+          ...normalizeProjectSharedObject(project.sharedObject, project.id),
+          ...patch,
+        };
       });
     };
 
@@ -118,6 +140,7 @@ export const ProjectPlayground = withSharedState<
           hasSynced={demo || hasSynced}
           onUpdateProject={demo ? undefined : updateProject}
           playerId={playerId}
+          pluginEmbed={pluginEmbed}
           projects={projects}
         />
       </div>

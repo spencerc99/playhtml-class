@@ -26,12 +26,12 @@ Each person will have about 1 minute to present their project and 2 minutes to r
 
 ### Guest Crits
 
-Monday: [Xin Xin](https://xin-xin.info) is an artist currently making socially-engaged software that explores the possibilities of reshaping language and power relations. As an organizer, Xin co-founded voidLab, a LA-based intersectional feminist collective dedicated to women, trans, and queer folks. They were the Director for Processing Community Day 2019 and they serve on the Processing Foundation Board.
+Monday: Nolen
+
+Tuesday: [Xin Xin](https://xin-xin.info) is an artist currently making socially-engaged software that explores the possibilities of reshaping language and power relations. As an organizer, Xin co-founded voidLab, a LA-based intersectional feminist collective dedicated to women, trans, and queer folks. They were the Director for Processing Community Day 2019 and they serve on the Processing Foundation Board.
 
 - [Together Net](https://xin-xin.info/projects/2021/02/15/togethernet.html)
 - [Consentful Protocol](https://xin-xin.info/projects/2021/02/15/consentfulProtocol.html)
-
-Tuesday: [Nolen]
 
 ## What's a web ring?
 
@@ -90,7 +90,7 @@ However, this is not as visually interesting or dynamic as we would like it to b
 ```html
 <script
   type="module"
-  src="https://class.playhtml.fun/class-webring.js"
+  src="https://class.playhtml.fun/class-webring.js?embed=plugin"
 ></script>
 ```
 
@@ -116,92 +116,33 @@ You can use ICO, PNG, JPG, GIF, or SVG. Declaring the icon in your HTML is more 
 <link rel="icon" href="/favicon.ico" type="image/x-icon" />
 ```
 
-## What's Next?
-
-This is the last week of class! We want to make sure you have time to reflect on your experience and share some thoughts with us. Before we say goodbye, there are a couple of things we would like to share with you:
-
-### Physical Showcase
-
-SFPC is organizing a public summer showcase at the National Academy of Design in Midtown Manhattan from **August 20–22**, with a public reception on **August 21**. This is an opportunity to present work developed in our class alongside projects from other SFPC courses.
-
-The showcase can include websites, interactive projects, videos, writing, images, performances, printed matter, or physical objects. SFPC will provide our class with a display desk, and a limited number of Windows computer terminals and shared projection equipment are also available. **Digital work and project information are due August 3.** Physical work can be dropped off on **August 18, from 10am–6pm**, and must be picked up on **August 24 or 25**.
-
-Please let us know soon if you would like to participate, especially if your project involves a performance, sound, projection, unusual installation, or other technical requirements.
-
-### Reflection Form
-
-We will dedicate 15 minutes of our class time to collecting feedback from students, please take a moment to fill out the [reflection form](https://orienting.sfpc.study/is-where-we/reflect-together/final-reflections.html) now. Your feedback is important to us and will help us improve the class for future students.
-
-### QA & Other Resources
-
-Here are some resources that may be helpful as you continue to develop your projects:
-
-Anything else you want to share with the class?
-
 ## Let's also create a shared space!
 
-Another way we can make the web ring more dynamic is to create a shared space where we can all interact with each other. This can be done by creating a shared element on each site that is connected to the same state. This way, when one person interacts with their element, it will update the state for everyone else in the ring.
+We had the idea that people can all be in the "same room". In the submission form, every submission creates a live object in our canvas. It fall back as a red stool, but the submitter can also change its HTML and CSS from the class site.
 
 PlayHTML [shared elements](https://playhtml.fun/docs/advanced/shared-elements/) have:
 
-- a **source** on the participant's site
-- a **consumer** in the class Showcase
-- the same PlayHTML capability on both sides
+- a **source** with a permanent `id` and `shared`
+- a **consumer** that points to `domain/path#id` with `data-source`
+- matching capabilities on both elements
 
 They share state, but they do not need the same HTML, image, CSS, or layout.
 
-The documentation can be reduced to three rules:
+For our class ring, the direction is:
 
-1. A source has a stable `id`, `shared`, and one or more PlayHTML capabilities.
-2. A consumer points to `domain/optional-path#elementId` with `data-source`.
-3. Every capability you want to share must exist on both source and consumer. Their tags, children, classes, and styling may be completely different.
+- your submission
+- class.playhtml.fun creates a permanent source object
+- your own website can subscribe to that object
 
-Here is the basic example from the PlayHTML docs:
+### 1. Add/Edit a submission!
 
-```html
-<!-- Source on thissite.com -->
-<div id="couch" shared can-move>🛋️</div>
+In the submission form, add/edit:
 
-<!-- Consumer on anothersite.com -->
-<div data-source="thissite.com#couch" can-move>🪑</div>
-```
+1. Your project details and public URL
+2. A short invitation to the site
+3. The emoji, glow color, and optional **circle image URL** for the consumer
 
-The source is a couch and the consumer is a chair. Their markup looks different, but their `can-move` position is shared.
-
-Our ring follows the same pattern:
-
-```html
-<!-- Source on the participant's site -->
-<img id="my-ring-charm" shared can-toggle src="/lamp.png" alt="A lamp" />
-
-<!-- Consumer created safely by the class Showcase -->
-<img
-  data-source="student.example#my-ring-charm"
-  can-toggle
-  src="https://student.example/circle.png"
-  alt=""
-/>
-```
-
-The **circle image submitted in the form is the consumer element**. The participant keeps complete control over the source element and code on their own site.
-
-### 1. Match the source capabilities
-
-The capability is the kind of state shared between the two sites. It is not the visual style.
-
-| Capability   | Shared state        | Participant can customize                          |
-| ------------ | ------------------- | -------------------------------------------------- |
-| `can-toggle` | on or off           | colors, images, visibility, sound, local animation |
-| `can-spin`   | rotation            | what spins and what the rotation means             |
-| `can-grow`   | scale               | what grows and how the surrounding page responds   |
-| `can-hover`  | live hover presence | what responds when someone hovers either copy      |
-| `can-move`   | dragged position    | the object, its appearance, and its surroundings   |
-
-For example, two students can both use `can-toggle`: one might light a lamp while another reveals a secret garden. The shared contract is the same; the effect is not. The form asks for the capability because the Showcase must put that matching attribute on the circle consumer—not to prescribe the participant's design.
-
-PlayHTML itself also supports `can-mirror`, `can-duplicate`, and custom `can-play`. We do not infer those from a submission because they carry DOM structure, duplication targets, or a custom data schema and renderer. Participants may use them freely on their own sites. Bringing them into the Showcase requires a specific, reviewed adapter rather than executing submitted code.
-
-### 2. Add a source to your site
+### 2. Add a consumer to your site
 
 This is the smallest complete toggle example:
 
@@ -237,23 +178,9 @@ To try a different capability, keep the stable ID and replace `can-toggle` with 
 
 You can continue editing the HTML, images, CSS, and scripts on your site after joining the ring. You do not need to resubmit unless you change the source page URL, element ID, or shared capability.
 
-### 3. Publish, then submit
+### 3. Test both directions
 
-Deploy the project before adding it to the Showcase. The source must exist at a public URL.
-
-In the submission form, add:
-
-1. Your project details and public URL
-2. The emoji, glow color, and optional **circle image URL** for the consumer
-3. The exact page URL containing your source element
-4. The source's stable element ID, such as `my-ring-charm`
-5. The same shared capability used by the source
-
-The form generates a source snippet for comparison. It stores configuration, not participant JavaScript.
-
-### 4. Test both directions
-
-1. Open the participant's deployed site in one window.
+1. Open your deployed site in one window.
 2. Open the class Showcase in another window.
 3. Interact with the source and watch the circle update.
 4. Interact with the circle and watch the source update.
@@ -267,39 +194,24 @@ If it does not connect, check:
 - Does the source include `shared`?
 - Does the page initialize PlayHTML once?
 
-### 5. Keep shaping your place
+## What's Next?
 
-The ring is not a final upload. Participants can:
+This is the last week of class! We want to make sure you have time to reflect on your experience and share some thoughts with us. Before we say goodbye, there are a couple of things we would like to share with you:
 
-- keep changing and redeploying all code on their own site
-- customize how their shared state is represented locally
-- use a different source image from the class circle image
-- return to **Your submissions** to edit those details or remove the project from the registry
+### Physical Showcase
 
-The Showcase never executes submitted code. This lets each site remain expressive while the class ring stays safe and structurally consistent.
+SFPC is organizing a public summer showcase at the National Academy of Design in Midtown Manhattan from **August 20–22**, with a public reception on **August 21**. This is an opportunity to present work developed in our class alongside projects from other SFPC courses.
 
-### 6. Put the whole ring on your site
+The showcase can include websites, interactive projects, videos, writing, images, performances, printed matter, or physical objects. SFPC will provide our class with a display desk, and a limited number of Windows computer terminals and shared projection equipment are also available. **Digital work and project information are due August 3.** Physical work can be dropped off on **August 18, from 10am–6pm**, and must be picked up on **August 24 or 25**.
 
-The shared charm connects one element to the Showcase. This separate embed displays the directory of class sites on any participant website:
+Please let us know soon if you have specific things or ways to participate other than a class site like to participate, especially if your project involves a performance, sound, projection, unusual installation, or other technical requirements.
 
-```html
-<script
-  type="module"
-  src="https://class.playhtml.fun/class-webring.js"
-></script>
-```
+### Reflection Form
 
-After deployment, the script lives at [`/class-webring.js`](/class-webring.js). It derives the Showcase registry from the domain serving the script and subscribes read-only. The ring starts closed as a small orbit labeled **Benches for the Internet**. Selecting the label opens the fullscreen image field; the close button returns it to the small orbit.
+We will dedicate 15 minutes of our class time to collecting feedback from students, please take a moment to fill out the [reflection form](https://orienting.sfpc.study/is-where-we/reflect-together/final-reflections.html) now. Your feedback is important to us and will help us improve the class for future students.
 
-The class app chooses the script URL automatically. During local development it loads `/class-webring.js` from the current development origin. A production build loads the canonical script above from `class.playhtml.fun`. The resolver lives in `src/lib/classWebringScript.ts`, so previewing and deploying do not require hand-editing a URL.
+### QA & Other Resources
 
-For a separate staging deployment, use that deployment's origin instead:
+Here are some resources that may be helpful as you continue to develop your projects:
 
-```html
-<script
-  type="module"
-  src="https://YOUR-PREVIEW-DOMAIN/class-webring.js"
-></script>
-```
-
-Visit the hidden [`/webring-demo`](/webring-demo) route to see a pretend independent website load this exact script. The demo always uses 30 sample links, so you can inspect a crowded ring without changing the real registry.
+Anything else you want to share with the class?

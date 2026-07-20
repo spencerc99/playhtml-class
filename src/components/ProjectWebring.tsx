@@ -1,9 +1,11 @@
 // ABOUTME: Full-viewport playground of class-hosted, participant-editable objects.
 // ABOUTME: Every object publishes can-toggle and can-play state from a stable ID.
 
-import { CanPlayElement } from '@playhtml/react';
+import { CanPlayElement, playhtml } from '@playhtml/react';
 import { TagType } from 'playhtml';
 import {
+  lazy,
+  Suspense,
   useEffect,
   useMemo,
   useRef,
@@ -14,10 +16,13 @@ import {
 import {
   DEFAULT_SHARED_OBJECT_HTML,
   defaultSharedObjectCss,
+  isBuiltInProjectId,
   normalizeProjectSharedObject,
   sharedObjectConsumerSnippet,
   type ProjectSharedObject,
 } from '../lib/projectSharedObject';
+
+const ProjectCodeEditor = lazy(() => import('./ProjectCodeEditor'));
 
 export interface RingProject {
   accentColor?: string;
@@ -26,7 +31,9 @@ export interface RingProject {
   id: string;
   imageUrl?: string;
   name: string;
+  ringLabel?: string;
   sharedObject?: ProjectSharedObject;
+  starterVersion?: number;
   submittedAt: number;
   submittedBy?: string;
   title: string;
@@ -38,10 +45,17 @@ interface ProjectWebringProps {
   hasSynced: boolean;
   onUpdateProject?: (
     projectId: string,
-    sharedObject: ProjectSharedObject,
+    patch: Partial<Pick<ProjectSharedObject, 'css' | 'html'>>,
   ) => void;
   playerId?: string;
+  pluginEmbed?: boolean;
   projects: RingProject[];
+}
+
+type SharedObjectCode = Pick<ProjectSharedObject, 'css' | 'html'>;
+
+interface PreviewOverride extends SharedObjectCode {
+  projectId: string;
 }
 
 const FALLBACK_COLORS = [
@@ -90,6 +104,7 @@ function safeProjects(projects: RingProject[]): RingProject[] {
       {
         id,
         name: safeText(project.name, 80, 'someone'),
+        ringLabel: safeText(project.ringLabel, 80) || undefined,
         title,
         url,
         description: safeText(project.description, 240) || undefined,
@@ -145,30 +160,73 @@ function ObjectMarkup({ html }: { html: string }) {
 
 function ObjectNode({
   demo,
-  isSelected,
-  onSelect,
   project,
 }: {
   demo: boolean;
-  isSelected: boolean;
-  onSelect: () => void;
   project: RingProject;
 }) {
   const sharedObject = project.sharedObject!;
+  const [isToggled, setIsToggled] = useState(false);
+
+  useEffect(() => {
+    if (demo) return;
+    let cancelled = false;
+
+    void playhtml.ready.then(() => {
+      const element = document.getElementById(sharedObject.id);
+      if (!cancelled && element) {
+        return playhtml.setupPlayElementForTag(element, TagType.CanToggle);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [demo, sharedObject.id]);
+
+  useEffect(() => {
+    const element = document.getElementById(sharedObject.id);
+    if (!element) return;
+
+    const reflectToggleState = () => {
+      setIsToggled(element.classList.contains('toggled'));
+    };
+    const observer = new MutationObserver(reflectToggleState);
+    observer.observe(element, {
+      attributeFilter: ['class'],
+      attributes: true,
+    });
+    reflectToggleState();
+
+    return () => observer.disconnect();
+  }, [sharedObject.id]);
+
   const node = (
     <div
-      className={`project-webring__node${isSelected ? ' is-selected' : ''}`}
+      className="project-webring__node"
       id={sharedObject.id}
       role="button"
       tabIndex={0}
-      aria-label={`Meet ${project.title} by ${project.name}`}
-      aria-pressed={isSelected}
-      onClick={onSelect}
+      aria-label={`Toggle ${project.title} by ${project.name}`}
+      aria-pressed={isToggled}
+      // eslint-disable-next-line react/no-unknown-property -- PlayHTML capability attribute.
+      can-toggle=""
+      onClick={
+        demo
+          ? (event) => {
+              event.currentTarget.classList.toggle('toggled');
+            }
+          : undefined
+      }
       onKeyDown={(event: KeyboardEvent<HTMLDivElement>) => {
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
-          onSelect();
+          event.currentTarget.click();
         }
+      }}
+      onDoubleClick={(event) => {
+        event.preventDefault();
+        window.open(project.url, '_blank', 'noopener,noreferrer');
       }}
     >
       <ObjectMarkup html={sharedObject.html} />
@@ -185,7 +243,6 @@ function ObjectNode({
           defaultData={{}}
           id={sharedObject.id}
           shared="read-write"
-          tagInfo={[TagType.CanToggle, TagType.CanPlay]}
         >
           {() => node}
         </CanPlayElement>
@@ -199,21 +256,61 @@ export function ProjectWebring({
   hasSynced,
   onUpdateProject,
   playerId,
+  pluginEmbed = false,
   projects,
 }: ProjectWebringProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editorDraft, setEditorDraft] = useState<SharedObjectCode | null>(null);
+  const [savedCode, setSavedCode] = useState<SharedObjectCode | null>(null);
+  const [previewOverride, setPreviewOverride] =
+    useState<PreviewOverride | null>(null);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [editorStatus, setEditorStatus] = useState(
+    'Edit your draft, then preview it before saving.',
+  );
   const [copyStatus, setCopyStatus] = useState('Copy connection code');
   const safeRingProjects = useMemo(() => safeProjects(projects), [projects]);
+  const displayedRingProjects = useMemo(
+    () =>
+      previewOverride
+        ? safeRingProjects.map((project) =>
+            project.id === previewOverride.projectId && project.sharedObject
+              ? {
+                  ...project,
+                  sharedObject: {
+                    ...project.sharedObject,
+                    css: previewOverride.css,
+                    html: previewOverride.html,
+                  },
+                }
+              : project,
+          )
+        : safeRingProjects,
+    [previewOverride, safeRingProjects],
+  );
   const selected =
     safeRingProjects.find((project) => project.id === selectedId) ?? null;
   const editing =
     safeRingProjects.find((project) => project.id === editingId) ?? null;
+  const hasDraftChanges = Boolean(
+    editorDraft &&
+    savedCode &&
+    (editorDraft.html !== savedCode.html || editorDraft.css !== savedCode.css),
+  );
+  const isCurrentDraftPreviewed = Boolean(
+    editorDraft &&
+    previewOverride &&
+    previewOverride.projectId === editingId &&
+    previewOverride.html === editorDraft.html &&
+    previewOverride.css === editorDraft.css,
+  );
   const canEditSelected = Boolean(
+    !pluginEmbed &&
     selected &&
-      onUpdateProject &&
-      playerId &&
-      selected.submittedBy === playerId,
+    playerId &&
+    onUpdateProject &&
+    (selected.submittedBy === playerId || isBuiltInProjectId(selected.id)),
   );
 
   useEffect(() => {
@@ -228,6 +325,10 @@ export function ProjectWebring({
       !safeRingProjects.some((project) => project.id === editingId)
     ) {
       setEditingId(null);
+      setEditorDraft(null);
+      setSavedCode(null);
+      setPreviewOverride(null);
+      setIsPreviewMode(false);
     }
   }, [editingId, safeRingProjects, selectedId]);
 
@@ -235,20 +336,86 @@ export function ProjectWebring({
     setCopyStatus('Copy connection code');
   }, [editingId]);
 
-  const updateSharedObject = (patch: Partial<ProjectSharedObject>) => {
-    if (!editing?.sharedObject || !onUpdateProject) return;
-    onUpdateProject(editing.id, { ...editing.sharedObject, ...patch });
+  const beginEditing = (project: RingProject) => {
+    if (!project.sharedObject) return;
+
+    const code = {
+      css: project.sharedObject.css,
+      html: project.sharedObject.html,
+    };
+    setEditingId(project.id);
+    setEditorDraft(code);
+    setSavedCode(code);
+    setPreviewOverride(null);
+    setIsPreviewMode(false);
+    setEditorStatus('Edit your draft, then preview it before saving.');
+  };
+
+  const closeEditor = () => {
+    if (
+      hasDraftChanges &&
+      !window.confirm('Discard the HTML and CSS changes in this draft?')
+    )
+      return;
+
+    setEditingId(null);
+    setEditorDraft(null);
+    setSavedCode(null);
+    setPreviewOverride(null);
+    setIsPreviewMode(false);
+  };
+
+  const updateDraft = (language: 'css' | 'html', value: string) => {
+    setEditorDraft((current) =>
+      current ? { ...current, [language]: value } : current,
+    );
+    setPreviewOverride(null);
+    setIsPreviewMode(false);
+    setEditorStatus('Draft changed — preview it before saving.');
+  };
+
+  const previewDraft = () => {
+    if (!editing || !editorDraft || !hasDraftChanges) return;
+
+    setPreviewOverride({ projectId: editing.id, ...editorDraft });
+    setIsPreviewMode(true);
+    setEditorStatus('Previewing locally. Save to publish these changes.');
+  };
+
+  const saveDraft = () => {
+    if (
+      !editing ||
+      !editorDraft ||
+      !onUpdateProject ||
+      !hasDraftChanges ||
+      !isCurrentDraftPreviewed
+    )
+      return;
+
+    onUpdateProject(editing.id, editorDraft);
+    setSavedCode({ ...editorDraft });
+    setIsPreviewMode(false);
+    setEditorStatus('Saved to the shared class registry.');
   };
 
   const resetSharedObject = () => {
-    if (!editing?.sharedObject) return;
-    if (!window.confirm('Replace your current HTML and CSS with the red stool?'))
+    if (!editing?.sharedObject || !editorDraft) return;
+    if (
+      !window.confirm(
+        'Load the red stool into this draft? Preview and save it afterward.',
+      )
+    )
       return;
 
-    updateSharedObject({
+    setEditorDraft({
       html: DEFAULT_SHARED_OBJECT_HTML,
       css: defaultSharedObjectCss(editing.sharedObject.id),
     });
+    setPreviewOverride(null);
+    setIsPreviewMode(false);
+    setEditorStatus(
+      'Red stool loaded into the draft — preview it before saving.',
+    );
   };
 
   const copyConnectionCode = async () => {
@@ -268,7 +435,7 @@ export function ProjectWebring({
     <div
       className={`project-webring${selected ? ' project-webring--expanded' : ''}${
         editing ? ' project-webring--editing' : ''
-      }`}
+      }${isPreviewMode ? ' project-webring--previewing' : ''}`}
       aria-label="Class project playground"
     >
       <div className="project-webring__wash" aria-hidden="true" />
@@ -285,7 +452,7 @@ export function ProjectWebring({
       ) : (
         <>
           <ol className="project-webring__orbit">
-            {safeRingProjects.map((project, index) => {
+            {displayedRingProjects.map((project, index) => {
               const accent =
                 project.accentColor ??
                 FALLBACK_COLORS[index % FALLBACK_COLORS.length];
@@ -302,15 +469,16 @@ export function ProjectWebring({
                   key={project.id}
                   style={nodeStyle}
                 >
-                  <ObjectNode
-                    demo={demo}
-                    isSelected={selectedId === project.id}
-                    onSelect={() => setSelectedId(project.id)}
-                    project={project}
-                  />
-                  <span className="project-webring__node-label">
-                    {project.name}
-                  </span>
+                  <ObjectNode demo={demo} project={project} />
+                  <button
+                    aria-controls="project-webring-detail"
+                    aria-expanded={selectedId === project.id}
+                    className="project-webring__node-label"
+                    onClick={() => setSelectedId(project.id)}
+                    type="button"
+                  >
+                    {project.ringLabel ?? project.title}
+                  </button>
                 </li>
               );
             })}
@@ -320,6 +488,7 @@ export function ProjectWebring({
             {selected ? (
               <article
                 className="project-webring__detail"
+                id="project-webring-detail"
                 style={
                   {
                     '--ring-accent': selected.accentColor ?? '#e00000',
@@ -335,7 +504,7 @@ export function ProjectWebring({
                   ×
                 </button>
                 <p className="project-webring__detail-kicker">
-                  A web place by {selected.name}
+                  {selected.name}
                 </p>
                 <h2>{selected.title}</h2>
                 {selected.description ? <p>{selected.description}</p> : null}
@@ -350,34 +519,49 @@ export function ProjectWebring({
                   <button
                     className="project-webring__edit-object"
                     type="button"
-                    onClick={() => setEditingId(selected.id)}
+                    onClick={() => beginEditing(selected)}
                   >
-                    Edit this object
+                    {isBuiltInProjectId(selected.id)
+                      ? 'Try editing this example'
+                      : 'Edit this object'}
                   </button>
+                ) : null}
+                {!pluginEmbed && selected.submittedBy === playerId ? (
+                  <a
+                    className="project-webring__edit-details"
+                    href="/showcase#your-submissions"
+                    target="_top"
+                  >
+                    Edit project + thumbnail
+                  </a>
                 ) : null}
               </article>
             ) : (
               <div className="project-webring__welcome">
-                <p>A shared room built by the class</p>
                 <h1>Benches for the Internet</h1>
-                <span>Choose a stool to meet its website</span>
+                <span>Tap an object to play · tap its name to visit</span>
               </div>
             )}
           </div>
         </>
       )}
 
-      {editing?.sharedObject ? (
-        <aside className="project-webring__editor" aria-label="Object editor">
+      {editing?.sharedObject && editorDraft ? (
+        <aside
+          className="project-webring__editor"
+          aria-hidden={isPreviewMode}
+          aria-label="Object editor"
+          inert={isPreviewMode}
+        >
           <header>
             <div>
-              <p>Live object editor</p>
+              <p>Object code editor</p>
               <h2>{editing.title}</h2>
             </div>
             <button
               type="button"
               aria-label="Close object editor"
-              onClick={() => setEditingId(null)}
+              onClick={closeEditor}
             >
               ×
             </button>
@@ -389,32 +573,46 @@ export function ProjectWebring({
             <small>This ID cannot be edited or reused by another entry.</small>
           </div>
 
-          <label>
-            <span>HTML</span>
-            <textarea
-              value={editing.sharedObject.html}
-              spellCheck={false}
-              onChange={(event) =>
-                updateSharedObject({ html: event.target.value })
-              }
+          <Suspense
+            fallback={
+              <div className="project-code-editor__loading" role="status">
+                Opening code editor…
+              </div>
+            }
+          >
+            <ProjectCodeEditor
+              css={editorDraft.css}
+              html={editorDraft.html}
+              onChange={updateDraft}
             />
-          </label>
+          </Suspense>
 
-          <label>
-            <span>CSS</span>
-            <textarea
-              value={editing.sharedObject.css}
-              spellCheck={false}
-              onChange={(event) =>
-                updateSharedObject({ css: event.target.value })
-              }
-            />
-          </label>
+          <div className="project-webring__editor-actions">
+            <button
+              className="project-webring__preview-object"
+              disabled={!hasDraftChanges}
+              onClick={previewDraft}
+              type="button"
+            >
+              Preview
+            </button>
+            <button
+              className="project-webring__save-object"
+              disabled={!hasDraftChanges || !isCurrentDraftPreviewed}
+              onClick={saveDraft}
+              type="button"
+            >
+              Save changes
+            </button>
+            <span aria-live="polite">{editorStatus}</span>
+          </div>
 
           <p className="project-webring__editor-live">
-            Changes save to the class registry and appear live. The outer
-            object always keeps <code>shared</code>, <code>can-toggle</code>, and{' '}
-            <code>can-play</code>.
+            {isBuiltInProjectId(editing.id)
+              ? 'This is a permanent starter example. Previewing stays in your browser; saving publishes it for everyone. '
+              : 'Previewing stays in your browser; saving publishes it to the shared room. '}
+            The outer object always keeps <code>shared</code>,{' '}
+            <code>can-toggle</code>, and <code>can-play</code>.
           </p>
 
           <div className="project-webring__editor-snippet">
@@ -424,9 +622,7 @@ export function ProjectWebring({
                 {copyStatus}
               </button>
             </div>
-            <code>
-              {sharedObjectConsumerSnippet(editing.sharedObject.id)}
-            </code>
+            <code>{sharedObjectConsumerSnippet(editing.sharedObject.id)}</code>
           </div>
 
           <button
@@ -439,13 +635,20 @@ export function ProjectWebring({
         </aside>
       ) : null}
 
-      <a
-        className="project-webring__skip"
-        href="/showcase#submit-project"
-        target="_top"
-      >
-        Add your place ↓
-      </a>
+      {editing && editorDraft && isPreviewMode ? (
+        <div className="project-webring__preview-bar" role="status">
+          <div>
+            <strong>Unsaved preview</strong>
+            <span>Only you can see this version.</span>
+          </div>
+          <button type="button" onClick={() => setIsPreviewMode(false)}>
+            Back to code
+          </button>
+          <button type="button" onClick={saveDraft}>
+            Save preview
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

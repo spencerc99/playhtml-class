@@ -1,11 +1,11 @@
 // ABOUTME: One-tag class web-ring embed for participant and external websites.
 // ABOUTME: Renders the Showcase registry as a small, read-only orbit of links.
 /* eslint-disable import/no-unresolved, no-inner-declarations -- This standalone
-   browser module imports from a CDN and scopes its helpers to one widget. */
-
-import { playhtml as importedPlayhtml } from 'https://unpkg.com/playhtml';
+   browser module can import from a CDN and scopes its helpers to one widget. */
 
 const SCRIPT_URL = new URL(import.meta.url);
+const DISPLAY_FONT_URL = new URL('/fonts/HealTheWebA-Regular.otf', SCRIPT_URL)
+  .href;
 const scriptElement = [...document.scripts].find((script) => {
   try {
     return new URL(script.src).href === SCRIPT_URL.href;
@@ -15,18 +15,20 @@ const scriptElement = [...document.scripts].find((script) => {
 });
 
 if (!document.querySelector('[data-class-webring-widget]')) {
-  const playhtml = window.playhtml ?? importedPlayhtml;
+  let playhtml = window.playhtml;
   const configuredRegistry = scriptElement?.dataset.registry?.trim();
   const registryLocation = configuredRegistry
     ? configuredRegistry.replace(/^https?:\/\//, '').replace(/\/$/, '')
     : SCRIPT_URL.host;
   const dataSource = `${registryLocation}/showcase#student-projects`;
   const registryProtocol =
-    configuredRegistry?.match(/^https?:\/\//)?.[0] ?? `${SCRIPT_URL.protocol}//`;
+    configuredRegistry?.match(/^https?:\/\//)?.[0] ??
+    `${SCRIPT_URL.protocol}//`;
   const playgroundUrl = new URL(
     '/playground',
     `${registryProtocol}${registryLocation}`,
   );
+  playgroundUrl.searchParams.set('embed', 'plugin');
   const isRegistryPage =
     window.location.host === registryLocation &&
     window.location.pathname.replace(/\/$/, '') === '/showcase';
@@ -134,6 +136,51 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     submittedAt: index + 1,
     demo: true,
   }));
+  const starterProjects = [
+    {
+      id: 'builtin-class-site',
+      name: 'Spencer Chang + Munus Shih',
+      title: 'Building Benches for the Web',
+      url: 'https://class.playhtml.fun/',
+      emoji: '🪑',
+      imageUrl: new URL('/red-stool.png', SCRIPT_URL).href,
+      accentColor: '#e00000',
+      submittedAt: -3,
+    },
+    {
+      id: 'builtin-playhtml-docs',
+      name: 'Spencer Chang',
+      title: 'PlayHTML Docs',
+      url: 'https://playhtml.fun/docs/',
+      emoji: '📖',
+      imageUrl: new URL('/pixel-bunny.png', SCRIPT_URL).href,
+      accentColor: '#274b9e',
+      submittedAt: -2,
+    },
+    {
+      id: 'builtin-playhtml',
+      name: 'Spencer Chang',
+      title: 'PlayHTML',
+      url: 'https://playhtml.fun/',
+      emoji: '🌐',
+      imageUrl: new URL('/persian-rug.png', SCRIPT_URL).href,
+      accentColor: '#ffad42',
+      submittedAt: -1,
+    },
+  ];
+
+  function withStarterProjects(projects) {
+    const projectsById = new Map(
+      projects.map((project) => [project.id, project]),
+    );
+    const starterIds = new Set(starterProjects.map((project) => project.id));
+    return [
+      ...starterProjects.map(
+        (project) => projectsById.get(project.id) ?? project,
+      ),
+      ...projects.filter((project) => !starterIds.has(project.id)),
+    ];
+  }
 
   function safeUrl(value) {
     if (typeof value !== 'string') return null;
@@ -342,13 +389,15 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     appendProjectImage(link, project);
 
     const tooltip = document.createElement('em');
-    tooltip.textContent = project.name;
+    tooltip.textContent = project.title;
     link.append(tooltip);
     return link;
   }
 
   function renderExpandable() {
-    const projects = demoMode ? demoProjects : latestProjects;
+    const projects = demoMode
+      ? demoProjects
+      : withStarterProjects(latestProjects);
 
     widget.replaceChildren();
     widget.className = `class-webring-widget class-webring-widget--expandable${
@@ -414,16 +463,19 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     latestProjects = sanitizeProjects(data);
     renderExpandable();
 
-    widget.dataset.projectCount = String(latestProjects.length);
+    const projectCount = demoMode
+      ? demoProjects.length
+      : withStarterProjects(latestProjects).length;
+    widget.dataset.projectCount = String(projectCount);
     window.dispatchEvent(
       new CustomEvent('class-webring:update', {
-        detail: { projectCount: latestProjects.length },
+        detail: { projectCount },
       }),
     );
     if (debugMode) {
       console.info('[class-webring] registry updated', {
         dataSource,
-        projectCount: latestProjects.length,
+        projectCount,
         source,
       });
     }
@@ -432,6 +484,13 @@ if (!document.querySelector('[data-class-webring-widget]')) {
   const style = document.createElement('style');
   style.dataset.classWebringStyle = '';
   style.textContent = `
+    @font-face {
+      font-family: 'Healing the Web A';
+      src: url('${DISPLAY_FONT_URL}') format('opentype');
+      font-display: swap;
+      font-style: normal;
+      font-weight: 400;
+    }
     .class-webring-widget {
       z-index: 2147483000;
     }
@@ -441,14 +500,14 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     .class-webring-widget--expandable {
       bottom: .65rem;
       color: #382c28;
-      font-family: var(--font-display, inherit);
+      font-family: 'Healing the Web A', 'Helvetica Neue', Helvetica, Arial, sans-serif;
       position: fixed;
       right: .65rem;
     }
     .class-webring-widget__miniature {
-      height: 10rem;
+      height: 12rem;
       position: relative;
-      width: 10rem;
+      width: 12rem;
     }
     .class-webring-widget__mini-orbit {
       animation: class-webring-spin 45s linear infinite;
@@ -524,10 +583,10 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     }
     .class-webring-widget__circle--mini {
       animation: class-webring-counter-spin 45s linear infinite;
-      font-size: 1rem;
-      height: 2.35rem;
-      margin: -1.175rem 0 0 -1.175rem;
-      width: 2.35rem;
+      font-size: 1.3rem;
+      height: 3.35rem;
+      margin: -1.675rem 0 0 -1.675rem;
+      width: 3.35rem;
     }
     .class-webring-widget__circle img {
       border-radius: inherit;
@@ -567,11 +626,11 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     @keyframes class-webring-spin { to { transform: rotate(360deg); } }
     @keyframes class-webring-counter-spin { to { transform: rotate(-360deg); } }
     @media (max-width: 520px) {
-      .class-webring-widget__miniature { height: 8.5rem; width: 8.5rem; }
+      .class-webring-widget__miniature { height: 10.5rem; width: 10.5rem; }
       .class-webring-widget__circle--mini {
-        height: 2rem;
-        margin: -1rem 0 0 -1rem;
-        width: 2rem;
+        height: 2.8rem;
+        margin: -1.4rem 0 0 -1.4rem;
+        width: 2.8rem;
       }
     }
     @media (prefers-reduced-motion: reduce) {
@@ -599,14 +658,23 @@ if (!document.querySelector('[data-class-webring-widget]')) {
 
   document.head.append(style);
   document.body.append(widget);
-  widget.dataset.projectCount = '0';
+  widget.dataset.projectCount = String(
+    demoMode ? demoProjects.length : starterProjects.length,
+  );
   renderExpandable();
 
   if (isRegistryPage) {
     window.dispatchEvent(new Event(registryDataRequestEvent));
-  } else if (playhtml.roomId) {
-    playhtml.setupPlayElement(widget);
   } else {
-    await playhtml.init();
+    if (!playhtml) {
+      const importedModule = await import('https://unpkg.com/playhtml');
+      playhtml = window.playhtml ?? importedModule.playhtml;
+    }
+
+    if (playhtml.roomId) {
+      playhtml.setupPlayElement(widget);
+    } else {
+      await playhtml.init();
+    }
   }
 }

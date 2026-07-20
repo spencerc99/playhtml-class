@@ -10,12 +10,16 @@ import {
   type RefObject,
 } from 'react';
 import {
+  createBuiltInProjects,
+  createBuiltInReservedIds,
   createSharedObjectId,
   DEFAULT_SHARED_OBJECT_HTML,
   defaultSharedObjectCss,
+  mergeBuiltInProjects,
   normalizeProjectSharedObject,
   sharedObjectConsumerSnippet,
 } from '../lib/projectSharedObject';
+import { ProjectEmojiPicker } from './ProjectEmojiPicker';
 import { ProjectPlaygroundFrame } from './ProjectPlaygroundFrame';
 import { type RingProject } from './ProjectWebring';
 
@@ -34,6 +38,7 @@ interface ProjectSubmission extends RingProject {
 
 interface ProjectSubmissionData {
   projects: Record<string, ProjectSubmission>;
+  reservedSharedIds?: Record<string, true>;
 }
 
 interface ProjectSubmissionsProps {
@@ -80,14 +85,18 @@ export const ProjectSubmissions = withSharedState<
   ProjectSubmissionsProps
 >(
   ({ variant }) => ({
-    defaultData: { projects: {} },
+    defaultData: {
+      projects: createBuiltInProjects(),
+      reservedSharedIds: createBuiltInReservedIds(),
+    },
     id: PROJECTS_ELEMENT_ID,
     ...(variant === 'showcase'
       ? { shared: PROJECT_REGISTRY_PERMISSIONS }
       : { dataSource: projectDataSource() }),
   }),
   ({ data, setData, ref }, { variant }) => {
-    const { cursors, getMyPlayerIdentity } = usePlayContext();
+    const { cursors, getMyPlayerIdentity, hasSynced } = usePlayContext();
+    const builtInsSeeded = useRef(false);
     const nameEdited = useRef(false);
     const [name, setName] = useState(() => cursors.name?.trim() ?? '');
     const [title, setTitle] = useState('');
@@ -110,11 +119,33 @@ export const ProjectSubmissions = withSharedState<
     }, [cursors.name]);
 
     useEffect(() => {
+      if (variant !== 'showcase' || !hasSynced || builtInsSeeded.current)
+        return;
+
+      builtInsSeeded.current = true;
+      setData((draft) => {
+        draft.reservedSharedIds ??= {};
+        for (const [id, project] of Object.entries(createBuiltInProjects())) {
+          if (
+            !draft.projects[id] ||
+            draft.projects[id].starterVersion !== project.starterVersion
+          ) {
+            draft.projects[id] = project;
+          }
+          draft.reservedSharedIds[project.sharedObject.id] = true;
+        }
+      });
+    }, [hasSynced, setData, variant]);
+
+    useEffect(() => {
       if (variant !== 'showcase') return;
 
       const publishRegistryData = () => {
+        const projects = mergeBuiltInProjects(data.projects);
         window.dispatchEvent(
-          new CustomEvent(REGISTRY_DATA_EVENT, { detail: { data } }),
+          new CustomEvent(REGISTRY_DATA_EVENT, {
+            detail: { data: { ...data, projects } },
+          }),
         );
       };
 
@@ -128,8 +159,12 @@ export const ProjectSubmissions = withSharedState<
       };
     }, [data, variant]);
 
-    const projectRecord =
-      data.projects && typeof data.projects === 'object' ? data.projects : {};
+    const projectRecord: Record<string, ProjectSubmission> =
+      mergeBuiltInProjects(
+        data.projects && typeof data.projects === 'object'
+          ? data.projects
+          : undefined,
+      );
     const projects = Object.values(projectRecord)
       .filter(
         (project) =>
@@ -161,7 +196,7 @@ export const ProjectSubmissions = withSharedState<
 
       if (!trimmedName || !trimmedTitle || !url.trim()) {
         setStatus({
-          message: 'Fill out the three fields marked Required.',
+          message: 'Fill out the three fields marked *.',
           tone: 'error',
         });
         return;
@@ -213,16 +248,14 @@ export const ProjectSubmissions = withSharedState<
         (project) =>
           normalizeProjectSharedObject(project.sharedObject, project.id).id,
       );
+      unavailableSharedIds.push(...Object.keys(data.reservedSharedIds ?? {}));
       const sharedObject = existingProject
         ? normalizeProjectSharedObject(
             existingProject.sharedObject,
             existingProject.id,
           )
         : (() => {
-            const id = createSharedObjectId(
-              trimmedTitle,
-              unavailableSharedIds,
-            );
+            const id = createSharedObjectId(trimmedTitle, unavailableSharedIds);
             return {
               id,
               html: DEFAULT_SHARED_OBJECT_HTML,
@@ -245,6 +278,8 @@ export const ProjectSubmissions = withSharedState<
 
       setData((draft) => {
         draft.projects[submission.id] = submission;
+        draft.reservedSharedIds ??= {};
+        draft.reservedSharedIds[sharedObject.id] = true;
       });
       setTitle('');
       setUrl('');
@@ -333,9 +368,8 @@ export const ProjectSubmissions = withSharedState<
               {editingProjectId ? 'Edit your project' : 'Submit your project'}
             </h2>
             <p className="project-submissions__form-copy">
-              Only the three fields marked <strong>Required</strong> are needed.
-              Submitting reserves a permanent shared ID and places a red stool
-              in the room above. Everything else is optional.
+              Fields marked <strong>*</strong> are required. Submitting reserves
+              a permanent shared ID and places a red stool in the room above.
             </p>
           </div>
 
@@ -346,10 +380,7 @@ export const ProjectSubmissions = withSharedState<
           >
             <label className="project-submissions__field">
               <span className="project-submissions__label">
-                Your name
-                <small className="project-submissions__requirement is-required">
-                  Required
-                </small>
+                Your name <span aria-hidden="true">*</span>
               </span>
               <input
                 className="project-submissions__input"
@@ -369,10 +400,7 @@ export const ProjectSubmissions = withSharedState<
 
             <label className="project-submissions__field">
               <span className="project-submissions__label">
-                Project title
-                <small className="project-submissions__requirement is-required">
-                  Required
-                </small>
+                Project title <span aria-hidden="true">*</span>
               </span>
               <input
                 className="project-submissions__input"
@@ -390,10 +418,7 @@ export const ProjectSubmissions = withSharedState<
 
             <label className="project-submissions__field project-submissions__field--url">
               <span className="project-submissions__label">
-                Project URL
-                <small className="project-submissions__requirement is-required">
-                  Required
-                </small>
+                Project URL <span aria-hidden="true">*</span>
               </span>
               <input
                 className="project-submissions__input"
@@ -412,9 +437,6 @@ export const ProjectSubmissions = withSharedState<
             <label className="project-submissions__field project-submissions__field--wide">
               <span className="project-submissions__label">
                 Short invitation
-                <small className="project-submissions__requirement">
-                  Optional
-                </small>
               </span>
               <textarea
                 className="project-submissions__input project-submissions__textarea"
@@ -430,30 +452,14 @@ export const ProjectSubmissions = withSharedState<
 
             <fieldset className="project-submissions__appearance">
               <legend className="project-submissions__section-label">
-                Ring thumbnail <span>optional</span>
+                Ring thumbnail
               </legend>
-              <label className="project-submissions__field project-submissions__field--emoji">
-                <span className="project-submissions__label">
-                  Fallback emoji
-                  <small className="project-submissions__requirement">
-                    Optional
-                  </small>
-                </span>
-                <input
-                  className="project-submissions__input"
-                  type="text"
-                  value={emoji}
-                  maxLength={MAX_EMOJI_LENGTH}
-                  onChange={(event) => setEmoji(event.target.value)}
-                />
-              </label>
+              <div className="project-submissions__field project-submissions__field--emoji">
+                <span className="project-submissions__label">Emoji</span>
+                <ProjectEmojiPicker value={emoji} onChange={setEmoji} />
+              </div>
               <label className="project-submissions__field project-submissions__field--color">
-                <span className="project-submissions__label">
-                  Glow
-                  <small className="project-submissions__requirement">
-                    Optional
-                  </small>
-                </span>
+                <span className="project-submissions__label">Glow</span>
                 <input
                   className="project-submissions__color"
                   type="color"
@@ -464,9 +470,6 @@ export const ProjectSubmissions = withSharedState<
               <label className="project-submissions__field project-submissions__field--image">
                 <span className="project-submissions__label">
                   Thumbnail image URL
-                  <small className="project-submissions__requirement">
-                    Optional
-                  </small>
                 </span>
                 <input
                   className="project-submissions__input"
@@ -485,11 +488,11 @@ export const ProjectSubmissions = withSharedState<
             <div className="project-submissions__generated">
               <img src="/red-stool.png" alt="" />
               <div>
-                <h3>Your shared object is automatic</h3>
+                <h3>We create this stool for you</h3>
                 <p>
                   We generate a unique, permanent <code>id</code> and host its
-                  source at <code>class.playhtml.fun/playground</code>. It starts
-                  as this red stool with <code>shared</code>,{' '}
+                  source at <code>class.playhtml.fun/playground</code>. It
+                  starts as this red stool with <code>shared</code>,{' '}
                   <code>can-toggle</code>, and <code>can-play</code>. After
                   submitting, select it in the room to edit its HTML and CSS.
                 </p>
@@ -524,9 +527,13 @@ export const ProjectSubmissions = withSharedState<
           </form>
 
           {myProjects.length > 0 ? (
-            <div className="project-submissions__mine">
+            <div className="project-submissions__mine" id="your-submissions">
               <p className="project-submissions__mine-title">
                 Your submissions
+              </p>
+              <p className="project-submissions__mine-copy">
+                Return here with the same PlayHTML identity to change your
+                project details, emoji, glow, or thumbnail image.
               </p>
               <ul className="project-submissions__mine-list">
                 {myProjects.map((project) => {
@@ -564,7 +571,7 @@ export const ProjectSubmissions = withSharedState<
                           type="button"
                           onClick={() => editProject(project)}
                         >
-                          Edit project info
+                          Edit project + thumbnail
                         </button>
                         <button
                           className="project-submissions__remove"

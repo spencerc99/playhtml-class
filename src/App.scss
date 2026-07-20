@@ -960,6 +960,7 @@ a:hover {
     ),
     #f8efe3;
   display: flex;
+  font-family: var(--font-display);
   isolation: isolate;
   justify-content: center;
   min-height: 100svh;
@@ -1013,11 +1014,11 @@ a:hover {
   color: #30231f;
   cursor: pointer;
   display: flex;
-  height: clamp(4.5rem, 10vw, 8.5rem);
+  height: clamp(5.75rem, 12vw, 11rem);
   justify-content: center;
   padding: 0;
   position: relative;
-  width: clamp(4.5rem, 10vw, 8.5rem);
+  width: clamp(5.75rem, 12vw, 11rem);
 }
 
 .project-webring__node:hover,
@@ -1044,9 +1045,12 @@ a:hover {
 }
 
 .project-webring__node-label {
+  appearance: none;
   background: rgba(255, 255, 255, 0.9);
+  border: 0;
   border-radius: 999px;
   color: #5e403b;
+  cursor: pointer;
   font-family: var(--font-display);
   font-size: clamp(0.58rem, 1.2vw, 0.76rem);
   letter-spacing: 0.05em;
@@ -1056,7 +1060,20 @@ a:hover {
   padding: 0.3rem 0.5rem;
   text-overflow: ellipsis;
   text-transform: uppercase;
+  transition:
+    background 160ms ease,
+    transform 160ms ease;
   white-space: nowrap;
+}
+
+.project-webring__node-label:hover {
+  background: #ffffff;
+  transform: translateY(-0.08rem);
+}
+
+.project-webring__node-label:focus-visible {
+  outline: 2px solid var(--ring-accent);
+  outline-offset: 2px;
 }
 
 .project-webring--expanded .project-webring__item:not(.is-selected) {
@@ -1204,6 +1221,16 @@ a:hover {
   text-transform: uppercase;
 }
 
+.project-webring__detail > a.project-webring__edit-details {
+  background: transparent;
+  border: 1px solid var(--ring-accent);
+  color: var(--ring-accent);
+  display: table;
+  font-size: 0.7rem;
+  margin: 0.45rem auto 0;
+  padding: 0.5rem 0.75rem;
+}
+
 .project-webring__detail small {
   color: #765b54;
   display: block;
@@ -1228,23 +1255,6 @@ a:hover {
   right: 0.8rem;
   top: 0.8rem;
   width: 2.4rem;
-}
-
-.project-webring__skip {
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(224, 0, 0, 0.25);
-  border-radius: 999px;
-  bottom: 4.5rem;
-  color: var(--red);
-  font-family: var(--font-display);
-  font-size: 0.7rem;
-  letter-spacing: 0.08em;
-  padding: 0.5rem 0.75rem;
-  position: absolute;
-  right: 1rem;
-  text-decoration: none;
-  text-transform: uppercase;
-  z-index: 4;
 }
 
 .project-webring__empty {
@@ -1284,8 +1294,19 @@ a:hover {
   position: absolute;
   right: 0;
   top: 0;
-  width: min(34rem, 100%);
-  z-index: 10;
+  transition:
+    opacity 0.22s ease,
+    transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
+    visibility 0.32s;
+  width: min(46rem, 100%);
+  z-index: 1000;
+}
+
+.project-webring--previewing .project-webring__editor {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(102%);
+  visibility: hidden;
 }
 
 .project-webring__editor > header,
@@ -1303,7 +1324,6 @@ a:hover {
 
 .project-webring__editor > header p,
 .project-webring__editor-id > span,
-.project-webring__editor label > span,
 .project-webring__editor-snippet span {
   color: #765b54;
   font-family: var(--font-display);
@@ -1351,28 +1371,117 @@ a:hover {
   line-height: 1.35;
 }
 
-.project-webring__editor label {
+.project-code-editor {
+  background: #2d2725;
+  border: 1px solid #463d3a;
+  border-radius: 0.8rem;
+  box-shadow: 0 12px 30px rgba(52, 43, 41, 0.16);
   display: flex;
+  flex: 0 0 auto;
   flex-direction: column;
-  gap: 0.4rem;
+  min-height: 25rem;
+  overflow: hidden;
 }
 
-.project-webring__editor textarea {
-  background: #fff;
-  border: 1px solid rgba(224, 0, 0, 0.32);
-  border-radius: 0.65rem;
-  color: #2f2624;
-  font: 0.75rem/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
-  min-height: 9.5rem;
-  padding: 0.75rem;
-  resize: vertical;
-  width: 100%;
+.project-code-editor__loading {
+  align-items: center;
+  background: #2d2725;
+  border: 1px solid #463d3a;
+  border-radius: 0.8rem;
+  color: #fffaf5;
+  display: flex;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  justify-content: center;
+  min-height: 25rem;
 }
 
-.project-webring__editor textarea:focus-visible {
-  border-color: var(--red);
-  box-shadow: 0 0 0 3px rgba(224, 0, 0, 0.12);
+.project-code-editor__toolbar,
+.project-code-editor__footer {
+  align-items: center;
+  color: #cfc5bf;
+  display: flex;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  justify-content: space-between;
+}
+
+.project-code-editor__toolbar {
+  background: #26211f;
+  border-bottom: 1px solid #463d3a;
+  min-height: 2.7rem;
+  padding: 0 0.7rem 0 0;
+}
+
+.project-code-editor__tabs {
+  align-self: stretch;
+  display: flex;
+}
+
+.project-code-editor__tabs button {
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: #a99d97;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  min-width: 4.5rem;
+  padding: 0.7rem 1rem 0.6rem;
+}
+
+.project-code-editor__tabs button:hover {
+  color: #fffaf5;
+}
+
+.project-code-editor__tabs button.is-active {
+  background: #332d2a;
+  border-bottom-color: #ff654d;
+  color: #fffaf5;
+}
+
+.project-code-editor__tabs button:focus-visible {
+  box-shadow: inset 0 0 0 2px #ff806c;
   outline: none;
+}
+
+.project-code-editor__state {
+  align-items: center;
+  display: flex;
+  font-size: 0.65rem;
+  gap: 0.35rem;
+  text-transform: uppercase;
+}
+
+.project-code-editor__state i {
+  background: #ffad42;
+  border-radius: 50%;
+  height: 0.45rem;
+  width: 0.45rem;
+}
+
+.project-code-editor__surface {
+  flex: 1 1 auto;
+  height: clamp(19rem, 48vh, 32rem);
+  min-height: 19rem;
+  text-align: left;
+}
+
+.project-code-editor__surface.ace_editor {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  line-height: 1.55;
+}
+
+.project-code-editor__footer {
+  background: #26211f;
+  border-top: 1px solid #463d3a;
+  font-size: 0.62rem;
+  gap: 1rem;
+  padding: 0.55rem 0.75rem;
+}
+
+.project-code-editor__footer kbd {
+  color: #fffaf5;
+  font: inherit;
 }
 
 .project-webring__editor-live {
@@ -1384,6 +1493,95 @@ a:hover {
 
 .project-webring__editor-live code {
   color: var(--red);
+}
+
+.project-webring__editor-actions {
+  align-items: center;
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: auto auto minmax(0, 1fr);
+}
+
+.project-webring__editor-actions button,
+.project-webring__preview-bar button {
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  padding: 0.55rem 0.8rem;
+  text-transform: uppercase;
+}
+
+.project-webring__preview-object {
+  background: #fffaf5;
+  color: var(--red);
+}
+
+.project-webring__save-object {
+  background: var(--red);
+  color: #fff;
+}
+
+.project-webring__editor-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.36;
+}
+
+.project-webring__editor-actions > span {
+  color: #70534c;
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
+.project-webring__preview-bar {
+  align-items: center;
+  animation: ring-detail-in 0.24s ease-out;
+  background: rgba(52, 43, 41, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 1rem;
+  bottom: 1.1rem;
+  box-shadow: 0 12px 35px rgba(52, 43, 41, 0.28);
+  color: #fffaf5;
+  display: flex;
+  gap: 0.65rem;
+  left: 50%;
+  max-width: calc(100% - 2rem);
+  padding: 0.7rem;
+  position: absolute;
+  transform: translateX(-50%);
+  z-index: 1100;
+}
+
+.project-webring__preview-bar > div {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  margin-right: 0.4rem;
+}
+
+.project-webring__preview-bar strong {
+  color: #ffad42;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.project-webring__preview-bar span {
+  color: #d7c8c2;
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
+
+.project-webring__preview-bar button {
+  background: transparent;
+  color: #fffaf5;
+  white-space: nowrap;
+}
+
+.project-webring__preview-bar button:last-child {
+  background: var(--red);
+  border-color: var(--red);
 }
 
 .project-webring__editor-snippet button,
@@ -1697,13 +1895,6 @@ a:hover {
   text-transform: uppercase;
 }
 
-.project-submissions__section-label span {
-  color: #8a6b64;
-  font-family: var(--font-body);
-  font-size: 0.68rem;
-  letter-spacing: 0.04em;
-}
-
 .project-submissions__color {
   background: #fffaf5;
   border: 2px solid rgba(224, 0, 0, 0.28);
@@ -1712,6 +1903,95 @@ a:hover {
   height: 3rem;
   padding: 0.28rem;
   width: 100%;
+}
+
+.project-emoji-picker {
+  position: relative;
+}
+
+.project-emoji-picker__trigger {
+  align-items: center;
+  background: #fffaf5;
+  border: 2px solid rgba(224, 0, 0, 0.28);
+  border-radius: 0.7rem;
+  color: #4b312c;
+  cursor: pointer;
+  display: grid;
+  font: inherit;
+  gap: 0.35rem;
+  grid-template-columns: 1fr auto;
+  min-height: 3rem;
+  padding: 0.35rem 0.65rem;
+  text-align: left;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+  width: 100%;
+}
+
+.project-emoji-picker__trigger:hover,
+.project-emoji-picker__trigger[aria-expanded='true'] {
+  background: #fff;
+  border-color: var(--red);
+}
+
+.project-emoji-picker__trigger:focus-visible {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px rgba(224, 0, 0, 0.12);
+  outline: none;
+}
+
+.project-emoji-picker__value {
+  align-items: center;
+  background: #f9eee6;
+  border-radius: 0.45rem;
+  display: flex;
+  font-size: 1.35rem;
+  height: 2.1rem;
+  justify-content: center;
+  width: 2.1rem;
+}
+
+.project-emoji-picker__chevron {
+  font-family: var(--font-display);
+  font-size: 0.67rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.project-emoji-picker__chevron {
+  color: var(--red);
+}
+
+.project-emoji-picker__popover {
+  background: #fff;
+  border: 2px solid var(--red);
+  border-radius: 0.85rem;
+  box-shadow: 8px 10px 0 rgba(224, 0, 0, 0.16);
+  left: 0;
+  overflow: hidden;
+  position: absolute;
+  top: calc(100% + 0.55rem);
+  width: min(22rem, calc(100vw - 4rem));
+  z-index: 20;
+}
+
+.project-emoji-picker__popover .EmojiPickerReact {
+  --epr-bg-color: #fffaf5;
+  --epr-category-label-bg-color: rgba(255, 250, 245, 0.92);
+  --epr-highlight-color: #e00000;
+  --epr-hover-bg-color: #f9ded7;
+  border: 0;
+}
+
+.project-emoji-picker__loading {
+  align-items: center;
+  color: #70534c;
+  display: flex;
+  font-size: 0.8rem;
+  height: 22.5rem;
+  justify-content: center;
 }
 
 .project-submissions__generated {
@@ -1759,21 +2039,6 @@ a:hover {
   gap: 0.45rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-}
-
-.project-submissions__requirement {
-  background: #eee6dc;
-  border-radius: 999px;
-  color: #80645d;
-  font-family: var(--font-body);
-  font-size: 0.58rem;
-  letter-spacing: 0.04em;
-  padding: 0.18rem 0.35rem;
-}
-
-.project-submissions__requirement.is-required {
-  background: var(--red);
-  color: #fff;
 }
 
 .project-submissions__input {
@@ -1901,6 +2166,14 @@ a:hover {
   text-transform: uppercase;
 }
 
+.project-submissions__mine-copy {
+  color: #70534c;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  margin: -0.35rem 0 0.9rem;
+  max-width: 38rem;
+}
+
 .project-submissions__mine-list {
   display: grid;
   gap: 0.8rem;
@@ -2023,12 +2296,14 @@ a:hover {
   }
 
   .project-webring__node {
-    height: clamp(3.8rem, 17vw, 5.4rem);
-    width: clamp(3.8rem, 17vw, 5.4rem);
+    height: clamp(5rem, 22vw, 7.5rem);
+    width: clamp(5rem, 22vw, 7.5rem);
   }
 
   .project-webring__node-label {
-    display: none;
+    font-size: 0.5rem;
+    max-width: clamp(3.25rem, 18vw, 5rem);
+    padding: 0.24rem 0.38rem;
   }
 
   .project-webring__center {
@@ -2076,13 +2351,32 @@ a:hover {
     width: 2rem;
   }
 
-  .project-webring__skip {
-    bottom: 5rem;
-  }
-
   .project-webring__editor {
     border-left: 0;
     width: 100%;
+  }
+
+  .project-webring__editor-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .project-webring__editor-actions > span {
+    grid-column: 1 / -1;
+  }
+
+  .project-webring__preview-bar {
+    align-items: stretch;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: calc(100% - 1.4rem);
+  }
+
+  .project-webring__preview-bar > div {
+    grid-column: 1 / -1;
+  }
+
+  .project-webring__preview-bar span {
+    white-space: normal;
   }
 
   .project-submissions {
