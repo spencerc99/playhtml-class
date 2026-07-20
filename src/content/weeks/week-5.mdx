@@ -147,22 +147,22 @@ In the submission form, add/edit:
 This is the smallest complete toggle example:
 
 ```html
-<img
-  id="my-ring-charm"
-  shared
+<div
+  id="your-permanent-id"
+  data-source="class.playhtml.fun/playground#your-permanent-id"
   can-toggle
-  src="/lamp.png"
-  alt="Turn the lamp on or off"
-/>
+>
+  <img src="/lamp.png" alt="Turn the lamp on or off" />
+</div>
 
 <style>
-  #my-ring-charm {
+  #your-permanent-id {
     filter: grayscale(1);
     transition: 300ms;
   }
 
   /* PlayHTML adds .toggled when the shared state is on. */
-  #my-ring-charm.toggled {
+  #your-permanent-id.toggled {
     filter: grayscale(0) drop-shadow(0 0 20px gold);
   }
 </style>
@@ -174,24 +174,23 @@ This is the smallest complete toggle example:
 </script>
 ```
 
-To try a different capability, keep the stable ID and replace `can-toggle` with `can-spin`, `can-grow`, `can-hover`, or `can-move`.
+Replace both instances of `your-permanent-id` with the permanent shared ID shown after you submit. Keep `data-source` on your site; the class playground already owns the `shared` source.
 
-You can continue editing the HTML, images, CSS, and scripts on your site after joining the ring. You do not need to resubmit unless you change the source page URL, element ID, or shared capability.
+You can continue editing the HTML, images, CSS, and scripts on your site after joining the ring. Update your submission when its project details, public URL, or thumbnail change.
 
 ### 3. Test both directions
 
 1. Open your deployed site in one window.
 2. Open the class Showcase in another window.
-3. Interact with the source and watch the circle update.
-4. Interact with the circle and watch the source update.
+3. Interact with the consumer on your site and watch the class object update.
+4. Interact with the class object and watch your consumer update.
 
 If it does not connect, check:
 
-- Is the source deployed at a public URL rather than only available in a private development environment?
-- Does the submitted page include the exact path? `student.example/room` and `student.example/` are different PlayHTML rooms.
-- Does the stable ID match exactly?
+- Did you replace both instances of `your-permanent-id` with the ID from your submission?
+- Does `data-source` still point to `class.playhtml.fun/playground#` followed by that exact ID?
 - Do source and consumer use the same capability?
-- Does the source include `shared`?
+- Did you leave `shared` off the consumer on your site?
 - Does the page initialize PlayHTML once?
 
 ## What's Next?

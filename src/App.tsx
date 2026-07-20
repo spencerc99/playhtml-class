@@ -77,7 +77,7 @@ export default function App() {
       <DocumentTitle />
       <ScrollToTop />
       {isPlayground ? null : <Nav />}
-      {isPlayground ? null : <ClassWebringEmbed />}
+      <ClassWebringEmbed />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/3d" element={<ThreeDBenchPage />} />

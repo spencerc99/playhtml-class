@@ -494,6 +494,9 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     .class-webring-widget {
       z-index: 2147483000;
     }
+    html.class-webring-embed-hidden .class-webring-widget {
+      display: none !important;
+    }
     .class-webring-widget *,
     .class-webring-widget *::before,
     .class-webring-widget *::after { box-sizing: border-box; }

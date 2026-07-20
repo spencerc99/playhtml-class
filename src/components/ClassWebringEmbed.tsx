@@ -11,13 +11,23 @@ const EMBED_SCRIPT_ID = 'class-webring-embed-script';
 export function ClassWebringEmbed() {
   const { isLoading } = usePlayContext();
   const location = useLocation();
+  const embedHidden =
+    location.pathname === '/playground' ||
+    location.pathname === '/webring-demo';
 
   useEffect(() => {
-    if (
-      isLoading ||
-      location.pathname === '/webring-demo' ||
-      document.getElementById(EMBED_SCRIPT_ID)
-    ) {
+    document.documentElement.classList.toggle(
+      'class-webring-embed-hidden',
+      embedHidden,
+    );
+
+    return () => {
+      document.documentElement.classList.remove('class-webring-embed-hidden');
+    };
+  }, [embedHidden]);
+
+  useEffect(() => {
+    if (isLoading || embedHidden || document.getElementById(EMBED_SCRIPT_ID)) {
       return;
     }
 
@@ -26,7 +36,7 @@ export function ClassWebringEmbed() {
     script.type = 'module';
     script.src = getClassWebringScriptUrl();
     document.body.append(script);
-  }, [isLoading, location.pathname]);
+  }, [embedHidden, isLoading]);
 
   return null;
 }

@@ -297,9 +297,9 @@ export function sharedObjectDataSource(sharedId: string): string {
 
 export function sharedObjectConsumerSnippet(sharedId: string): string {
   return `<div
+  id="${sharedId}"
   data-source="${sharedObjectDataSource(sharedId)}"
   can-toggle
-  can-play
 >
   🪑
 </div>
