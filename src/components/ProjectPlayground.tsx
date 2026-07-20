@@ -114,13 +114,14 @@ export const ProjectPlayground = withSharedState<
       projectId: string,
       patch: Partial<Pick<ProjectSharedObject, 'css' | 'html'>>,
     ) => {
-      if (!playerId || demo) return;
+      if (demo) return;
 
       setData((draft) => {
         const project = draft.projects[projectId];
         if (
           !project ||
-          (!isBuiltInProjectId(projectId) && project.submittedBy !== playerId)
+          (!isBuiltInProjectId(projectId) &&
+            (!playerId || project.submittedBy !== playerId))
         )
           return;
         project.sharedObject = {

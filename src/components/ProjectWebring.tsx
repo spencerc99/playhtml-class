@@ -305,12 +305,14 @@ export function ProjectWebring({
     previewOverride.html === editorDraft.html &&
     previewOverride.css === editorDraft.css,
   );
+  const selectedIsBuiltIn = Boolean(
+    selected && isBuiltInProjectId(selected.id),
+  );
   const canEditSelected = Boolean(
-    !pluginEmbed &&
     selected &&
-    playerId &&
     onUpdateProject &&
-    (selected.submittedBy === playerId || isBuiltInProjectId(selected.id)),
+    (selectedIsBuiltIn ||
+      (!pluginEmbed && playerId && selected.submittedBy === playerId)),
   );
 
   useEffect(() => {

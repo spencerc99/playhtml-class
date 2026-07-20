@@ -15,13 +15,14 @@ import {
   createSharedObjectId,
   DEFAULT_SHARED_OBJECT_HTML,
   defaultSharedObjectCss,
+  isBuiltInProjectId,
   mergeBuiltInProjects,
   normalizeProjectSharedObject,
   sharedObjectConsumerSnippet,
+  type ProjectSharedObject,
 } from '../lib/projectSharedObject';
 import { ProjectEmojiPicker } from './ProjectEmojiPicker';
-import { ProjectPlaygroundFrame } from './ProjectPlaygroundFrame';
-import { type RingProject } from './ProjectWebring';
+import { ProjectWebring, type RingProject } from './ProjectWebring';
 
 interface ProjectSubmission extends RingProject {
   id: string;
@@ -187,6 +188,26 @@ export const ProjectSubmissions = withSharedState<
     const myProjects = playerId
       ? projects.filter((project) => project.submittedBy === playerId)
       : [];
+
+    const updateProjectObject = (
+      projectId: string,
+      patch: Partial<Pick<ProjectSharedObject, 'css' | 'html'>>,
+    ) => {
+      setData((draft) => {
+        const project = draft.projects[projectId];
+        if (
+          !project ||
+          (!isBuiltInProjectId(projectId) &&
+            (!playerId || project.submittedBy !== playerId))
+        )
+          return;
+
+        project.sharedObject = {
+          ...normalizeProjectSharedObject(project.sharedObject, project.id),
+          ...patch,
+        };
+      });
+    };
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
@@ -357,7 +378,16 @@ export const ProjectSubmissions = withSharedState<
         id={PROJECTS_ELEMENT_ID}
         className={`project-submissions project-submissions--${variant}`}
       >
-        {variant === 'showcase' ? <ProjectPlaygroundFrame /> : null}
+        {variant === 'showcase' ? (
+          <div className="project-playground">
+            <ProjectWebring
+              hasSynced={hasSynced}
+              onUpdateProject={updateProjectObject}
+              playerId={playerId}
+              projects={projects}
+            />
+          </div>
+        ) : null}
 
         <div className="project-submissions__form-panel" id="submit-project">
           <div className="project-submissions__intro">
