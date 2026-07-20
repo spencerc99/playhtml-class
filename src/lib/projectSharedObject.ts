@@ -95,72 +95,39 @@ export function defaultSharedObjectCss(sharedId: string): string {
 }`;
 }
 
-function docsSharedObjectCss(sharedId: string): string {
+function faviconSharedObjectCss(sharedId: string): string {
   return `#${sharedId} {
   cursor: pointer;
-  filter: drop-shadow(0 0.7em 0.55em rgba(39, 75, 158, 0.2));
-  transition: filter 220ms ease;
+  filter: drop-shadow(0 0.55em 0.45em rgba(39, 75, 158, 0.2));
+  transition: filter 220ms ease, transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-#${sharedId} .starter-bunny {
+#${sharedId} .starter-favicon {
+  border-radius: 22%;
   display: block;
   height: auto;
-  image-rendering: pixelated;
-  transform-origin: 50% 85%;
-  transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
-  width: 82%;
+  width: 72%;
 }
 
 #${sharedId}:hover,
 #${sharedId}:focus-visible {
-  filter: drop-shadow(0 0.95em 0.7em rgba(39, 75, 158, 0.35));
+  filter: drop-shadow(0 0.8em 0.6em rgba(39, 75, 158, 0.36));
+  transform: translateY(-5%) rotate(4deg) scale(1.06);
 }
 
-#${sharedId}:hover .starter-bunny,
-#${sharedId}:focus-visible .starter-bunny {
-  transform: translateY(-7%) rotate(5deg);
-}
-
-#${sharedId}.toggled .starter-bunny {
-  transform: translateY(-15%) rotate(-10deg) scaleX(-1) scale(1.12);
-}`;
-}
-
-function playhtmlSharedObjectCss(sharedId: string): string {
-  return `#${sharedId} {
-  cursor: pointer;
-  perspective: 28rem;
-}
-
-#${sharedId} .starter-rug {
-  display: block;
-  filter: drop-shadow(0 0.65em 0.45em rgba(81, 31, 20, 0.22));
-  height: auto;
-  transform: rotate(-3deg);
-  transform-origin: 50% 80%;
-  transition: filter 280ms ease, transform 380ms cubic-bezier(0.2, 0.8, 0.2, 1);
-  width: 100%;
-}
-
-#${sharedId}:hover .starter-rug,
-#${sharedId}:focus-visible .starter-rug {
-  filter: drop-shadow(0 0.9em 0.6em rgba(81, 31, 20, 0.32));
-  transform: rotate(2deg) translateY(-5%) scale(1.04);
-}
-
-#${sharedId}.toggled .starter-rug {
-  filter: drop-shadow(0 1.25em 0.8em rgba(81, 31, 20, 0.42));
-  transform: rotateX(34deg) rotateZ(7deg) translateY(-12%) scale(1.08);
+#${sharedId}.toggled {
+  filter: drop-shadow(0 0 1.1em rgba(39, 75, 158, 0.58));
+  transform: rotate(-9deg) scale(1.14);
 }`;
 }
 
 const DOCS_SHARED_OBJECT_HTML =
-  '<img class="starter-bunny" src="/pixel-bunny.png" alt="A pixel bunny" />';
+  '<img class="starter-favicon" src="https://playhtml.fun/docs/icon.png" alt="PlayHTML Docs favicon" />';
 
 const PLAYHTML_SHARED_OBJECT_HTML =
-  '<img class="starter-rug" src="/persian-rug.png" alt="A Persian rug" />';
+  '<img class="starter-favicon" src="https://playhtml.fun/icon.png" alt="PlayHTML favicon" />';
 
-const BUILT_IN_STARTER_VERSION = 5;
+const BUILT_IN_STARTER_VERSION = 6;
 
 const BUILT_IN_PROJECT_DEFINITIONS = [
   {
@@ -188,9 +155,9 @@ const BUILT_IN_PROJECT_DEFINITIONS = [
     description: 'Examples and references for every PlayHTML capability.',
     emoji: '📖',
     accentColor: '#274b9e',
-    imageUrl: 'https://class.playhtml.fun/pixel-bunny.png',
+    imageUrl: 'https://playhtml.fun/docs/icon.png',
     html: DOCS_SHARED_OBJECT_HTML,
-    css: docsSharedObjectCss('bench-playhtml-docs'),
+    css: faviconSharedObjectCss('bench-playhtml-docs'),
     submittedAt: -2,
   },
   {
@@ -203,9 +170,9 @@ const BUILT_IN_PROJECT_DEFINITIONS = [
     description: 'The playful library connecting all of these shared objects.',
     emoji: '🌐',
     accentColor: '#ffad42',
-    imageUrl: 'https://class.playhtml.fun/persian-rug.png',
+    imageUrl: 'https://playhtml.fun/icon.png',
     html: PLAYHTML_SHARED_OBJECT_HTML,
-    css: playhtmlSharedObjectCss('bench-playhtml'),
+    css: faviconSharedObjectCss('bench-playhtml'),
     submittedAt: -1,
   },
 ] as const;

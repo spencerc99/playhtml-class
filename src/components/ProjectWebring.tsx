@@ -579,9 +579,11 @@ export function ProjectWebring({
                       {selected.description ? (
                         <p>{selected.description}</p>
                       ) : null}
-                      <code className="project-webring__shared-id">
-                        id=&quot;{selected.sharedObject?.id}&quot;
-                      </code>
+                      {pluginEmbed ? null : (
+                        <code className="project-webring__shared-id">
+                          id=&quot;{selected.sharedObject?.id}&quot;
+                        </code>
+                      )}
                       <a href={selected.url} target="_blank" rel="noreferrer">
                         Enter {projectHostname(selected.url)}{' '}
                         <span aria-hidden="true">↗</span>
