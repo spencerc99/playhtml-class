@@ -5,7 +5,7 @@ export function ProjectPlaygroundFrame() {
     <iframe
       className="project-playground-frame"
       src="/playground"
-      title="Benches for the Internet shared playground"
+      title="Building Benches for the Web shared playground"
       allow="clipboard-write"
     />
   );

@@ -538,7 +538,7 @@ export function ProjectWebring({
               </article>
             ) : (
               <div className="project-webring__welcome">
-                <h1>Benches for the Internet</h1>
+                <h1>Building Benches for the Web</h1>
                 <span>Tap an object to play · tap its name to visit</span>
               </div>
             )}

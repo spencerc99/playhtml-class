@@ -66,8 +66,8 @@ export default function WebringDemo() {
       <section className="webring-demo-page__instructions">
         <p>
           The frame below is a pretend independent website. The ring starts
-          closed; select “Benches for the Internet” to open its fullscreen image
-          field and preview its 30 sample links.
+          closed; select “Building Benches for the Web” to open its fullscreen
+          image field and preview its 30 sample links.
         </p>
         <code>{snippet}</code>
       </section>

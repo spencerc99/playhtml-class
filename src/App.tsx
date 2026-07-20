@@ -39,7 +39,7 @@ function DocumentTitle() {
     if (location.pathname === '/showcase') {
       pageTitle = `Showcase | ${APP_TITLE}`;
     } else if (location.pathname === '/playground') {
-      pageTitle = `Benches for the Internet | ${APP_TITLE}`;
+      pageTitle = APP_TITLE;
     } else if (location.pathname === '/webring-demo') {
       pageTitle = `Web Ring Embed Demo | ${APP_TITLE}`;
     } else if (location.pathname === '/3d') {

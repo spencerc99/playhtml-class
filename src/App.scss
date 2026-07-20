@@ -2102,6 +2102,13 @@ a:hover {
   transform: translateY(-0.15rem) rotate(-0.5deg);
 }
 
+.project-submissions__submit:disabled {
+  box-shadow: none;
+  cursor: wait;
+  opacity: 0.55;
+  transform: none;
+}
+
 .project-submissions__submit:focus-visible {
   box-shadow: 0 0 0 4px rgba(224, 0, 0, 0.2);
   outline: 2px solid #ffffff;
@@ -2172,6 +2179,21 @@ a:hover {
   line-height: 1.4;
   margin: -0.35rem 0 0.9rem;
   max-width: 38rem;
+}
+
+.project-submissions__mine--admin {
+  border-top-color: var(--red);
+}
+
+.project-submissions__mine-owner,
+.project-submissions__mine-empty {
+  color: #70534c;
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.project-submissions__mine-empty {
+  margin: 0;
 }
 
 .project-submissions__mine-list {

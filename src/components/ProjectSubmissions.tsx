@@ -1,7 +1,11 @@
 // ABOUTME: Domain-accessible student project submission form backed by a
 // ABOUTME: canonical PlayHTML shared element rendered on the Showcase page.
 
-import { usePlayContext, withSharedState } from '@playhtml/react';
+import {
+  usePlayContext,
+  usePlayerIdentity,
+  withSharedState,
+} from '@playhtml/react';
 import {
   useEffect,
   useRef,
@@ -15,6 +19,7 @@ import {
   createSharedObjectId,
   DEFAULT_SHARED_OBJECT_HTML,
   defaultSharedObjectCss,
+  isBuiltInProjectId,
   mergeBuiltInProjects,
   normalizeProjectSharedObject,
   sharedObjectConsumerSnippet,
@@ -42,6 +47,7 @@ interface ProjectSubmissionData {
 }
 
 interface ProjectSubmissionsProps {
+  adminMode?: boolean;
   variant: 'form' | 'showcase';
 }
 
@@ -94,8 +100,9 @@ export const ProjectSubmissions = withSharedState<
       ? { shared: PROJECT_REGISTRY_PERMISSIONS }
       : { dataSource: projectDataSource() }),
   }),
-  ({ data, setData, ref }, { variant }) => {
-    const { cursors, getMyPlayerIdentity, hasSynced } = usePlayContext();
+  ({ data, setData, ref }, { adminMode = false, variant }) => {
+    const { cursors, hasSynced } = usePlayContext();
+    const { pid: playerId } = usePlayerIdentity();
     const builtInsSeeded = useRef(false);
     const nameEdited = useRef(false);
     const [name, setName] = useState(() => cursors.name?.trim() ?? '');
@@ -138,8 +145,6 @@ export const ProjectSubmissions = withSharedState<
     }, [hasSynced, setData, variant]);
 
     useEffect(() => {
-      if (variant !== 'showcase') return;
-
       const publishRegistryData = () => {
         const projects = mergeBuiltInProjects(data.projects);
         window.dispatchEvent(
@@ -157,7 +162,7 @@ export const ProjectSubmissions = withSharedState<
           publishRegistryData,
         );
       };
-    }, [data, variant]);
+    }, [data]);
 
     const projectRecord: Record<string, ProjectSubmission> =
       mergeBuiltInProjects(
@@ -183,10 +188,12 @@ export const ProjectSubmissions = withSharedState<
         url: normalizeProjectUrl(project.url)!,
       }))
       .sort((left, right) => right.submittedAt - left.submittedAt);
-    const playerId = getMyPlayerIdentity()?.publicKey;
     const myProjects = playerId
       ? projects.filter((project) => project.submittedBy === playerId)
       : [];
+    const managedProjects = adminMode
+      ? projects.filter((project) => !isBuiltInProjectId(project.id))
+      : myProjects;
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
@@ -223,7 +230,7 @@ export const ProjectSubmissions = withSharedState<
         return;
       }
 
-      if (!playerId) {
+      if (!hasSynced || !playerId) {
         setStatus({
           message: 'Your PlayHTML identity is still loading. Try again.',
           tone: 'error',
@@ -232,12 +239,13 @@ export const ProjectSubmissions = withSharedState<
       }
 
       const existingProject = editingProjectId
-        ? myProjects.find((project) => project.id === editingProjectId)
+        ? managedProjects.find((project) => project.id === editingProjectId)
         : undefined;
       if (editingProjectId && !existingProject) {
         setStatus({
-          message:
-            'This submission no longer belongs to your PlayHTML identity.',
+          message: adminMode
+            ? 'This submission is no longer available.'
+            : 'This submission no longer belongs to your PlayHTML identity.',
           tone: 'error',
         });
         return;
@@ -265,7 +273,7 @@ export const ProjectSubmissions = withSharedState<
       const submission: ProjectSubmission = {
         id: projectId,
         name: trimmedName.slice(0, MAX_NAME_LENGTH),
-        submittedBy: playerId,
+        submittedBy: existingProject ? existingProject.submittedBy : playerId,
         title: trimmedTitle.slice(0, MAX_TITLE_LENGTH),
         url: normalizedUrl,
         description: description.trim().slice(0, MAX_DESCRIPTION_LENGTH),
@@ -325,7 +333,7 @@ export const ProjectSubmissions = withSharedState<
     };
 
     const removeProject = (project: ProjectSubmission) => {
-      if (!playerId || project.submittedBy !== playerId) {
+      if (!adminMode && (!playerId || project.submittedBy !== playerId)) {
         setStatus({
           message: 'This submission does not belong to your PlayHTML identity.',
           tone: 'error',
@@ -337,7 +345,10 @@ export const ProjectSubmissions = withSharedState<
 
       setData((draft) => {
         const currentProject = draft.projects[project.id];
-        if (currentProject?.submittedBy === playerId) {
+        if (
+          currentProject &&
+          (adminMode || currentProject.submittedBy === playerId)
+        ) {
           delete draft.projects[project.id];
         }
       });
@@ -500,9 +511,19 @@ export const ProjectSubmissions = withSharedState<
             </div>
 
             <div className="project-submissions__actions">
-              <button className="project-submissions__submit" type="submit">
-                {editingProjectId ? 'Save changes' : 'Submit project'}{' '}
-                <span aria-hidden="true">→</span>
+              <button
+                className="project-submissions__submit"
+                disabled={!hasSynced || !playerId}
+                type="submit"
+              >
+                {!hasSynced || !playerId
+                  ? 'Connecting…'
+                  : editingProjectId
+                    ? 'Save changes'
+                    : 'Submit project'}{' '}
+                {hasSynced && playerId ? (
+                  <span aria-hidden="true">→</span>
+                ) : null}
               </button>
               {editingProjectId ? (
                 <button
@@ -526,65 +547,84 @@ export const ProjectSubmissions = withSharedState<
             </div>
           </form>
 
-          {myProjects.length > 0 ? (
-            <div className="project-submissions__mine" id="your-submissions">
+          {adminMode || managedProjects.length > 0 ? (
+            <div
+              className={`project-submissions__mine${
+                adminMode ? ' project-submissions__mine--admin' : ''
+              }`}
+              id="your-submissions"
+            >
               <p className="project-submissions__mine-title">
-                Your submissions
+                {adminMode ? 'Admin settings' : 'Your submissions'}
               </p>
               <p className="project-submissions__mine-copy">
-                Return here with the same PlayHTML identity to change your
-                project details, emoji, glow, or thumbnail image.
+                {adminMode
+                  ? 'This is a soft-gated class control. Edit or remove any student entry below.'
+                  : 'Return here with the same PlayHTML identity to change your project details, emoji, glow, or thumbnail image.'}
               </p>
-              <ul className="project-submissions__mine-list">
-                {myProjects.map((project) => {
-                  const sharedObject = normalizeProjectSharedObject(
-                    project.sharedObject,
-                    project.id,
-                  );
+              {managedProjects.length > 0 ? (
+                <ul className="project-submissions__mine-list">
+                  {managedProjects.map((project) => {
+                    const sharedObject = normalizeProjectSharedObject(
+                      project.sharedObject,
+                      project.id,
+                    );
 
-                  return (
-                    <li
-                      className="project-submissions__mine-item"
-                      key={project.id}
-                    >
-                      <a
-                        className="project-submissions__mine-link"
-                        href={project.url}
-                        target="_blank"
-                        rel="noreferrer"
+                    return (
+                      <li
+                        className="project-submissions__mine-item"
+                        key={project.id}
                       >
-                        {project.title} <span aria-hidden="true">↗</span>
-                      </a>
-                      <div className="project-submissions__mine-id">
-                        <span>Permanent shared ID</span>
-                        <code>{sharedObject.id}</code>
-                      </div>
-                      <details className="project-submissions__mine-code">
-                        <summary>Code for your website</summary>
-                        <code>
-                          {sharedObjectConsumerSnippet(sharedObject.id)}
-                        </code>
-                      </details>
-                      <div className="project-submissions__mine-actions">
-                        <button
-                          className="project-submissions__edit"
-                          type="button"
-                          onClick={() => editProject(project)}
+                        <a
+                          className="project-submissions__mine-link"
+                          href={project.url}
+                          target="_blank"
+                          rel="noreferrer"
                         >
-                          Edit project + thumbnail
-                        </button>
-                        <button
-                          className="project-submissions__remove"
-                          type="button"
-                          onClick={() => removeProject(project)}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
+                          {project.title} <span aria-hidden="true">↗</span>
+                        </a>
+                        {adminMode ? (
+                          <span className="project-submissions__mine-owner">
+                            Submitted by {project.name}
+                          </span>
+                        ) : null}
+                        <div className="project-submissions__mine-id">
+                          <span>Permanent shared ID</span>
+                          <code>{sharedObject.id}</code>
+                        </div>
+                        <details className="project-submissions__mine-code">
+                          <summary>Code for your website</summary>
+                          <code>
+                            {sharedObjectConsumerSnippet(sharedObject.id)}
+                          </code>
+                        </details>
+                        <div className="project-submissions__mine-actions">
+                          <button
+                            className="project-submissions__edit"
+                            type="button"
+                            onClick={() => editProject(project)}
+                          >
+                            {adminMode
+                              ? 'Edit entry'
+                              : 'Edit project + thumbnail'}
+                          </button>
+                          <button
+                            className="project-submissions__remove"
+                            type="button"
+                            onClick={() => removeProject(project)}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <p className="project-submissions__mine-empty">
+                  No student submissions yet.
+                </p>
+              )}
             </div>
           ) : null}
         </div>

@@ -29,13 +29,13 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     `${registryProtocol}${registryLocation}`,
   );
   playgroundUrl.searchParams.set('embed', 'plugin');
-  const isRegistryPage =
+  const receivesLocalRegistryData =
     window.location.host === registryLocation &&
-    window.location.pathname.replace(/\/$/, '') === '/showcase';
+    Boolean(document.getElementById('student-projects'));
   const demoMode = scriptElement?.dataset.demo === 'true';
   if (demoMode) playgroundUrl.searchParams.set('demo', 'true');
   const debugMode = scriptElement?.dataset.debug === 'true';
-  const label = 'Benches for the Internet';
+  const label = 'Building Benches for the Web';
   const widget = document.createElement('aside');
   const registryDataEvent = 'class-webring:registry-data';
   const registryDataRequestEvent = 'class-webring:request-data';
@@ -651,7 +651,7 @@ if (!document.querySelector('[data-class-webring-widget]')) {
   };
   window.addEventListener(registryDataEvent, handleLocalRegistryData);
 
-  if (!isRegistryPage) {
+  if (!receivesLocalRegistryData) {
     widget.setAttribute('can-play', '');
     widget.setAttribute('data-source', dataSource);
     widget.setAttribute('data-source-read-only', '');
@@ -666,7 +666,7 @@ if (!document.querySelector('[data-class-webring-widget]')) {
   );
   renderExpandable();
 
-  if (isRegistryPage) {
+  if (receivesLocalRegistryData) {
     window.dispatchEvent(new Event(registryDataRequestEvent));
   } else {
     if (!playhtml) {
