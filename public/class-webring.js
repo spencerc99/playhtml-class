@@ -40,6 +40,7 @@ if (!document.querySelector('[data-class-webring-widget]')) {
   const registryDataEvent = 'class-webring:registry-data';
   const registryDataRequestEvent = 'class-webring:request-data';
   const declaredIconCache = new Map();
+  const maximumCompactProjects = 12;
   let expanded = false;
   let latestProjects = [];
 
@@ -394,6 +395,20 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     return link;
   }
 
+  function shuffle(items) {
+    const shuffledItems = [...items];
+
+    for (let index = shuffledItems.length - 1; index > 0; index -= 1) {
+      const randomIndex = Math.floor(Math.random() * (index + 1));
+      [shuffledItems[index], shuffledItems[randomIndex]] = [
+        shuffledItems[randomIndex],
+        shuffledItems[index],
+      ];
+    }
+
+    return shuffledItems;
+  }
+
   function renderExpandable() {
     const projects = demoMode
       ? demoProjects
@@ -409,7 +424,14 @@ if (!document.querySelector('[data-class-webring-widget]')) {
       miniature.className = 'class-webring-widget__miniature';
       const miniOrbit = document.createElement('div');
       miniOrbit.className = 'class-webring-widget__mini-orbit';
-      const compactProjects = projects.slice(0, 12);
+      const randomizedProjects = shuffle(projects);
+      const compactProjects = randomizedProjects.slice(
+        0,
+        maximumCompactProjects,
+      );
+      const waitingProjects = randomizedProjects.slice(maximumCompactProjects);
+      let replacementSlots = shuffle(compactProjects.map((_, index) => index));
+
       compactProjects.forEach((project, index) => {
         const angle =
           (index / Math.max(compactProjects.length, 1)) * Math.PI * 2;
@@ -421,12 +443,42 @@ if (!document.querySelector('[data-class-webring-widget]')) {
         circle.style.top = `${50 + Math.sin(angle) * 35}%`;
         miniOrbit.append(circle);
       });
+      miniOrbit.addEventListener('animationiteration', (event) => {
+        if (event.target !== miniOrbit || waitingProjects.length === 0) return;
+
+        if (replacementSlots.length === 0) {
+          replacementSlots = shuffle(compactProjects.map((_, index) => index));
+        }
+
+        const replacementIndex = replacementSlots.shift();
+        const arrivingProject = waitingProjects.shift();
+        if (replacementIndex === undefined || !arrivingProject) return;
+
+        const departingProject = compactProjects[replacementIndex];
+        const departingCircle = miniOrbit.children[replacementIndex];
+        const arrivingCircle = makeExpandableCircle(
+          arrivingProject,
+          'class-webring-widget__circle class-webring-widget__circle--mini',
+        );
+        arrivingCircle.style.left = departingCircle.style.left;
+        arrivingCircle.style.top = departingCircle.style.top;
+        departingCircle.replaceWith(arrivingCircle);
+        compactProjects[replacementIndex] = arrivingProject;
+        waitingProjects.push(departingProject);
+      });
 
       const toggle = document.createElement('button');
       toggle.className = 'class-webring-widget__toggle';
       toggle.type = 'button';
       toggle.setAttribute('aria-expanded', 'false');
-      toggle.textContent = label;
+      const toggleLabel = document.createElement('span');
+      toggleLabel.textContent = label;
+      const projectCount = document.createElement('small');
+      projectCount.textContent =
+        projects.length > maximumCompactProjects
+          ? `+${projects.length - maximumCompactProjects} more places`
+          : `${projects.length} ${projects.length === 1 ? 'place' : 'places'}`;
+      toggle.append(toggleLabel, projectCount);
       toggle.addEventListener('click', () => {
         expanded = true;
         renderExpandable();
@@ -534,6 +586,16 @@ if (!document.querySelector('[data-class-webring-widget]')) {
       top: 50%;
       transform: translate(-50%, -50%);
       width: 5.5rem;
+    }
+    .class-webring-widget__toggle small {
+      color: #e00000;
+      display: block;
+      font-family: inherit;
+      font-size: .58rem;
+      font-style: normal;
+      line-height: 1;
+      margin-top: .35rem;
+      text-transform: uppercase;
     }
     .class-webring-widget--expandable.is-expanded {
       inset: 0;

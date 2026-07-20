@@ -969,6 +969,29 @@ a:hover {
   width: 100%;
 }
 
+.project-webring__viewport {
+  inset: 0;
+  overflow: auto;
+  position: absolute;
+}
+
+.project-webring__canvas-extent {
+  min-height: 100%;
+  min-width: 100%;
+  position: relative;
+}
+
+.project-webring__canvas {
+  align-items: center;
+  display: flex;
+  height: 100svh;
+  justify-content: center;
+  position: absolute;
+  transform: scale(var(--ring-zoom));
+  transform-origin: top left;
+  width: 100vw;
+}
+
 .project-webring__wash {
   background-image:
     radial-gradient(circle, rgba(224, 0, 0, 0.15) 0 1px, transparent 1.5px),
@@ -1014,11 +1037,11 @@ a:hover {
   color: #30231f;
   cursor: pointer;
   display: flex;
-  height: clamp(5.75rem, 12vw, 11rem);
+  height: var(--ring-node-size);
   justify-content: center;
   padding: 0;
   position: relative;
-  width: clamp(5.75rem, 12vw, 11rem);
+  width: var(--ring-node-size);
 }
 
 .project-webring__node:hover,
@@ -1055,7 +1078,7 @@ a:hover {
   font-size: clamp(0.58rem, 1.2vw, 0.76rem);
   letter-spacing: 0.05em;
   line-height: 1;
-  max-width: 8rem;
+  max-width: var(--ring-label-width);
   overflow: hidden;
   padding: 0.3rem 0.5rem;
   text-overflow: ellipsis;
@@ -1089,6 +1112,64 @@ a:hover {
   position: relative;
   width: 100%;
   z-index: 3;
+}
+
+.project-webring--dense .project-webring__center {
+  max-width: min(26vw, 19rem);
+}
+
+.project-webring--dense .project-webring__welcome h1 {
+  font-size: clamp(2rem, 4vw, 4.5rem);
+}
+
+.project-webring__zoom {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(224, 0, 0, 0.2);
+  border-radius: 999px;
+  bottom: 1rem;
+  box-shadow: 0 0.35rem 1.25rem rgba(81, 31, 20, 0.12);
+  display: flex;
+  left: 1rem;
+  overflow: hidden;
+  position: absolute;
+  z-index: 5;
+}
+
+.project-webring__zoom button {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: #5e403b;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  height: 2.35rem;
+  min-width: 2.35rem;
+  padding: 0 0.65rem;
+}
+
+.project-webring__zoom button:hover:not(:disabled),
+.project-webring__zoom button:focus-visible {
+  background: #fff8ed;
+  color: var(--red);
+}
+
+.project-webring__zoom button:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: -2px;
+}
+
+.project-webring__zoom button:disabled {
+  cursor: default;
+  opacity: 0.38;
+}
+
+.project-webring__zoom-level {
+  border-left: 1px solid rgba(224, 0, 0, 0.14) !important;
+  border-right: 1px solid rgba(224, 0, 0, 0.14) !important;
+  font-size: 0.68rem !important;
+  letter-spacing: 0.04em;
 }
 
 .project-webring__welcome {
@@ -2318,19 +2399,28 @@ a:hover {
   }
 
   .project-webring__node {
-    height: clamp(5rem, 22vw, 7.5rem);
-    width: clamp(5rem, 22vw, 7.5rem);
+    height: var(--ring-mobile-node-size);
+    width: var(--ring-mobile-node-size);
   }
 
   .project-webring__node-label {
     font-size: 0.5rem;
-    max-width: clamp(3.25rem, 18vw, 5rem);
+    max-width: var(--ring-mobile-label-width);
     padding: 0.24rem 0.38rem;
   }
 
   .project-webring__center {
     max-height: 58svh;
     max-width: min(66vw, 24rem);
+  }
+
+  .project-webring--dense .project-webring__center {
+    max-width: min(34vw, 12rem);
+  }
+
+  .project-webring__zoom {
+    bottom: 0.65rem;
+    left: 0.65rem;
   }
 
   .project-webring__welcome h1 {

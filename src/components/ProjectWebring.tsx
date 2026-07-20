@@ -66,6 +66,9 @@ const FALLBACK_COLORS = [
   '#8976c9',
   '#df72a2',
 ];
+const MIN_ZOOM = 0.75;
+const MAX_ZOOM = 1.75;
+const ZOOM_STEP = 0.25;
 
 function safeHttpUrl(value: unknown): string | null {
   if (typeof value !== 'string') return null;
@@ -133,18 +136,51 @@ function projectHostname(projectUrl: string): string {
 
 function orbitPosition(index: number, total: number): CSSProperties {
   const maxPerOrbit = 16;
-  const orbitIndex = Math.floor(index / maxPerOrbit);
-  const itemIndex = index % maxPerOrbit;
-  const itemsBeforeOrbit = orbitIndex * maxPerOrbit;
-  const itemsInOrbit = Math.min(maxPerOrbit, total - itemsBeforeOrbit);
+  const orbitCount = Math.ceil(total / maxPerOrbit);
+  const minimumItemsPerOrbit = Math.floor(total / orbitCount);
+  const largerOrbitCount = total % orbitCount;
+  let itemsBeforeOrbit = 0;
+  let orbitIndex = 0;
+  let itemsInOrbit = 0;
+
+  for (; orbitIndex < orbitCount; orbitIndex += 1) {
+    itemsInOrbit =
+      minimumItemsPerOrbit + (orbitIndex < largerOrbitCount ? 1 : 0);
+    if (index < itemsBeforeOrbit + itemsInOrbit) break;
+    itemsBeforeOrbit += itemsInOrbit;
+  }
+
+  const itemIndex = index - itemsBeforeOrbit;
+  const angleOffset = orbitIndex % 2 === 0 ? 0 : Math.PI / itemsInOrbit;
   const angle =
-    (itemIndex / Math.max(itemsInOrbit, 1)) * Math.PI * 2 - Math.PI / 2;
-  const radius = Math.max(24, 46 - orbitIndex * 11);
+    (itemIndex / Math.max(itemsInOrbit, 1)) * Math.PI * 2 -
+    Math.PI / 2 +
+    angleOffset;
+  const outerRadius = 46;
+  const innerRadius = Math.max(18, outerRadius - (orbitCount - 1) * 13);
+  const radius =
+    orbitCount === 1
+      ? outerRadius
+      : outerRadius -
+        (orbitIndex / (orbitCount - 1)) * (outerRadius - innerRadius);
 
   return {
     '--ring-x': `${50 + Math.cos(angle) * radius}%`,
     '--ring-y': `${50 + Math.sin(angle) * radius}%`,
     '--ring-delay': `${index * -0.12}s`,
+  } as CSSProperties;
+}
+
+function ringSizing(total: number): CSSProperties {
+  const density = Math.max(0.42, Math.min(1, 17 / Math.max(total, 1)));
+  const desktopMinimum = Math.max(3, 5.75 * density);
+  const mobileMinimum = Math.max(2.75, 5 * density);
+
+  return {
+    '--ring-label-width': `${Math.max(3.5, 8 * density).toFixed(2)}rem`,
+    '--ring-mobile-label-width': `${Math.max(3.25, 5 * density).toFixed(2)}rem`,
+    '--ring-mobile-node-size': `clamp(${mobileMinimum.toFixed(2)}rem, ${(22 * density).toFixed(2)}vw, ${(7.5 * density).toFixed(2)}rem)`,
+    '--ring-node-size': `clamp(${desktopMinimum.toFixed(2)}rem, ${(12 * density).toFixed(2)}vw, ${(11 * density).toFixed(2)}rem)`,
   } as CSSProperties;
 }
 
@@ -260,6 +296,7 @@ export function ProjectWebring({
   projects,
 }: ProjectWebringProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [zoom, setZoom] = useState(1);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editorDraft, setEditorDraft] = useState<SharedObjectCode | null>(null);
   const [savedCode, setSavedCode] = useState<SharedObjectCode | null>(null);
@@ -312,6 +349,13 @@ export function ProjectWebring({
     onUpdateProject &&
     (selected.submittedBy === playerId || isBuiltInProjectId(selected.id)),
   );
+  const webringSizing = ringSizing(safeRingProjects.length);
+
+  const changeZoom = (amount: number) => {
+    setZoom((current) =>
+      Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, current + amount)),
+    );
+  };
 
   useEffect(() => {
     if (
@@ -435,116 +479,176 @@ export function ProjectWebring({
     <div
       className={`project-webring${selected ? ' project-webring--expanded' : ''}${
         editing ? ' project-webring--editing' : ''
-      }${isPreviewMode ? ' project-webring--previewing' : ''}`}
+      }${isPreviewMode ? ' project-webring--previewing' : ''}${
+        safeRingProjects.length > 24 ? ' project-webring--dense' : ''
+      }`}
       aria-label="Class project playground"
     >
-      <div className="project-webring__wash" aria-hidden="true" />
-      {safeRingProjects.length === 0 ? (
-        <div className="project-webring__empty">
-          <img src="/red-stool.png" alt="" />
-          <h2>{hasSynced ? 'Take the first seat' : 'Gathering the stools…'}</h2>
-          <p>
-            {hasSynced
-              ? 'The first submission will place a red stool in this shared room.'
-              : 'Connecting to the shared class collection.'}
-          </p>
-        </div>
-      ) : (
-        <>
-          <ol className="project-webring__orbit">
-            {displayedRingProjects.map((project, index) => {
-              const accent =
-                project.accentColor ??
-                FALLBACK_COLORS[index % FALLBACK_COLORS.length];
-              const nodeStyle = {
-                ...orbitPosition(index, safeRingProjects.length),
-                '--ring-accent': accent,
-              } as CSSProperties;
-
-              return (
-                <li
-                  className={`project-webring__item${
-                    selectedId === project.id ? ' is-selected' : ''
-                  }`}
-                  key={project.id}
-                  style={nodeStyle}
-                >
-                  <ObjectNode demo={demo} project={project} />
-                  <button
-                    aria-controls="project-webring-detail"
-                    aria-expanded={selectedId === project.id}
-                    className="project-webring__node-label"
-                    onClick={() => setSelectedId(project.id)}
-                    type="button"
-                  >
-                    {project.ringLabel ?? project.title}
-                  </button>
-                </li>
-              );
-            })}
-          </ol>
-
-          <div className="project-webring__center" aria-live="polite">
-            {selected ? (
-              <article
-                className="project-webring__detail"
-                id="project-webring-detail"
-                style={
-                  {
-                    '--ring-accent': selected.accentColor ?? '#e00000',
-                  } as CSSProperties
-                }
-              >
-                <button
-                  className="project-webring__close"
-                  type="button"
-                  onClick={() => setSelectedId(null)}
-                  aria-label="Close project details"
-                >
-                  ×
-                </button>
-                <p className="project-webring__detail-kicker">
-                  {selected.name}
+      <div className="project-webring__viewport">
+        <div
+          className="project-webring__canvas-extent"
+          style={
+            {
+              height: `${Math.max(zoom, 1) * 100}svh`,
+              width: `${Math.max(zoom, 1) * 100}vw`,
+            } as CSSProperties
+          }
+        >
+          <div
+            className="project-webring__canvas"
+            style={
+              {
+                ...webringSizing,
+                left: zoom < 1 ? `${(1 - zoom) * 50}vw` : 0,
+                top: zoom < 1 ? `${(1 - zoom) * 50}svh` : 0,
+                '--ring-zoom': zoom,
+              } as CSSProperties
+            }
+          >
+            <div className="project-webring__wash" aria-hidden="true" />
+            {safeRingProjects.length === 0 ? (
+              <div className="project-webring__empty">
+                <img src="/red-stool.png" alt="" />
+                <h2>
+                  {hasSynced ? 'Take the first seat' : 'Gathering the stools…'}
+                </h2>
+                <p>
+                  {hasSynced
+                    ? 'The first submission will place a red stool in this shared room.'
+                    : 'Connecting to the shared class collection.'}
                 </p>
-                <h2>{selected.title}</h2>
-                {selected.description ? <p>{selected.description}</p> : null}
-                <code className="project-webring__shared-id">
-                  id=&quot;{selected.sharedObject?.id}&quot;
-                </code>
-                <a href={selected.url} target="_blank" rel="noreferrer">
-                  Enter {projectHostname(selected.url)}{' '}
-                  <span aria-hidden="true">↗</span>
-                </a>
-                {canEditSelected ? (
-                  <button
-                    className="project-webring__edit-object"
-                    type="button"
-                    onClick={() => beginEditing(selected)}
-                  >
-                    {isBuiltInProjectId(selected.id)
-                      ? 'Try editing this example'
-                      : 'Edit this object'}
-                  </button>
-                ) : null}
-                {!pluginEmbed && selected.submittedBy === playerId ? (
-                  <a
-                    className="project-webring__edit-details"
-                    href="/showcase#your-submissions"
-                    target="_top"
-                  >
-                    Edit project + thumbnail
-                  </a>
-                ) : null}
-              </article>
-            ) : (
-              <div className="project-webring__welcome">
-                <h1>Building Benches for the Web</h1>
-                <span>Tap an object to play · tap its name to visit</span>
               </div>
+            ) : (
+              <>
+                <ol className="project-webring__orbit">
+                  {displayedRingProjects.map((project, index) => {
+                    const accent =
+                      project.accentColor ??
+                      FALLBACK_COLORS[index % FALLBACK_COLORS.length];
+                    const nodeStyle = {
+                      ...orbitPosition(index, safeRingProjects.length),
+                      '--ring-accent': accent,
+                    } as CSSProperties;
+
+                    return (
+                      <li
+                        className={`project-webring__item${
+                          selectedId === project.id ? ' is-selected' : ''
+                        }`}
+                        key={project.id}
+                        style={nodeStyle}
+                      >
+                        <ObjectNode demo={demo} project={project} />
+                        <button
+                          aria-controls="project-webring-detail"
+                          aria-expanded={selectedId === project.id}
+                          className="project-webring__node-label"
+                          onClick={() => setSelectedId(project.id)}
+                          type="button"
+                        >
+                          {project.ringLabel ?? project.title}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ol>
+
+                <div className="project-webring__center" aria-live="polite">
+                  {selected ? (
+                    <article
+                      className="project-webring__detail"
+                      id="project-webring-detail"
+                      style={
+                        {
+                          '--ring-accent': selected.accentColor ?? '#e00000',
+                        } as CSSProperties
+                      }
+                    >
+                      <button
+                        className="project-webring__close"
+                        type="button"
+                        onClick={() => setSelectedId(null)}
+                        aria-label="Close project details"
+                      >
+                        ×
+                      </button>
+                      <p className="project-webring__detail-kicker">
+                        {selected.name}
+                      </p>
+                      <h2>{selected.title}</h2>
+                      {selected.description ? (
+                        <p>{selected.description}</p>
+                      ) : null}
+                      <code className="project-webring__shared-id">
+                        id=&quot;{selected.sharedObject?.id}&quot;
+                      </code>
+                      <a href={selected.url} target="_blank" rel="noreferrer">
+                        Enter {projectHostname(selected.url)}{' '}
+                        <span aria-hidden="true">↗</span>
+                      </a>
+                      {canEditSelected ? (
+                        <button
+                          className="project-webring__edit-object"
+                          type="button"
+                          onClick={() => beginEditing(selected)}
+                        >
+                          {isBuiltInProjectId(selected.id)
+                            ? 'Try editing this example'
+                            : 'Edit this object'}
+                        </button>
+                      ) : null}
+                      {!pluginEmbed && selected.submittedBy === playerId ? (
+                        <a
+                          className="project-webring__edit-details"
+                          href="/showcase#your-submissions"
+                          target="_top"
+                        >
+                          Edit project + thumbnail
+                        </a>
+                      ) : null}
+                    </article>
+                  ) : (
+                    <div className="project-webring__welcome">
+                      <h1>Building Benches for the Web</h1>
+                      <span>Tap an object to play · tap its name to visit</span>
+                    </div>
+                  )}
+                </div>
+              </>
             )}
           </div>
-        </>
-      )}
+        </div>
+      </div>
+
+      {safeRingProjects.length > 0 ? (
+        <div className="project-webring__zoom" aria-label="Playground zoom">
+          <button
+            aria-label="Zoom out"
+            disabled={zoom <= MIN_ZOOM}
+            onClick={() => changeZoom(-ZOOM_STEP)}
+            type="button"
+          >
+            −
+          </button>
+          <button
+            aria-label="Reset zoom"
+            className="project-webring__zoom-level"
+            disabled={zoom === 1}
+            onClick={() => setZoom(1)}
+            type="button"
+          >
+            {Math.round(zoom * 100)}%
+          </button>
+          <button
+            aria-label="Zoom in"
+            disabled={zoom >= MAX_ZOOM}
+            onClick={() => changeZoom(ZOOM_STEP)}
+            type="button"
+          >
+            +
+          </button>
+        </div>
+      ) : null}
 
       {editing?.sharedObject && editorDraft ? (
         <aside
