@@ -49,6 +49,10 @@ interface SubmitStatus {
 }
 
 const PROJECTS_ELEMENT_ID = 'student-projects';
+const REGISTRY_DATA_EVENT = 'class-webring:registry-data';
+const REGISTRY_DATA_REQUEST_EVENT = 'class-webring:request-data';
+// Change this to "read-only" after the submission window closes.
+const PROJECT_REGISTRY_PERMISSIONS = 'read-write' as const;
 const MAX_NAME_LENGTH = 80;
 const MAX_TITLE_LENGTH = 120;
 const MAX_DESCRIPTION_LENGTH = 240;
@@ -145,7 +149,7 @@ export const ProjectSubmissions = withSharedState<
     defaultData: { projects: {} },
     id: PROJECTS_ELEMENT_ID,
     ...(variant === 'showcase'
-      ? { shared: 'read-write' }
+      ? { shared: PROJECT_REGISTRY_PERMISSIONS }
       : { dataSource: projectDataSource() }),
   }),
   ({ data, setData, ref }, { variant }) => {
@@ -175,6 +179,25 @@ export const ProjectSubmissions = withSharedState<
         setName(profileName);
       }
     }, [cursors.name]);
+
+    useEffect(() => {
+      if (variant !== 'showcase') return;
+
+      const publishRegistryData = () => {
+        window.dispatchEvent(
+          new CustomEvent(REGISTRY_DATA_EVENT, { detail: { data } }),
+        );
+      };
+
+      window.addEventListener(REGISTRY_DATA_REQUEST_EVENT, publishRegistryData);
+      publishRegistryData();
+      return () => {
+        window.removeEventListener(
+          REGISTRY_DATA_REQUEST_EVENT,
+          publishRegistryData,
+        );
+      };
+    }, [data, variant]);
 
     const projectRecord =
       data.projects && typeof data.projects === 'object' ? data.projects : {};
@@ -343,6 +366,33 @@ export const ProjectSubmissions = withSharedState<
       setSharedElementId('');
       setSharedCapability('toggle');
       setStatus(null);
+    };
+
+    const removeProject = (project: ProjectSubmission) => {
+      if (!playerId || project.submittedBy !== playerId) {
+        setStatus({
+          message: 'This submission does not belong to your PlayHTML identity.',
+          tone: 'error',
+        });
+        return;
+      }
+
+      if (!window.confirm(`Remove “${project.title}” from the ring?`)) return;
+
+      setData((draft) => {
+        const currentProject = draft.projects[project.id];
+        if (currentProject?.submittedBy === playerId) {
+          delete draft.projects[project.id];
+        }
+      });
+
+      if (editingProjectId === project.id) {
+        cancelEditing();
+      }
+      setStatus({
+        message: 'Removed — the live ring will update automatically.',
+        tone: 'success',
+      });
     };
 
     return (
@@ -633,6 +683,13 @@ export const ProjectSubmissions = withSharedState<
                       onClick={() => editProject(project)}
                     >
                       Edit
+                    </button>
+                    <button
+                      className="project-submissions__remove"
+                      type="button"
+                      onClick={() => removeProject(project)}
+                    >
+                      Remove
                     </button>
                   </li>
                 ))}

@@ -7,13 +7,16 @@ export const meta = {
 
 ## Activities
 
-- Crit and feedback:
+- Crit and feedback (1hr):
   - Introduce our guest crit!
-- Create a web ring together
-- What's next?
-  - Showcase
-  - Other resources
-- QA and group photo
+- What's a web ring? (45 mins):
+  - Create a web ring together
+  - Create a shared space
+- What's next? (45 mins):
+  - Physical Showcase (5 mins)
+  - Reflection Form (15 mins)
+  - QA & Other Resources (20 mins)
+- Goodbye & Group photo (5 mins)
 
 ## Showcase
 
@@ -21,7 +24,7 @@ We will be showcasing your final projects in a live crit session. Please submit 
 
 Each person will have about 1 minute to present their project and 2 minutes to receive feedback from the class and our guest crit. Please be prepared to share your screen and walk us through your project.
 
-## Guest Crits
+### Guest Crits
 
 Monday: [Xin Xin](https://xin-xin.info) is an artist currently making socially-engaged software that explores the possibilities of reshaping language and power relations. As an organizer, Xin co-founded voidLab, a LA-based intersectional feminist collective dedicated to women, trans, and queer folks. They were the Director for Processing Community Day 2019 and they serve on the Processing Foundation Board.
 
@@ -30,18 +33,86 @@ Monday: [Xin Xin](https://xin-xin.info) is an artist currently making socially-e
 
 Tuesday: [Nolen]
 
-## Let's create a web ring together!
+## What's a web ring?
 
 What is a [web ring](https://en.wikipedia.org/wiki/Webring)? A web ring is a collection of websites linked together in a circular structure. Each site points to another site, creating a continuous loop.
 
 ![A diagram of a web ring](/images/Webringwork.png)
 
-The early web was full of separate personal homepages. A web ring stitched those independent places into a shared path without turning them into one platform.
+When the **World Wide Web** was young, it was conceived as a distributed system for connecting information across different computers. [Tim Berners-Lee’s 1989 proposal](https://www.w3.org/History/1989/proposal.html) addressed a problem at CERN: documents, projects, and institutional knowledge were scattered across incompatible systems. Hyperlinks allowed one addressable resource to point to another without placing everything in a central database.
 
-Our class ring has two related layers:
+[![A recreation of the first website in an early line-mode browser](https://home.cern/wp-content/uploads/2026/05/Screenshot-World-Wide-Web-project-small-2-1024x619.png)](https://info.cern.ch/)
 
-1. The **shared charm**: each submitted project becomes a circular consumer in the Showcase that can share an interaction with an element on its owner's site.
-2. The **ring embed**: one script lets participants display an expandable directory of all class websites on their own site.
+_[The first website](https://info.cern.ch/) explained the Web itself and linked to browsers, servers, software, and other online information. [Browse CERN’s reconstruction.](https://info.cern.ch/)_
+
+This is why some servers were designed to return `index.html` when someone visits a directory, and if no index file exsits, the server may generate a directory listing. For example, if you visit `https://example.com/public/`, the server may return `https://example.com/public/index.html` if it exists. If not, it may return a list of files in that directory:
+
+```text
+Index of /notes/
+
+week-01.html
+week-02.html
+reading-list.pdf
+```
+
+One of the most important aspects of the early Web was the [hyperlink](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a), which made connecting and linking resources possiblebut. However, it did not guarantee visibility. Someone had to discover a page, decide it mattered, and link to it. Therefore, many websites were isolated and difficult to find.
+
+[Yahoo emerged in 1994 as **Jerry and David’s Guide to the World Wide Web**.](https://web.stanford.edu/class/e145/2007_fall/materials/Yahoo_1995_STVPCase.pdf) It was initially a human-curated directory rather than a modern crawler-based search engine.
+
+[![Yahoo in 1994, organized as a hierarchy of categories](https://www.webdesignmuseum.org/uploaded/timeline/yahoo/yahoo-1994.png)](https://www.webdesignmuseum.org/gallery/yahoo-1994)
+
+_Yahoo presented the Web as categories such as Art, Business, Computers, and Politics. [View the archived interface.](https://www.webdesignmuseum.org/gallery/yahoo-1994)_
+
+Directories and search engines solved discovery by creating centralized maps of the Web. This made navigation easier, but also concentrated power: directories decided what belonged in each category, while search engines decided what appeared first.
+
+A **web ring** instead, linked independently operated sites around a shared subject. [An early example, EUROPa, appeared in 1994; Sage Weil later developed a centrally managed system that made rings easier to maintain.](https://crln.acrl.org/index.php/crlnews/article/view/22105/28059) Participating sites usually included navigation like this:
+
+```html
+<nav>
+  <a href="/previous">← Previous</a>
+  <a href="/members">All sites</a>
+  <a href="/next">Next →</a>
+</nav>
+```
+
+Unlike a search engine, a web ring made curation explicit. Joining a web ring means meeting neighboring sites, sharing visitors, and presenting oneself as part of a community. Rings were not completely decentralized: a ringmaster could control membership, and abandoned sites could break navigation. But still they offered a different politics of discovery sites.
+
+A contemporary example is the [XXIIVV Webring](https://github.com/xxiivv/webring), which connects artists’ and developers’ hand-built personal websites.
+
+### Let's create a web ring together!
+
+The easiest way to create a web ring is to have a page that contains links to all the other sites in the ring. Each site in the ring would have a link back to the main page, creating a circular structure.
+
+However, this is not as visually interesting or dynamic as we would like it to be, as they are completely ad-hoc and static. If we wish to create a more dynamic and visually interesting web ring, we can instead create a database of all the sites in the ring, and then use that database to generate a dynamic plugin that displays all the sites in the ring. This way, we can easily add or remove sites from the ring, and the page will automatically update to reflect those changes, by using playhtml.
+
+1. We will first need to add those sites to our database (the data is stored in playhtml's database).
+
+2. Then we can use the `class-webring.js` script to display the sites in the ring on our page. The script will automatically generate a dynamic plugin that displays all the sites in the ring, and it will update automatically when new sites are added or removed.
+
+```html
+<script
+  type="module"
+  src="https://class.playhtml.fun/class-webring.js"
+></script>
+```
+
+3. Each site is displayed with its favicon. The embed tries the site's own `/favicon.ico`, then a favicon cache, the submitted circle image, and finally the project's emoji. This fallback order also supports sites whose icon is not stored at the traditional path.
+
+### Verify the live registry
+
+Test the complete data path before class:
+
+1. Open the [`/showcase`](/showcase) submission form and the hidden [`/webring-demo`](/webring-demo) in separate windows.
+2. Submit a temporary project with a real public URL. It should appear in the Showcase and both embed variants without refreshing.
+3. Edit its title or URL under **Your submissions**. Every open ring should update.
+4. Choose **Remove** and confirm. The project should disappear from every open ring.
+5. Inspect the embed element in DevTools. Its `data-project-count` attribute should match the number of valid registry entries.
+
+For extra console output while debugging, add `data-debug="true"` to the script tag. Every registry update will log its source and valid project count.
+
+The canonical registry is the shared element `class.playhtml.fun/showcase#student-projects`. While submissions are open it exports read-write access. After class, change `PROJECT_REGISTRY_PERMISSIONS` in `ProjectSubmissions.tsx` from `read-write` to `read-only` to freeze the registry.
+
+### Let's also create a shared space!
 
 ### The one idea to teach
 
@@ -177,7 +248,7 @@ The ring is not a final upload. Participants can:
 - keep changing and redeploying all code on their own site
 - customize how their shared state is represented locally
 - use a different source image from the class circle image
-- return to **Your submissions → Edit** to change their circle, metadata, source URL, ID, or capability
+- return to **Your submissions** to edit those details or remove the project from the registry
 
 The Showcase never executes submitted code. This lets each site remain expressive while the class ring stays safe and structurally consistent.
 

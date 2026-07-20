@@ -21,11 +21,17 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     ? configuredRegistry.replace(/^https?:\/\//, '').replace(/\/$/, '')
     : SCRIPT_URL.host;
   const dataSource = `${registryLocation}/showcase#student-projects`;
+  const isRegistryPage =
+    window.location.host === registryLocation &&
+    window.location.pathname.replace(/\/$/, '') === '/showcase';
   const demoMode = scriptElement?.dataset.demo === 'true';
+  const debugMode = scriptElement?.dataset.debug === 'true';
   const variant =
     scriptElement?.dataset.variant === 'expandable' ? 'expandable' : 'peek';
   const label = 'Benches for the Internet';
   const widget = document.createElement('aside');
+  const registryDataEvent = 'class-webring:registry-data';
+  const registryDataRequestEvent = 'class-webring:request-data';
   let expanded = scriptElement?.dataset.expanded === 'true';
   let latestProjects = [];
 
@@ -95,6 +101,23 @@ if (!document.querySelector('[data-class-webring-widget]')) {
       : fallback;
   }
 
+  function faviconUrl(projectUrl) {
+    try {
+      return new URL('/favicon.ico', projectUrl).href;
+    } catch {
+      return null;
+    }
+  }
+
+  function cachedFaviconUrl(projectUrl) {
+    try {
+      const { hostname } = new URL(projectUrl);
+      return `https://icons.duckduckgo.com/ip3/${encodeURIComponent(hostname)}.ico`;
+    } catch {
+      return null;
+    }
+  }
+
   function sanitizeProjects(data) {
     const records = data?.projects;
     if (!records || typeof records !== 'object') return [];
@@ -113,8 +136,9 @@ if (!document.querySelector('[data-class-webring-widget]')) {
             title,
             url,
             emoji: safeText(project.emoji, 12, '✦'),
-            imageUrl:
-              safeUrl(project.imageUrl) ?? new URL('/favicon.ico', url).href,
+            faviconUrl: faviconUrl(url),
+            cachedFaviconUrl: cachedFaviconUrl(url),
+            imageUrl: safeUrl(project.imageUrl),
             accentColor: safeColor(project.accentColor, '#274b9e'),
             submittedAt:
               typeof project.submittedAt === 'number'
@@ -144,6 +168,32 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     return link;
   }
 
+  function appendProjectImage(container, project) {
+    const imageSources = [
+      project.faviconUrl,
+      project.cachedFaviconUrl,
+      project.imageUrl,
+    ].filter(
+      (source, index, sources) => source && sources.indexOf(source) === index,
+    );
+    if (imageSources.length === 0) return;
+
+    const image = document.createElement('img');
+    let sourceIndex = 0;
+    image.src = imageSources[sourceIndex];
+    image.alt = '';
+    image.loading = 'lazy';
+    image.addEventListener('error', () => {
+      sourceIndex += 1;
+      if (imageSources[sourceIndex]) {
+        image.src = imageSources[sourceIndex];
+      } else {
+        image.remove();
+      }
+    });
+    container.append(image);
+  }
+
   function makeExpandableCircle(project, className) {
     const link = makeLink(project, className);
     link.style.setProperty('--ring-color', project.accentColor);
@@ -153,14 +203,7 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     fallback.textContent = project.emoji;
     link.append(fallback);
 
-    if (project.imageUrl) {
-      const image = document.createElement('img');
-      image.src = project.imageUrl;
-      image.alt = '';
-      image.loading = 'lazy';
-      image.addEventListener('error', () => image.remove());
-      link.append(image);
-    }
+    appendProjectImage(link, project);
 
     const tooltip = document.createElement('em');
     tooltip.textContent = project.name;
@@ -191,14 +234,7 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     fallback.textContent = project.emoji;
     disc.append(fallback);
 
-    if (project.imageUrl) {
-      const image = document.createElement('img');
-      image.src = project.imageUrl;
-      image.alt = '';
-      image.loading = 'lazy';
-      image.addEventListener('error', () => image.remove());
-      disc.append(image);
-    }
+    appendProjectImage(disc, project);
 
     link.append(disc);
     return link;
@@ -360,6 +396,29 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     navigation.append(previousLink, randomLink, nextLink);
     panel.append(navigation);
     widget.append(panel);
+  }
+
+  function updateProjects(data, source) {
+    latestProjects = sanitizeProjects(data);
+    if (variant === 'expandable') {
+      renderExpandable();
+    } else {
+      renderPeek();
+    }
+
+    widget.dataset.projectCount = String(latestProjects.length);
+    window.dispatchEvent(
+      new CustomEvent('class-webring:update', {
+        detail: { projectCount: latestProjects.length },
+      }),
+    );
+    if (debugMode) {
+      console.info('[class-webring] registry updated', {
+        dataSource,
+        projectCount: latestProjects.length,
+        source,
+      });
+    }
   }
 
   const style = document.createElement('style');
@@ -711,28 +770,31 @@ if (!document.querySelector('[data-class-webring-widget]')) {
   widget.id = 'class-webring-widget';
   widget.dataset.classWebringWidget = '';
   widget.setAttribute('aria-label', label);
-  widget.setAttribute('can-play', '');
-  widget.setAttribute('data-source', dataSource);
-  widget.setAttribute('data-source-read-only', '');
-  widget.defaultData = { projects: {} };
-  widget.updateElement = ({ data }) => {
-    latestProjects = sanitizeProjects(data);
-    if (variant === 'expandable') {
-      renderExpandable();
-    } else {
-      renderPeek();
-    }
+  const handleLocalRegistryData = (event) => {
+    updateProjects(event.detail?.data, 'source page');
   };
+  window.addEventListener(registryDataEvent, handleLocalRegistryData);
+
+  if (!isRegistryPage) {
+    widget.setAttribute('can-play', '');
+    widget.setAttribute('data-source', dataSource);
+    widget.setAttribute('data-source-read-only', '');
+    widget.defaultData = { projects: {} };
+    widget.updateElement = ({ data }) => updateProjects(data, 'PlayHTML');
+  }
 
   document.head.append(style);
   document.body.append(widget);
+  widget.dataset.projectCount = '0';
   if (variant === 'expandable') {
     renderExpandable();
   } else {
     renderPeek();
   }
 
-  if (playhtml.roomId) {
+  if (isRegistryPage) {
+    window.dispatchEvent(new Event(registryDataRequestEvent));
+  } else if (playhtml.roomId) {
     playhtml.setupPlayElement(widget);
   } else {
     await playhtml.init();
