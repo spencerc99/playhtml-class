@@ -463,14 +463,20 @@ export const ProjectSubmissions = withSharedState<
 
             <fieldset className="project-submissions__appearance">
               <legend className="project-submissions__section-label">
-                Ring thumbnail
+                Ring appearance
               </legend>
+              <p className="project-submissions__appearance-copy">
+                The ring tries your site&apos;s favicon first, then the ring
+                icon URL. The emoji only appears if neither image loads.
+              </p>
               <div className="project-submissions__field project-submissions__field--emoji">
-                <span className="project-submissions__label">Emoji</span>
+                <span className="project-submissions__label">
+                  Fallback emoji
+                </span>
                 <ProjectEmojiPicker value={emoji} onChange={setEmoji} />
               </div>
               <label className="project-submissions__field project-submissions__field--color">
-                <span className="project-submissions__label">Glow</span>
+                <span className="project-submissions__label">Glow color</span>
                 <input
                   className="project-submissions__color"
                   type="color"
@@ -480,7 +486,7 @@ export const ProjectSubmissions = withSharedState<
               </label>
               <label className="project-submissions__field project-submissions__field--image">
                 <span className="project-submissions__label">
-                  Thumbnail image URL
+                  Ring icon URL
                 </span>
                 <input
                   className="project-submissions__input"
@@ -560,7 +566,7 @@ export const ProjectSubmissions = withSharedState<
               <p className="project-submissions__mine-copy">
                 {adminMode
                   ? 'This is a soft-gated class control. Edit or remove any student entry below.'
-                  : 'Return here with the same PlayHTML identity to change your project details, emoji, glow, or thumbnail image.'}
+                  : 'Return here with the same PlayHTML identity to change your project details, fallback emoji, glow color, or ring icon URL.'}
               </p>
               {managedProjects.length > 0 ? (
                 <ul className="project-submissions__mine-list">

@@ -1976,6 +1976,14 @@ a:hover {
   text-transform: uppercase;
 }
 
+.project-submissions__appearance-copy {
+  color: #785a52;
+  font-size: 0.78rem;
+  grid-column: 1 / -1;
+  line-height: 1.4;
+  margin: -0.15rem 0 0.1rem;
+}
+
 .project-submissions__color {
   background: #fffaf5;
   border: 2px solid rgba(224, 0, 0, 0.28);
