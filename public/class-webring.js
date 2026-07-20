@@ -409,10 +409,18 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     return shuffledItems;
   }
 
-  function positionCompactElement(element, slotIndex, slotCount) {
+  function compactElementPosition(slotIndex, slotCount) {
     const angle = (slotIndex / slotCount) * Math.PI * 2 - Math.PI / 2;
-    element.style.left = `${50 + Math.cos(angle) * 38}%`;
-    element.style.top = `${50 + Math.sin(angle) * 38}%`;
+    return {
+      left: `${50 + Math.cos(angle) * 38}%`,
+      top: `${50 + Math.sin(angle) * 38}%`,
+    };
+  }
+
+  function positionCompactElement(element, slotIndex, slotCount) {
+    const position = compactElementPosition(slotIndex, slotCount);
+    element.style.left = position.left;
+    element.style.top = position.top;
   }
 
   function renderExpandable() {
@@ -430,6 +438,10 @@ if (!document.querySelector('[data-class-webring-widget]')) {
       miniature.className = 'class-webring-widget__miniature';
       const miniOrbit = document.createElement('div');
       miniOrbit.className = 'class-webring-widget__mini-orbit';
+      miniOrbit.style.setProperty(
+        '--class-webring-orbit-duration',
+        demoMode ? '8s' : '45s',
+      );
       const randomizedProjects = shuffle(projects);
       const compactProjects = randomizedProjects.slice(
         0,
@@ -443,7 +455,12 @@ if (!document.querySelector('[data-class-webring-widget]')) {
         { length: slotCount },
         (_, index) => index,
       ).filter((index) => index !== poolSlotIndex);
-      let replacementSlots = shuffle(compactProjects.map((_, index) => index));
+      const departingSlotIndex = (poolSlotIndex - 1 + slotCount) % slotCount;
+      const arrivingSlotIndex = (poolSlotIndex + 1) % slotCount;
+      const departingProjectIndex =
+        projectSlotIndexes.indexOf(departingSlotIndex);
+      const arrivingProjectIndex =
+        projectSlotIndexes.indexOf(arrivingSlotIndex);
       const compactCircles = [];
 
       compactProjects.forEach((project, index) => {
@@ -483,89 +500,118 @@ if (!document.querySelector('[data-class-webring-widget]')) {
         swappingProject = true;
         miniOrbit.classList.add('is-swapping');
 
-        if (replacementSlots.length === 0) {
-          replacementSlots = shuffle(compactProjects.map((_, index) => index));
-        }
-
-        const replacementIndex = replacementSlots.shift();
         const arrivingProject = waitingProjects.shift();
-        if (replacementIndex === undefined || !arrivingProject) {
+        if (
+          departingProjectIndex < 0 ||
+          arrivingProjectIndex < 0 ||
+          !arrivingProject
+        ) {
           miniOrbit.classList.remove('is-swapping');
           swappingProject = false;
           return;
         }
 
-        const departingProject = compactProjects[replacementIndex];
-        const departingCircle = compactCircles[replacementIndex];
-        const departingBounds = departingCircle.getBoundingClientRect();
-        const poolBounds = projectPool.getBoundingClientRect();
-        const offsetToPool = {
-          x:
-            poolBounds.left +
-            poolBounds.width / 2 -
-            (departingBounds.left + departingBounds.width / 2),
-          y:
-            poolBounds.top +
-            poolBounds.height / 2 -
-            (departingBounds.top + departingBounds.height / 2),
-        };
+        const departingProject = compactProjects[departingProjectIndex];
+        const departingCircle = compactCircles[departingProjectIndex];
+        const poolPosition = compactElementPosition(poolSlotIndex, slotCount);
         projectPool.classList.add('is-receiving');
 
         const departure = departingCircle.animate(
           [
-            { opacity: 1, transform: 'translate(0, 0) scale(1)' },
             {
+              left: departingCircle.style.left,
+              opacity: 1,
+              top: departingCircle.style.top,
+            },
+            {
+              left: poolPosition.left,
               opacity: 0,
-              transform: `translate(${offsetToPool.x}px, ${offsetToPool.y}px) scale(0.16)`,
+              top: poolPosition.top,
             },
           ],
           {
-            duration: 650,
+            duration: 460,
             easing: 'cubic-bezier(.55, 0, .8, .35)',
             fill: 'forwards',
           },
         );
         await departure.finished.catch(() => undefined);
+        departingCircle.remove();
+
+        const nextCompactProjects = Array(compactProjects.length);
+        const nextCompactCircles = Array(compactCircles.length);
+        const advances = compactCircles.flatMap((circle, index) => {
+          if (index === departingProjectIndex) return [];
+
+          const currentSlotIndex = projectSlotIndexes[index];
+          const nextSlotIndex = (currentSlotIndex + 1) % slotCount;
+          const nextProjectIndex = projectSlotIndexes.indexOf(nextSlotIndex);
+          const nextPosition = compactElementPosition(nextSlotIndex, slotCount);
+          const distanceToGap =
+            (departingSlotIndex - currentSlotIndex + slotCount) % slotCount;
+          const advance = circle.animate(
+            [
+              { left: circle.style.left, top: circle.style.top },
+              { left: nextPosition.left, top: nextPosition.top },
+            ],
+            {
+              delay: Math.max(0, distanceToGap - 1) * 55,
+              duration: 480,
+              easing: 'cubic-bezier(.22, .7, .25, 1)',
+            },
+          );
+
+          circle.style.left = nextPosition.left;
+          circle.style.top = nextPosition.top;
+          nextCompactProjects[nextProjectIndex] = compactProjects[index];
+          nextCompactCircles[nextProjectIndex] = circle;
+          return advance.finished.catch(() => undefined);
+        });
+        await Promise.all(advances);
 
         const arrivingCircle = makeExpandableCircle(
           arrivingProject,
           'class-webring-widget__circle class-webring-widget__circle--mini',
         );
-        positionCompactElement(
-          arrivingCircle,
-          projectSlotIndexes[replacementIndex],
+        positionCompactElement(arrivingCircle, poolSlotIndex, slotCount);
+        arrivingCircle.style.opacity = '0';
+        miniOrbit.append(arrivingCircle);
+        const arrivingPosition = compactElementPosition(
+          arrivingSlotIndex,
           slotCount,
         );
-        departingCircle.replaceWith(arrivingCircle);
-        compactCircles[replacementIndex] = arrivingCircle;
-        compactProjects[replacementIndex] = arrivingProject;
-        waitingProjects.push(departingProject);
-
-        const arrivingBounds = arrivingCircle.getBoundingClientRect();
-        const offsetFromPool = {
-          x:
-            poolBounds.left +
-            poolBounds.width / 2 -
-            (arrivingBounds.left + arrivingBounds.width / 2),
-          y:
-            poolBounds.top +
-            poolBounds.height / 2 -
-            (arrivingBounds.top + arrivingBounds.height / 2),
-        };
         const arrival = arrivingCircle.animate(
           [
             {
+              left: poolPosition.left,
               opacity: 0,
-              transform: `translate(${offsetFromPool.x}px, ${offsetFromPool.y}px) scale(0.16)`,
+              top: poolPosition.top,
             },
-            { opacity: 1, transform: 'translate(0, 0) scale(1)' },
+            {
+              left: arrivingPosition.left,
+              opacity: 1,
+              top: arrivingPosition.top,
+            },
           ],
           {
-            duration: 720,
+            duration: 520,
             easing: 'cubic-bezier(.18, .7, .22, 1)',
           },
         );
+        arrivingCircle.style.left = arrivingPosition.left;
+        arrivingCircle.style.opacity = '1';
+        arrivingCircle.style.top = arrivingPosition.top;
         await arrival.finished.catch(() => undefined);
+
+        nextCompactProjects[arrivingProjectIndex] = arrivingProject;
+        nextCompactCircles[arrivingProjectIndex] = arrivingCircle;
+        compactProjects.splice(
+          0,
+          compactProjects.length,
+          ...nextCompactProjects,
+        );
+        compactCircles.splice(0, compactCircles.length, ...nextCompactCircles);
+        waitingProjects.push(departingProject);
 
         projectPool.classList.remove('is-receiving');
         miniOrbit.classList.remove('is-swapping');
@@ -668,7 +714,7 @@ if (!document.querySelector('[data-class-webring-widget]')) {
       width: 14rem;
     }
     .class-webring-widget__mini-orbit {
-      animation: class-webring-spin 45s linear infinite;
+      animation: class-webring-spin var(--class-webring-orbit-duration) linear infinite;
       inset: 0;
       position: absolute;
     }
@@ -738,7 +784,7 @@ if (!document.querySelector('[data-class-webring-widget]')) {
       text-decoration: none;
     }
     .class-webring-widget__circle--mini {
-      animation: class-webring-counter-spin 45s linear infinite;
+      animation: class-webring-counter-spin var(--class-webring-orbit-duration) linear infinite;
       font-size: 1rem;
       height: 2.65rem;
       margin: -1.325rem 0 0 -1.325rem;
@@ -746,7 +792,7 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     }
     .class-webring-widget__pool {
       align-items: center;
-      animation: class-webring-counter-spin 45s linear infinite;
+      animation: class-webring-counter-spin var(--class-webring-orbit-duration) linear infinite;
       background: rgba(255,255,255,.9);
       border: 2px dashed rgba(224,0,0,.55);
       border-radius: 50%;
@@ -778,7 +824,7 @@ if (!document.querySelector('[data-class-webring-widget]')) {
       animation-play-state: paused;
     }
     .class-webring-widget__pool.is-receiving {
-      animation: class-webring-pool-pulse 1.37s ease-in-out both;
+      animation: class-webring-pool-pulse 1.8s ease-in-out both;
     }
     .class-webring-widget__circle img {
       height: 100%;
