@@ -200,8 +200,16 @@ export const ProjectSubmissions = withSharedState<
 
       builtInsSeeded.current = true;
       setData((draft) => {
+        const builtInProjects = createBuiltInProjects();
+
+        for (const id of Object.keys(draft.projects)) {
+          if (id.startsWith('builtin-') && !builtInProjects[id]) {
+            delete draft.projects[id];
+          }
+        }
+
         draft.reservedSharedIds ??= {};
-        for (const [id, project] of Object.entries(createBuiltInProjects())) {
+        for (const [id, project] of Object.entries(builtInProjects)) {
           if (
             !draft.projects[id] ||
             draft.projects[id].starterVersion !== project.starterVersion

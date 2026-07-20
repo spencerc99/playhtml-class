@@ -149,13 +149,13 @@ if (!document.querySelector('[data-class-webring-widget]')) {
       submittedAt: -3,
     },
     {
-      id: 'builtin-playhtml-docs',
+      id: 'builtin-we-were-online',
       name: 'Spencer Chang',
-      title: 'PlayHTML Docs',
-      url: 'https://playhtml.fun/docs/',
-      emoji: '📖',
-      imageUrl: 'https://playhtml.fun/docs/icon.png',
-      accentColor: '#274b9e',
+      title: 'we were online',
+      url: 'https://wewere.online/',
+      emoji: '🌿',
+      imageUrl: 'https://wewere.online/favicon.png',
+      accentColor: '#806a52',
       submittedAt: -2,
     },
     {
@@ -179,7 +179,10 @@ if (!document.querySelector('[data-class-webring-widget]')) {
       ...starterProjects.map(
         (project) => projectsById.get(project.id) ?? project,
       ),
-      ...projects.filter((project) => !starterIds.has(project.id)),
+      ...projects.filter(
+        (project) =>
+          !starterIds.has(project.id) && !project.id.startsWith('builtin-'),
+      ),
     ];
   }
 

@@ -224,14 +224,14 @@ function faviconSharedObjectCss(sharedId: string, accentColor: string): string {
 }`;
 }
 
-const DOCS_SHARED_OBJECT_HTML =
-  '<img class="starter-favicon" src="https://playhtml.fun/docs/icon.png" alt="PlayHTML Docs favicon" />';
+const WE_WERE_ONLINE_SHARED_OBJECT_HTML =
+  '<img class="starter-favicon" src="https://wewere.online/favicon.png" alt="we were online favicon" />';
 
 const PLAYHTML_SHARED_OBJECT_HTML =
   '<img class="starter-favicon" src="https://playhtml.fun/icon.png" alt="PlayHTML favicon" />';
 
-const BUILT_IN_STARTER_VERSION = 7;
-const PLAYHTML_DOCS_ACCENT_COLOR = '#274b9e';
+const BUILT_IN_STARTER_VERSION = 8;
+const WE_WERE_ONLINE_ACCENT_COLOR = '#806a52';
 const PLAYHTML_ACCENT_COLOR = '#ffad42';
 
 const BUILT_IN_PROJECT_DEFINITIONS = [
@@ -251,20 +251,21 @@ const BUILT_IN_PROJECT_DEFINITIONS = [
     submittedAt: -3,
   },
   {
-    id: 'builtin-playhtml-docs',
-    sharedId: 'bench-playhtml-docs',
+    id: 'builtin-we-were-online',
+    sharedId: 'bench-we-were-online',
     name: 'Spencer Chang',
-    ringLabel: 'Docs',
-    title: 'PlayHTML Docs',
-    url: 'https://playhtml.fun/docs/',
-    description: 'Examples and references for every PlayHTML capability.',
-    emoji: '📖',
-    accentColor: PLAYHTML_DOCS_ACCENT_COLOR,
-    imageUrl: 'https://playhtml.fun/docs/icon.png',
-    html: DOCS_SHARED_OBJECT_HTML,
+    ringLabel: 'we were online',
+    title: 'we were online',
+    url: 'https://wewere.online/',
+    description:
+      'An online multiplayer world turning the existing Internet into a living, shared space.',
+    emoji: '🌿',
+    accentColor: WE_WERE_ONLINE_ACCENT_COLOR,
+    imageUrl: 'https://wewere.online/favicon.png',
+    html: WE_WERE_ONLINE_SHARED_OBJECT_HTML,
     css: faviconSharedObjectCss(
-      'bench-playhtml-docs',
-      PLAYHTML_DOCS_ACCENT_COLOR,
+      'bench-we-were-online',
+      WE_WERE_ONLINE_ACCENT_COLOR,
     ),
     submittedAt: -2,
   },
@@ -315,9 +316,14 @@ export function mergeBuiltInProjects<T extends { starterVersion?: number }>(
   projects: Record<string, T> | undefined,
 ): Record<string, BuiltInRingProject | T> {
   const builtIns = createBuiltInProjects();
+  const currentProjects = Object.fromEntries(
+    Object.entries(projects ?? {}).filter(
+      ([id]) => !id.startsWith('builtin-') || id in builtIns,
+    ),
+  );
   const merged: Record<string, BuiltInRingProject | T> = {
     ...builtIns,
-    ...(projects ?? {}),
+    ...currentProjects,
   };
 
   for (const [id, builtIn] of Object.entries(builtIns)) {
