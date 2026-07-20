@@ -1122,6 +1122,10 @@ a:hover {
   font-size: clamp(2rem, 4vw, 4.5rem);
 }
 
+.project-webring--dense .project-webring__welcome p {
+  font-size: clamp(0.6rem, 0.78vw, 0.72rem);
+}
+
 .project-webring__zoom {
   align-items: center;
   background: rgba(255, 255, 255, 0.92);
@@ -1178,12 +1182,21 @@ a:hover {
 }
 
 .project-webring__welcome p {
+  color: #70534c;
+  font-size: clamp(0.68rem, 1vw, 0.84rem);
+  line-height: 1.45;
+  margin: 1rem auto 0;
+  max-width: 32rem;
+}
+
+.project-webring__welcome p a {
   color: var(--red);
-  font-family: var(--font-display);
-  font-size: clamp(0.7rem, 1.3vw, 0.92rem);
-  letter-spacing: 0.16em;
-  margin: 0 0 0.65rem;
-  text-transform: uppercase;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.16em;
+}
+
+.project-webring__welcome p a:hover {
+  text-decoration-thickness: 2px;
 }
 
 .project-webring__welcome h1 {
@@ -1202,7 +1215,7 @@ a:hover {
 
 .project-webring__welcome span {
   font-size: clamp(0.8rem, 1.4vw, 1rem);
-  margin-top: 1.2rem;
+  margin-top: 0.8rem;
 }
 
 .project-webring__welcome strong {
@@ -2437,6 +2450,13 @@ a:hover {
 
   .project-webring__welcome span {
     font-size: 0.7rem;
+  }
+
+  .project-webring__welcome p,
+  .project-webring--dense .project-webring__welcome p {
+    font-size: 0.58rem;
+    line-height: 1.35;
+    margin-top: 0.65rem;
   }
 
   .project-webring__detail {

@@ -610,6 +610,42 @@ export function ProjectWebring({
                   ) : (
                     <div className="project-webring__welcome">
                       <h1>Building Benches for the Web</h1>
+                      <p>
+                        A class on creating public, social spaces for the web,
+                        originally taught at{' '}
+                        <a
+                          href="https://sfpc.io"
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          SFPC
+                        </a>{' '}
+                        in Summer 2026 by{' '}
+                        <a
+                          href="https://spencer.place"
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Spencer Chang
+                        </a>{' '}
+                        and{' '}
+                        <a
+                          href="https://www.munusshih.com/"
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Munus Shih
+                        </a>
+                        {'. Learn more at '}
+                        <a
+                          href="https://class.playhtml.fun/"
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          class.playhtml.fun
+                        </a>
+                        {'.'}
+                      </p>
                       <span>Tap an object to play · tap its name to visit</span>
                     </div>
                   )}

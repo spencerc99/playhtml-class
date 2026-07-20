@@ -729,10 +729,12 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     }
     .class-webring-widget__circle {
       align-items: center;
-      background: color-mix(in srgb, var(--ring-color) 18%, white);
-      border: 3px solid rgba(255,255,255,.92);
+      background: color-mix(in srgb, var(--ring-color) 8%, white);
+      border: 1px solid rgba(56,44,40,.18);
       border-radius: 50%;
-      box-shadow: 0 0 1.2rem .35rem color-mix(in srgb, var(--ring-color) 42%, transparent);
+      box-shadow:
+        0 .18rem .55rem rgba(56,44,40,.14),
+        0 0 .5rem color-mix(in srgb, var(--ring-color) 18%, transparent);
       color: #222;
       display: flex;
       justify-content: center;
@@ -741,10 +743,10 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     }
     .class-webring-widget__circle--mini {
       animation: class-webring-counter-spin 45s linear infinite;
-      font-size: 1.15rem;
-      height: 3rem;
-      margin: -1.5rem 0 0 -1.5rem;
-      width: 3rem;
+      font-size: 1rem;
+      height: 2.65rem;
+      margin: -1.325rem 0 0 -1.325rem;
+      width: 2.65rem;
     }
     .class-webring-widget__pool {
       align-items: center;
@@ -756,12 +758,12 @@ if (!document.querySelector('[data-class-webring-widget]')) {
       color: #e00000;
       display: flex;
       flex-direction: column;
-      height: 3.2rem;
+      height: 2.85rem;
       justify-content: center;
-      margin: -1.6rem 0 0 -1.6rem;
+      margin: -1.425rem 0 0 -1.425rem;
       pointer-events: none;
       position: absolute;
-      width: 3.2rem;
+      width: 2.85rem;
     }
     .class-webring-widget__pool strong {
       font-size: .78rem;
@@ -826,14 +828,14 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     @media (max-width: 520px) {
       .class-webring-widget__miniature { height: 12.5rem; width: 12.5rem; }
       .class-webring-widget__circle--mini {
-        height: 2.65rem;
-        margin: -1.325rem 0 0 -1.325rem;
-        width: 2.65rem;
+        height: 2.35rem;
+        margin: -1.175rem 0 0 -1.175rem;
+        width: 2.35rem;
       }
       .class-webring-widget__pool {
-        height: 2.85rem;
-        margin: -1.425rem 0 0 -1.425rem;
-        width: 2.85rem;
+        height: 2.55rem;
+        margin: -1.275rem 0 0 -1.275rem;
+        width: 2.55rem;
       }
     }
     @media (prefers-reduced-motion: reduce) {
