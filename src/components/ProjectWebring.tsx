@@ -633,7 +633,7 @@ export function ProjectWebring({
                         A class on creating public, social spaces for the web,
                         originally taught at{' '}
                         <a
-                          href="https://sfpc.io"
+                          href="https://sfpc.study"
                           target="_blank"
                           rel="noreferrer"
                         >

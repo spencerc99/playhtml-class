@@ -87,7 +87,7 @@ export default function Home() {
           className={`${HOME_SECTION_FRAME} flex flex-col gap-10 md:flex-row md:items-start md:justify-between`}
         >
           <a
-            href="https://sfpc.io"
+            href="https://sfpc.study"
             className="pointer-events-auto text-xl font-bold uppercase leading-tight text-white no-underline transition duration-200 hover:-translate-y-0.5 hover:no-underline md:text-2xl"
           >
             School
