@@ -4,7 +4,6 @@
 import { playhtml, usePlayContext, withSharedState } from '@playhtml/react';
 import { type RefObject } from 'react';
 import {
-  createBuiltInProjects,
   createBuiltInReservedIds,
   DEFAULT_SHARED_OBJECT_HTML,
   defaultSharedObjectCss,
@@ -91,7 +90,7 @@ export const ProjectPlayground = withSharedState<
 >(
   ({ demo }) => ({
     defaultData: {
-      projects: createBuiltInProjects(),
+      projects: {},
       reservedSharedIds: createBuiltInReservedIds(),
     },
     id: demo ? 'demo-projects' : 'playground-projects',

@@ -154,7 +154,7 @@ if (!document.querySelector('[data-class-webring-widget]')) {
       title: 'we were online',
       url: 'https://wewere.online/',
       emoji: '🌿',
-      imageUrl: 'https://wewere.online/favicon.png',
+      imageUrl: new URL('/we-were-online-icon.png', SCRIPT_URL).href,
       accentColor: '#806a52',
       submittedAt: -2,
     },
@@ -353,12 +353,14 @@ if (!document.querySelector('[data-class-webring-widget]')) {
       const imageSources = (
         project.demo
           ? [project.imageUrl]
-          : [
-              ...declaredIconUrls,
-              ...(project.faviconUrls ?? []),
-              project.cachedFaviconUrl,
-              project.imageUrl,
-            ]
+          : project.id === 'builtin-we-were-online'
+            ? [project.imageUrl]
+            : [
+                ...declaredIconUrls,
+                ...(project.faviconUrls ?? []),
+                project.cachedFaviconUrl,
+                project.imageUrl,
+              ]
       ).filter(
         (source, index, sources) => source && sources.indexOf(source) === index,
       );

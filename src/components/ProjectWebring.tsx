@@ -34,7 +34,6 @@ export interface RingProject {
   name: string;
   ringLabel?: string;
   sharedObject?: ProjectSharedObject;
-  starterVersion?: number;
   submittedAt: number;
   submittedBy?: string;
   title: string;
@@ -593,11 +592,6 @@ export function ProjectWebring({
                       {selected.description ? (
                         <p>{selected.description}</p>
                       ) : null}
-                      {pluginEmbed ? null : (
-                        <code className="project-webring__shared-id">
-                          id=&quot;{selected.sharedObject?.id}&quot;
-                        </code>
-                      )}
                       <a href={selected.url} target="_blank" rel="noreferrer">
                         Enter {projectHostname(selected.url)}{' '}
                         <span aria-hidden="true">↗</span>

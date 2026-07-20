@@ -24,7 +24,6 @@ export interface BuiltInRingProject {
   name: string;
   ringLabel: string;
   sharedObject: ProjectSharedObject;
-  starterVersion: number;
   submittedAt: number;
   title: string;
   url: string;
@@ -225,12 +224,11 @@ function faviconSharedObjectCss(sharedId: string, accentColor: string): string {
 }
 
 const WE_WERE_ONLINE_SHARED_OBJECT_HTML =
-  '<img class="starter-favicon" src="https://wewere.online/favicon.png" alt="we were online favicon" />';
+  '<img class="starter-favicon" src="/we-were-online-icon.png" alt="we were online icon" />';
 
 const PLAYHTML_SHARED_OBJECT_HTML =
   '<img class="starter-favicon" src="https://playhtml.fun/icon.png" alt="PlayHTML favicon" />';
 
-const BUILT_IN_STARTER_VERSION = 8;
 const WE_WERE_ONLINE_ACCENT_COLOR = '#806a52';
 const PLAYHTML_ACCENT_COLOR = '#ffad42';
 
@@ -261,7 +259,7 @@ const BUILT_IN_PROJECT_DEFINITIONS = [
       'An online multiplayer world turning the existing Internet into a living, shared space.',
     emoji: '🌿',
     accentColor: WE_WERE_ONLINE_ACCENT_COLOR,
-    imageUrl: 'https://wewere.online/favicon.png',
+    imageUrl: 'https://class.playhtml.fun/we-were-online-icon.png',
     html: WE_WERE_ONLINE_SHARED_OBJECT_HTML,
     css: faviconSharedObjectCss(
       'bench-we-were-online',
@@ -300,7 +298,6 @@ export function createBuiltInProjects(): Record<string, BuiltInRingProject> {
         emoji: project.emoji,
         accentColor: project.accentColor,
         imageUrl: 'imageUrl' in project ? project.imageUrl : undefined,
-        starterVersion: BUILT_IN_STARTER_VERSION,
         submittedAt: project.submittedAt,
         sharedObject: {
           id: project.sharedId,
@@ -312,29 +309,17 @@ export function createBuiltInProjects(): Record<string, BuiltInRingProject> {
   );
 }
 
-export function mergeBuiltInProjects<T extends { starterVersion?: number }>(
+export function mergeBuiltInProjects<T>(
   projects: Record<string, T> | undefined,
 ): Record<string, BuiltInRingProject | T> {
   const builtIns = createBuiltInProjects();
   const currentProjects = Object.fromEntries(
-    Object.entries(projects ?? {}).filter(
-      ([id]) => !id.startsWith('builtin-') || id in builtIns,
-    ),
+    Object.entries(projects ?? {}).filter(([id]) => !id.startsWith('builtin-')),
   );
-  const merged: Record<string, BuiltInRingProject | T> = {
+  return {
     ...builtIns,
     ...currentProjects,
   };
-
-  for (const [id, builtIn] of Object.entries(builtIns)) {
-    const saved = projects?.[id];
-
-    if (!saved || saved.starterVersion !== builtIn.starterVersion) {
-      merged[id] = builtIn;
-    }
-  }
-
-  return merged;
 }
 
 export function createBuiltInReservedIds(): Record<string, true> {

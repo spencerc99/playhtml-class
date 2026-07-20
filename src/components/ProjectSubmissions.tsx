@@ -161,7 +161,7 @@ export const ProjectSubmissions = withSharedState<
 >(
   ({ variant }) => ({
     defaultData: {
-      projects: createBuiltInProjects(),
+      projects: {},
       reservedSharedIds: createBuiltInReservedIds(),
     },
     id: PROJECTS_ELEMENT_ID,
@@ -172,7 +172,7 @@ export const ProjectSubmissions = withSharedState<
   ({ data, setData, ref }, { adminMode = false, variant }) => {
     const { cursors, hasSynced } = usePlayContext();
     const { pid: playerId } = usePlayerIdentity();
-    const builtInsSeeded = useRef(false);
+    const builtInRegistryPrepared = useRef(false);
     const nameEdited = useRef(false);
     const [name, setName] = useState(() => cursors.name?.trim() ?? '');
     const [title, setTitle] = useState('');
@@ -195,27 +195,25 @@ export const ProjectSubmissions = withSharedState<
     }, [cursors.name]);
 
     useEffect(() => {
-      if (variant !== 'showcase' || !hasSynced || builtInsSeeded.current)
+      if (
+        variant !== 'showcase' ||
+        !hasSynced ||
+        builtInRegistryPrepared.current
+      )
         return;
 
-      builtInsSeeded.current = true;
+      builtInRegistryPrepared.current = true;
       setData((draft) => {
         const builtInProjects = createBuiltInProjects();
 
         for (const id of Object.keys(draft.projects)) {
-          if (id.startsWith('builtin-') && !builtInProjects[id]) {
+          if (id.startsWith('builtin-')) {
             delete draft.projects[id];
           }
         }
 
         draft.reservedSharedIds ??= {};
-        for (const [id, project] of Object.entries(builtInProjects)) {
-          if (
-            !draft.projects[id] ||
-            draft.projects[id].starterVersion !== project.starterVersion
-          ) {
-            draft.projects[id] = project;
-          }
+        for (const project of Object.values(builtInProjects)) {
           draft.reservedSharedIds[project.sharedObject.id] = true;
         }
       });
