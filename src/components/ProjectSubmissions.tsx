@@ -282,7 +282,7 @@ export const ProjectSubmissions = withSharedState<
         : undefined;
       if (imageUrl.trim() && !normalizedImageUrl) {
         setStatus({
-          message: 'The circle image must be a full http:// or https:// URL.',
+          message: 'The ring icon must be a full http:// or https:// URL.',
           tone: 'error',
         });
         return;

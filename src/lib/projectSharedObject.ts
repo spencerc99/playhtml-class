@@ -171,13 +171,9 @@ export function createProjectAppearanceSharedObject(
 #${sharedId} .starter-project-appearance {
   align-items: center;
   aspect-ratio: 1;
-  background: color-mix(in srgb, ${accentColor} 10%, white);
-  border: 1px solid color-mix(in srgb, ${accentColor} 35%, transparent);
-  border-radius: 50%;
   display: flex;
   font-size: clamp(1.6rem, 5vw, 4.5rem);
   justify-content: center;
-  overflow: hidden;
   position: relative;
   width: 72%;
 }
@@ -185,7 +181,7 @@ export function createProjectAppearanceSharedObject(
 #${sharedId} .starter-project-icon {
   height: 100%;
   inset: 0;
-  object-fit: cover;
+  object-fit: contain;
   position: absolute;
   width: 100%;
 }
@@ -211,7 +207,6 @@ function faviconSharedObjectCss(sharedId: string): string {
 }
 
 #${sharedId} .starter-favicon {
-  border-radius: 22%;
   display: block;
   height: auto;
   width: 72%;

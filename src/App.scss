@@ -1067,6 +1067,18 @@ a:hover {
   max-width: 100%;
 }
 
+.project-webring__node-markup .starter-project-appearance {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+}
+
+.project-webring__node-markup .starter-project-icon {
+  border-radius: 0 !important;
+  object-fit: contain !important;
+}
+
 .project-webring__node-label {
   appearance: none;
   background: rgba(255, 255, 255, 0.9);
@@ -2111,15 +2123,12 @@ a:hover {
 .project-submissions__generated-icon {
   align-items: center;
   aspect-ratio: 1;
-  background: color-mix(in srgb, var(--preview-accent) 10%, white);
-  border: 1px solid color-mix(in srgb, var(--preview-accent) 35%, transparent);
-  border-radius: 50%;
-  box-shadow: 0 0 1rem
-    color-mix(in srgb, var(--preview-accent) 30%, transparent);
+  filter: drop-shadow(
+    0 0 0.65rem color-mix(in srgb, var(--preview-accent) 30%, transparent)
+  );
   display: flex;
   font-size: 2rem;
   justify-content: center;
-  overflow: hidden;
   position: relative;
   width: 100%;
 }
@@ -2127,7 +2136,7 @@ a:hover {
 .project-submissions__generated-icon img {
   height: 100%;
   inset: 0;
-  object-fit: cover;
+  object-fit: contain;
   position: absolute;
   width: 100%;
 }

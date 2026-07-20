@@ -729,14 +729,10 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     }
     .class-webring-widget__circle {
       align-items: center;
-      background: color-mix(in srgb, var(--ring-color) 8%, white);
-      border: 1px solid rgba(56,44,40,.18);
-      border-radius: 50%;
-      box-shadow:
-        0 .18rem .55rem rgba(56,44,40,.14),
-        0 0 .5rem color-mix(in srgb, var(--ring-color) 18%, transparent);
       color: #222;
       display: flex;
+      filter: drop-shadow(0 .18rem .28rem rgba(56,44,40,.14))
+        drop-shadow(0 0 .35rem color-mix(in srgb, var(--ring-color) 22%, transparent));
       justify-content: center;
       position: absolute;
       text-decoration: none;
@@ -785,10 +781,9 @@ if (!document.querySelector('[data-class-webring-widget]')) {
       animation: class-webring-pool-pulse 1.37s ease-in-out both;
     }
     .class-webring-widget__circle img {
-      border-radius: inherit;
       height: 100%;
       inset: 0;
-      object-fit: cover;
+      object-fit: contain;
       position: absolute;
       width: 100%;
     }
