@@ -68,6 +68,17 @@ const MAX_TITLE_LENGTH = 120;
 const MAX_DESCRIPTION_LENGTH = 240;
 const MAX_EMOJI_LENGTH = 12;
 const DEFAULT_ACCENT_COLOR = '#f05a47';
+const SUBMISSION_DATE_FORMAT = new Intl.DateTimeFormat(undefined, {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+});
+
+function submissionDate(value: unknown): Date | null {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return null;
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
 
 function projectDataSource(): string {
   return `${window.location.host}/showcase#${PROJECTS_ELEMENT_ID}`;
@@ -636,6 +647,7 @@ export const ProjectSubmissions = withSharedState<
                       project.sharedObject,
                       project.id,
                     );
+                    const submittedAt = submissionDate(project.submittedAt);
 
                     return (
                       <li
@@ -651,9 +663,34 @@ export const ProjectSubmissions = withSharedState<
                           {project.title} <span aria-hidden="true">↗</span>
                         </a>
                         {adminMode ? (
-                          <span className="project-submissions__mine-owner">
-                            Submitted by {project.name}
-                          </span>
+                          <dl className="project-submissions__mine-submitter">
+                            <div>
+                              <dt>Submitted by</dt>
+                              <dd>{project.name}</dd>
+                            </div>
+                            <div>
+                              <dt>Submitted</dt>
+                              <dd>
+                                {submittedAt ? (
+                                  <time dateTime={submittedAt.toISOString()}>
+                                    {SUBMISSION_DATE_FORMAT.format(submittedAt)}
+                                  </time>
+                                ) : (
+                                  'Date not recorded'
+                                )}
+                              </dd>
+                            </div>
+                            <div>
+                              <dt>PlayHTML identity</dt>
+                              <dd>
+                                {project.submittedBy ? (
+                                  <code>{project.submittedBy}</code>
+                                ) : (
+                                  'Identity not recorded'
+                                )}
+                              </dd>
+                            </div>
+                          </dl>
                         ) : null}
                         <div className="project-submissions__mine-id">
                           <span>Permanent shared ID</span>

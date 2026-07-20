@@ -2315,7 +2315,6 @@ a:hover {
   border-top-color: var(--red);
 }
 
-.project-submissions__mine-owner,
 .project-submissions__mine-empty {
   color: #70534c;
   font-size: 0.75rem;
@@ -2370,6 +2369,42 @@ a:hover {
   transition:
     background 0.15s ease,
     transform 0.15s ease;
+}
+
+.project-submissions__mine-submitter {
+  background: #f6eee7;
+  border-radius: 0.55rem;
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0.65rem;
+  width: 100%;
+}
+
+.project-submissions__mine-submitter > div {
+  display: grid;
+  gap: 0.3rem;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+}
+
+.project-submissions__mine-submitter dt {
+  color: #80645d;
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.project-submissions__mine-submitter dd {
+  color: #5e403b;
+  font-size: 0.7rem;
+  margin: 0;
+  min-width: 0;
+}
+
+.project-submissions__mine-submitter code {
+  font-size: 0.65rem;
+  overflow-wrap: anywhere;
 }
 
 .project-submissions__mine-id {
