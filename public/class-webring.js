@@ -21,62 +21,119 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     ? configuredRegistry.replace(/^https?:\/\//, '').replace(/\/$/, '')
     : SCRIPT_URL.host;
   const dataSource = `${registryLocation}/showcase#student-projects`;
+  const registryProtocol =
+    configuredRegistry?.match(/^https?:\/\//)?.[0] ?? `${SCRIPT_URL.protocol}//`;
+  const playgroundUrl = new URL(
+    '/playground',
+    `${registryProtocol}${registryLocation}`,
+  );
   const isRegistryPage =
     window.location.host === registryLocation &&
     window.location.pathname.replace(/\/$/, '') === '/showcase';
   const demoMode = scriptElement?.dataset.demo === 'true';
+  if (demoMode) playgroundUrl.searchParams.set('demo', 'true');
   const debugMode = scriptElement?.dataset.debug === 'true';
-  const variant =
-    scriptElement?.dataset.variant === 'expandable' ? 'expandable' : 'peek';
   const label = 'Benches for the Internet';
   const widget = document.createElement('aside');
   const registryDataEvent = 'class-webring:registry-data';
   const registryDataRequestEvent = 'class-webring:request-data';
-  let expanded = scriptElement?.dataset.expanded === 'true';
+  const declaredIconCache = new Map();
+  let expanded = false;
   let latestProjects = [];
 
-  const demoProjects = [
-    {
-      id: 'demo-garden',
-      name: 'Mina',
-      title: 'Night Garden',
-      url: 'https://example.com/garden',
-      emoji: '🌱',
-      imageUrl: new URL('/pixel-bunny.png', SCRIPT_URL).href,
-      accentColor: '#7a9574',
-      submittedAt: 1,
-    },
-    {
-      id: 'demo-radio',
-      name: 'Jun',
-      title: 'Kitchen Radio',
-      url: 'https://example.com/radio',
-      emoji: '📻',
-      imageUrl: new URL('/red-stool.png', SCRIPT_URL).href,
-      accentColor: '#c0373c',
-      submittedAt: 2,
-    },
-    {
-      id: 'demo-moon',
-      name: 'Ari',
-      title: 'Moon Room',
-      url: 'https://example.com/moon',
-      emoji: '🌙',
-      imageUrl: new URL('/demo/cat.jpg', SCRIPT_URL).href,
-      accentColor: '#274b9e',
-      submittedAt: 3,
-    },
-    {
-      id: 'demo-library',
-      name: 'Sol',
-      title: 'Tiny Library',
-      url: 'https://example.com/library',
-      emoji: '📚',
-      imageUrl: new URL('/persian-rug.png', SCRIPT_URL).href,
-      accentColor: '#e8a63a',
-      submittedAt: 4,
-    },
+  const demoNames = [
+    'Mina',
+    'Jun',
+    'Ari',
+    'Sol',
+    'Inez',
+    'Bo',
+    'Luz',
+    'Mori',
+    'Nia',
+    'Paz',
+    'Rae',
+    'Tao',
+    'Uma',
+    'Vale',
+    'Wren',
+    'Xio',
+    'Yara',
+    'Zed',
+    'Ayo',
+    'Bela',
+    'Cleo',
+    'Dara',
+    'Eli',
+    'Fia',
+    'Geo',
+    'Hana',
+    'Io',
+    'Jae',
+    'Koa',
+    'Lio',
   ];
+  const demoTitles = [
+    'Night Garden',
+    'Kitchen Radio',
+    'Moon Room',
+    'Tiny Library',
+    'Soft Map',
+    'Window Seat',
+    'Cloud Index',
+    'Listening Table',
+    'Pocket Weather',
+    'Slow Arcade',
+    'Secret Porch',
+    'Small Signals',
+    'Neighborhood Clock',
+    'Shared Blanket',
+    'Internet Teahouse',
+    'Tender Machine',
+    'Moving Meadow',
+    'Friendly Static',
+    'Open Kitchen',
+    'Drifting Shelf',
+    'Common Thread',
+    'Quiet Broadcast',
+    'Lantern Exchange',
+    'Public Pillow',
+    'Borrowed Window',
+    'Daily Pebble',
+    'Little Portal',
+    'Warm Server',
+    'Garden Hotline',
+    'Last Light',
+  ];
+  const demoImages = [
+    '/pixel-bunny.png',
+    '/red-stool.png',
+    '/demo/cat.jpg',
+    '/demo/dog.png',
+    '/persian-rug.png',
+    '/images/do-not-turn-off.jpg',
+    '/week-3/saint-frank-communal-table.png',
+  ];
+  const demoEmojis = ['🌱', '📻', '🌙', '📚', '🫧', '🪑', '☁️', '🍵'];
+  const demoColors = [
+    '#7a9574',
+    '#c0373c',
+    '#274b9e',
+    '#e8a63a',
+    '#9b6aa2',
+    '#438a8f',
+  ];
+  const demoProjects = Array.from({ length: 30 }, (_, index) => ({
+    id: `demo-${index + 1}`,
+    name: demoNames[index],
+    title: demoTitles[index],
+    url: `https://example.com/place-${index + 1}`,
+    emoji: demoEmojis[index % demoEmojis.length],
+    imageUrl: new URL(demoImages[index % demoImages.length], SCRIPT_URL).href,
+    accentColor: demoColors[index % demoColors.length],
+    submittedAt: index + 1,
+    demo: true,
+  }));
 
   function safeUrl(value) {
     if (typeof value !== 'string') return null;
@@ -101,12 +158,80 @@ if (!document.querySelector('[data-class-webring-widget]')) {
       : fallback;
   }
 
-  function faviconUrl(projectUrl) {
+  function conventionalFaviconUrls(projectUrl) {
     try {
-      return new URL('/favicon.ico', projectUrl).href;
+      const { origin } = new URL(projectUrl);
+      return [
+        '/favicon.ico',
+        '/favicon.png',
+        '/favicon.jpg',
+        '/favicon.jpeg',
+        '/favicon.gif',
+        '/favicon.svg',
+        '/apple-touch-icon.png',
+        '/apple-touch-icon-precomposed.png',
+      ].map((path) => new URL(path, origin).href);
     } catch {
-      return null;
+      return [];
     }
+  }
+
+  function discoverDeclaredIconUrls(projectUrl) {
+    if (declaredIconCache.has(projectUrl)) {
+      return declaredIconCache.get(projectUrl);
+    }
+
+    const request = (async () => {
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 1800);
+
+      try {
+        const response = await fetch(projectUrl, {
+          cache: 'force-cache',
+          credentials: 'omit',
+          headers: { Accept: 'text/html' },
+          referrerPolicy: 'no-referrer',
+          signal: controller.signal,
+        });
+        if (!response.ok) return [];
+
+        const contentType = response.headers.get('content-type');
+        if (contentType && !contentType.includes('text/html')) return [];
+
+        const html = await response.text();
+        const documentSnapshot = new DOMParser().parseFromString(
+          html,
+          'text/html',
+        );
+
+        return [...documentSnapshot.querySelectorAll('link[rel][href]')]
+          .filter((link) =>
+            link.rel
+              .toLowerCase()
+              .split(/\s+/)
+              .some((token) => token === 'icon' || token.endsWith('-icon')),
+          )
+          .map((link) => {
+            try {
+              const iconUrl = new URL(link.getAttribute('href'), response.url);
+              return iconUrl.protocol === 'http:' ||
+                iconUrl.protocol === 'https:'
+                ? iconUrl.href
+                : null;
+            } catch {
+              return null;
+            }
+          })
+          .filter(Boolean);
+      } catch {
+        return [];
+      } finally {
+        window.clearTimeout(timeout);
+      }
+    })();
+
+    declaredIconCache.set(projectUrl, request);
+    return request;
   }
 
   function cachedFaviconUrl(projectUrl) {
@@ -135,8 +260,8 @@ if (!document.querySelector('[data-class-webring-widget]')) {
             name: safeText(project.name, 80, 'someone'),
             title,
             url,
-            emoji: safeText(project.emoji, 12, '✦'),
-            faviconUrl: faviconUrl(url),
+            emoji: safeText(project.emoji, 12, '🌱'),
+            faviconUrls: conventionalFaviconUrls(url),
             cachedFaviconUrl: cachedFaviconUrl(url),
             imageUrl: safeUrl(project.imageUrl),
             accentColor: safeColor(project.accentColor, '#274b9e'),
@@ -150,15 +275,6 @@ if (!document.querySelector('[data-class-webring-widget]')) {
       .sort((left, right) => left.submittedAt - right.submittedAt);
   }
 
-  function normalizeLocation(value) {
-    try {
-      const url = new URL(value);
-      return `${url.host}${url.pathname.replace(/\/$/, '')}`;
-    } catch {
-      return '';
-    }
-  }
-
   function makeLink(project, className) {
     const link = document.createElement('a');
     link.className = className;
@@ -169,29 +285,49 @@ if (!document.querySelector('[data-class-webring-widget]')) {
   }
 
   function appendProjectImage(container, project) {
-    const imageSources = [
-      project.faviconUrl,
-      project.cachedFaviconUrl,
-      project.imageUrl,
-    ].filter(
-      (source, index, sources) => source && sources.indexOf(source) === index,
-    );
-    if (imageSources.length === 0) return;
-
     const image = document.createElement('img');
-    let sourceIndex = 0;
-    image.src = imageSources[sourceIndex];
     image.alt = '';
+    image.decoding = 'async';
     image.loading = 'lazy';
-    image.addEventListener('error', () => {
-      sourceIndex += 1;
-      if (imageSources[sourceIndex]) {
-        image.src = imageSources[sourceIndex];
-      } else {
-        image.remove();
-      }
-    });
+    image.referrerPolicy = 'no-referrer';
     container.append(image);
+
+    const declaredIcons = project.demo
+      ? Promise.resolve([])
+      : discoverDeclaredIconUrls(project.url);
+
+    void declaredIcons.then((declaredIconUrls) => {
+      if (!image.isConnected) return;
+
+      const imageSources = (
+        project.demo
+          ? [project.imageUrl]
+          : [
+              ...declaredIconUrls,
+              ...(project.faviconUrls ?? []),
+              project.cachedFaviconUrl,
+              project.imageUrl,
+            ]
+      ).filter(
+        (source, index, sources) => source && sources.indexOf(source) === index,
+      );
+      let sourceIndex = 0;
+
+      const loadNextSource = () => {
+        const source = imageSources[sourceIndex];
+        if (!source) {
+          image.remove();
+          return;
+        }
+        image.src = source;
+      };
+
+      image.addEventListener('error', () => {
+        sourceIndex += 1;
+        loadNextSource();
+      });
+      loadNextSource();
+    });
   }
 
   function makeExpandableCircle(project, className) {
@@ -211,73 +347,8 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     return link;
   }
 
-  function makeProjectLink(project, index, total) {
-    const link = document.createElement('a');
-    link.className = 'class-webring-widget__link';
-    link.href = project.url;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    link.setAttribute('aria-label', `${project.title} by ${project.name}`);
-    link.style.setProperty('--ring-color', project.accentColor);
-    link.style.setProperty('--ring-delay', `${index * -0.17}s`);
-    link.style.setProperty('--ring-tilt', `${((index % 5) - 2) * 2.5}deg`);
-
-    const angle = (index / Math.max(total, 1)) * Math.PI * 2 - Math.PI / 2;
-    link.style.left = `${50 + Math.cos(angle) * 37}%`;
-    link.style.top = `${50 + Math.sin(angle) * 37}%`;
-
-    const disc = document.createElement('span');
-    disc.className = 'class-webring-widget__disc';
-
-    const fallback = document.createElement('span');
-    fallback.className = 'class-webring-widget__fallback';
-    fallback.textContent = project.emoji;
-    disc.append(fallback);
-
-    appendProjectImage(disc, project);
-
-    link.append(disc);
-    return link;
-  }
-
-  function makeCenterLink(project) {
-    const link = document.createElement('a');
-    link.className = 'class-webring-widget__center';
-    link.href = project?.url ?? new URL('/showcase', SCRIPT_URL).href;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    link.setAttribute(
-      'aria-label',
-      project ? `Visit ${project.title}` : 'Visit the class Showcase',
-    );
-    link.textContent = '✦';
-    return link;
-  }
-
-  function renderPeek() {
-    const projects =
-      latestProjects.length > 0 ? latestProjects : demoMode ? demoProjects : [];
-    const visibleProjects = projects.slice(0, 8);
-    const randomProject =
-      projects.length > 0
-        ? projects[Math.floor(Math.random() * projects.length)]
-        : null;
-
-    widget.replaceChildren();
-    widget.className = 'class-webring-widget class-webring-widget--peek';
-
-    const orbit = document.createElement('div');
-    orbit.className = 'class-webring-widget__orbit';
-    visibleProjects.forEach((project, index) => {
-      orbit.append(makeProjectLink(project, index, visibleProjects.length));
-    });
-
-    widget.append(orbit, makeCenterLink(randomProject));
-  }
-
   function renderExpandable() {
-    const projects =
-      latestProjects.length > 0 ? latestProjects : demoMode ? demoProjects : [];
+    const projects = demoMode ? demoProjects : latestProjects;
 
     widget.replaceChildren();
     widget.className = `class-webring-widget class-webring-widget--expandable${
@@ -306,9 +377,7 @@ if (!document.querySelector('[data-class-webring-widget]')) {
       toggle.className = 'class-webring-widget__toggle';
       toggle.type = 'button';
       toggle.setAttribute('aria-expanded', 'false');
-      const sparkle = document.createElement('span');
-      sparkle.textContent = '✦';
-      toggle.append(sparkle, document.createTextNode(label));
+      toggle.textContent = label;
       toggle.addEventListener('click', () => {
         expanded = true;
         renderExpandable();
@@ -331,80 +400,19 @@ if (!document.querySelector('[data-class-webring-widget]')) {
       expanded = false;
       renderExpandable();
     });
-    panel.append(close);
 
-    const center = document.createElement('div');
-    center.className = 'class-webring-widget__expanded-center';
-    const eyebrow = document.createElement('small');
-    eyebrow.textContent = 'A neighborhood of independent sites';
-    const title = document.createElement('strong');
-    title.textContent = label;
-    center.append(eyebrow, title);
-    panel.append(center);
-
-    if (projects.length === 0) {
-      const empty = document.createElement('p');
-      empty.className = 'class-webring-widget__empty';
-      empty.textContent = 'The ring is waiting for its first place.';
-      panel.append(empty);
-      widget.append(panel);
-      return;
-    }
-
-    const circles = document.createElement('div');
-    circles.className = 'class-webring-widget__circles';
-    projects.forEach((project, index) => {
-      const maxPerOrbit = 16;
-      const orbitIndex = Math.floor(index / maxPerOrbit);
-      const itemIndex = index % maxPerOrbit;
-      const itemsInOrbit = Math.min(
-        maxPerOrbit,
-        projects.length - orbitIndex * maxPerOrbit,
-      );
-      const angle =
-        (itemIndex / Math.max(itemsInOrbit, 1)) * Math.PI * 2 - Math.PI / 2;
-      const radius = Math.max(22, 44 - orbitIndex * 11);
-      const circle = makeExpandableCircle(
-        project,
-        'class-webring-widget__circle class-webring-widget__circle--large',
-      );
-      circle.style.left = `${50 + Math.cos(angle) * radius}%`;
-      circle.style.top = `${50 + Math.sin(angle) * radius}%`;
-      circle.style.setProperty('--ring-delay', `${index * -0.08}s`);
-      circles.append(circle);
-    });
-    panel.append(circles);
-
-    const currentLocation = normalizeLocation(window.location.href);
-    const currentIndex = projects.findIndex(
-      (project) => normalizeLocation(project.url) === currentLocation,
-    );
-    const baseIndex = currentIndex >= 0 ? currentIndex : 0;
-    const previous =
-      projects[(baseIndex - 1 + projects.length) % projects.length];
-    const next = projects[(baseIndex + 1) % projects.length];
-    const random = projects[Math.floor(Math.random() * projects.length)];
-    const navigation = document.createElement('nav');
-    navigation.className = 'class-webring-widget__nav';
-
-    const previousLink = makeLink(previous, 'class-webring-widget__nav-link');
-    previousLink.textContent = `← ${previous.name}`;
-    const randomLink = makeLink(random, 'class-webring-widget__nav-link');
-    randomLink.textContent = 'Random ✦';
-    const nextLink = makeLink(next, 'class-webring-widget__nav-link');
-    nextLink.textContent = `${next.name} →`;
-    navigation.append(previousLink, randomLink, nextLink);
-    panel.append(navigation);
+    const frame = document.createElement('iframe');
+    frame.className = 'class-webring-widget__frame';
+    frame.src = playgroundUrl.href;
+    frame.title = label;
+    frame.allow = 'clipboard-write';
+    panel.append(frame, close);
     widget.append(panel);
   }
 
   function updateProjects(data, source) {
     latestProjects = sanitizeProjects(data);
-    if (variant === 'expandable') {
-      renderExpandable();
-    } else {
-      renderPeek();
-    }
+    renderExpandable();
 
     widget.dataset.projectCount = String(latestProjects.length);
     window.dispatchEvent(
@@ -425,114 +433,15 @@ if (!document.querySelector('[data-class-webring-widget]')) {
   style.dataset.classWebringStyle = '';
   style.textContent = `
     .class-webring-widget {
-      --ring-paper: #f4efe5;
-      --ring-ink: #1c1c1c;
-      --ring-blue: #274b9e;
       z-index: 2147483000;
     }
     .class-webring-widget *,
     .class-webring-widget *::before,
     .class-webring-widget *::after { box-sizing: border-box; }
-    .class-webring-widget--peek {
-      bottom: -4.4rem;
-      height: 8rem;
-      position: fixed;
-      right: -4.4rem;
-      transform: rotate(-105deg) scale(.78);
-      transition:
-        bottom .5s cubic-bezier(.2, .8, .3, 1),
-        right .5s cubic-bezier(.2, .8, .3, 1),
-        transform .6s cubic-bezier(.2, .8, .3, 1);
-      width: 8rem;
-    }
-    .class-webring-widget--peek:hover,
-    .class-webring-widget--peek:focus-within {
-      bottom: .55rem;
-      right: .55rem;
-      transform: rotate(0) scale(1);
-    }
-    .class-webring-widget__orbit {
-      animation: class-webring-spin 48s linear infinite;
-      inset: 0;
-      position: absolute;
-    }
-    .class-webring-widget__link {
-      height: 1.85rem;
-      position: absolute;
-      transform: translate(-50%, -50%);
-      width: 1.85rem;
-    }
-    .class-webring-widget__disc {
-      align-items: center;
-      animation: class-webring-counter-spin 48s linear infinite;
-      background: color-mix(in srgb, var(--ring-color) 30%, var(--ring-paper));
-      border: 1.5px solid var(--ring-ink);
-      border-radius: 50%;
-      box-shadow: 2px 2px 0 var(--ring-ink);
-      color: var(--ring-ink);
-      display: flex;
-      font: .85rem/1 system-ui, sans-serif;
-      height: 100%;
-      justify-content: center;
-      overflow: hidden;
-      transform: rotate(var(--ring-tilt));
-      transition: box-shadow .12s cubic-bezier(.2, .8, .3, 1), transform .12s cubic-bezier(.2, .8, .3, 1);
-      width: 100%;
-    }
-    .class-webring-widget__link:hover,
-    .class-webring-widget__link:focus-visible { z-index: 2; }
-    .class-webring-widget__link:hover .class-webring-widget__disc,
-    .class-webring-widget__link:focus-visible .class-webring-widget__disc {
-      box-shadow: 4px 4px 0 var(--ring-ink);
-      outline: 3px solid var(--ring-paper);
-      transform: translate(-2px, -2px) rotate(var(--ring-tilt)) scale(1.18);
-    }
-    .class-webring-widget__link:focus-visible { outline: none; }
-    .class-webring-widget__disc img {
-      border-radius: inherit;
-      height: 100%;
-      inset: 0;
-      object-fit: cover;
-      position: absolute;
-      width: 100%;
-    }
-    .class-webring-widget__fallback { position: relative; }
-    .class-webring-widget__center {
-      align-items: center;
-      background: var(--ring-paper);
-      border: 1.5px solid var(--ring-ink);
-      border-radius: 50%;
-      box-shadow: 2px 2px 0 var(--ring-ink);
-      color: var(--ring-blue);
-      display: flex;
-      font: 700 .85rem/1 ui-monospace, monospace;
-      height: 1.75rem;
-      justify-content: center;
-      left: 50%;
-      position: absolute;
-      text-decoration: none;
-      top: 50%;
-      transform: translate(-50%, -50%) rotate(-8deg);
-      transition: box-shadow .12s cubic-bezier(.2, .8, .3, 1), transform .12s cubic-bezier(.2, .8, .3, 1);
-      width: 1.75rem;
-      z-index: 3;
-    }
-    .class-webring-widget__center:hover,
-    .class-webring-widget__center:focus-visible {
-      box-shadow: 4px 4px 0 var(--ring-ink);
-      outline: 3px solid var(--ring-paper);
-      transform: translate(calc(-50% - 2px), calc(-50% - 2px)) rotate(8deg) scale(1.08);
-    }
-    .class-webring-widget:hover .class-webring-widget__orbit,
-    .class-webring-widget:hover .class-webring-widget__disc,
-    .class-webring-widget:focus-within .class-webring-widget__orbit,
-    .class-webring-widget:focus-within .class-webring-widget__disc {
-      animation-play-state: paused;
-    }
     .class-webring-widget--expandable {
       bottom: .65rem;
       color: #382c28;
-      font-family: Georgia, 'Times New Roman', serif;
+      font-family: var(--font-display, inherit);
       position: fixed;
       right: .65rem;
     }
@@ -551,22 +460,18 @@ if (!document.querySelector('[data-class-webring-widget]')) {
       border: 0;
       color: currentColor;
       cursor: pointer;
-      font: italic .8rem/1.1 Georgia, serif;
+      font-family: inherit;
+      font-size: .8rem;
+      font-style: italic;
+      line-height: 1.1;
       left: 50%;
       padding: .5rem;
       position: absolute;
       text-align: center;
-      text-decoration: underline dotted;
-      text-underline-offset: .22rem;
+      text-decoration: none;
       top: 50%;
       transform: translate(-50%, -50%);
       width: 5.5rem;
-    }
-    .class-webring-widget__toggle span {
-      color: #e00000;
-      display: block;
-      font-style: normal;
-      margin-bottom: .15rem;
     }
     .class-webring-widget--expandable.is-expanded {
       inset: 0;
@@ -574,65 +479,36 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     }
     .class-webring-widget__world {
       animation: class-webring-in .3s ease-out;
-      background:
-        radial-gradient(circle at 50% 48%, rgba(255,255,255,.96) 0 8%, transparent 35%),
-        radial-gradient(circle at 20% 15%, rgba(255,190,153,.27), transparent 28%),
-        radial-gradient(circle at 82% 80%, rgba(130,190,198,.24), transparent 29%),
-        rgba(255, 250, 232, .97);
+      background: #f8efe3;
       height: 100%;
       overflow: hidden;
       position: relative;
       width: 100%;
     }
-    .class-webring-widget__world::before {
-      background-image: radial-gradient(circle, rgba(80,45,35,.12) 0 1px, transparent 1.5px);
-      background-size: 2.8rem 2.8rem;
-      content: '';
+    .class-webring-widget__frame {
+      border: 0;
+      display: block;
+      height: 100%;
       inset: 0;
-      opacity: .35;
-      pointer-events: none;
       position: absolute;
-    }
-    .class-webring-widget__expanded-center {
-      left: 50%;
-      max-width: min(40vw, 34rem);
-      position: absolute;
-      text-align: center;
-      top: 48%;
-      transform: translate(-50%, -50%);
-      z-index: 2;
-    }
-    .class-webring-widget__expanded-center small {
-      color: #73564d;
-      display: block;
-      font: .65rem/1.2 Arial, sans-serif;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-    }
-    .class-webring-widget__expanded-center strong {
-      color: #e00000;
-      display: block;
-      font-size: clamp(2.4rem, 7vw, 7rem);
-      font-weight: 400;
-      letter-spacing: -.06em;
-      line-height: .76;
-      margin: .6rem 0 1rem;
+      width: 100%;
     }
     .class-webring-widget__close {
-      background: transparent;
-      border: 0;
+      background: rgba(255,255,255,.92);
+      border: 1px solid rgba(224,0,0,.25);
+      border-radius: 50%;
       color: #e00000;
       cursor: pointer;
-      font: 400 2.2rem/1 Georgia, serif;
+      font-family: inherit;
+      font-size: 2.2rem;
+      font-weight: 400;
+      height: 2.8rem;
+      line-height: 1;
       position: absolute;
       right: 1.2rem;
       top: 1rem;
+      width: 2.8rem;
       z-index: 5;
-    }
-    .class-webring-widget__circles {
-      inset: clamp(2rem, 5vw, 5rem);
-      position: absolute;
-      z-index: 3;
     }
     .class-webring-widget__circle {
       align-items: center;
@@ -653,21 +529,6 @@ if (!document.querySelector('[data-class-webring-widget]')) {
       margin: -1.175rem 0 0 -1.175rem;
       width: 2.35rem;
     }
-    .class-webring-widget__circle--large {
-      animation: class-webring-float 4s var(--ring-delay) ease-in-out infinite;
-      font-size: clamp(1.9rem, 4.5vw, 3.8rem);
-      height: clamp(5.5rem, 12vw, 10.5rem);
-      margin: calc(clamp(5.5rem, 12vw, 10.5rem) / -2) 0 0 calc(clamp(5.5rem, 12vw, 10.5rem) / -2);
-      transition: filter .18s ease, box-shadow .18s ease;
-      width: clamp(5.5rem, 12vw, 10.5rem);
-    }
-    .class-webring-widget__circle--large:hover,
-    .class-webring-widget__circle--large:focus-visible {
-      box-shadow: 0 0 2.2rem .8rem color-mix(in srgb, var(--ring-color) 62%, transparent);
-      filter: saturate(1.12) brightness(1.04);
-      outline: none;
-      z-index: 4;
-    }
     .class-webring-widget__circle img {
       border-radius: inherit;
       height: 100%;
@@ -681,7 +542,9 @@ if (!document.querySelector('[data-class-webring-widget]')) {
       border-radius: 999px;
       bottom: -.5rem;
       color: #5d423b;
-      font: .6rem/1 Arial, sans-serif;
+      font-family: inherit;
+      font-size: .6rem;
+      line-height: 1;
       font-style: normal;
       left: 50%;
       max-width: 6rem;
@@ -698,69 +561,20 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     .class-webring-widget__circle:hover em,
     .class-webring-widget__circle:focus-visible em { opacity: 1; }
     .class-webring-widget__circle--mini em { display: none; }
-    .class-webring-widget__nav {
-      bottom: 1.2rem;
-      display: grid;
-      gap: 1rem;
-      grid-template-columns: 1fr auto 1fr;
-      left: 50%;
-      max-width: 42rem;
-      position: absolute;
-      transform: translateX(-50%);
-      width: calc(100% - 3rem);
-      z-index: 5;
-    }
-    .class-webring-widget__nav-link {
-      color: #e00000;
-      font: italic .78rem/1.2 Georgia, serif;
-      overflow: hidden;
-      padding: .35rem .1rem;
-      text-decoration: underline dotted;
-      text-overflow: ellipsis;
-      text-underline-offset: .2rem;
-      white-space: nowrap;
-    }
-    .class-webring-widget__nav-link:last-child { text-align: right; }
-    .class-webring-widget__empty {
-      left: 50%;
-      margin: 4rem 0 0;
-      position: absolute;
-      top: 50%;
-      transform: translate(-50%, -50%);
-    }
     @keyframes class-webring-in {
       from { opacity: 0; transform: scale(.98); }
     }
     @keyframes class-webring-spin { to { transform: rotate(360deg); } }
     @keyframes class-webring-counter-spin { to { transform: rotate(-360deg); } }
-    @keyframes class-webring-float { 50% { translate: 0 -.45rem; } }
     @media (max-width: 520px) {
-      .class-webring-widget--peek:hover,
-      .class-webring-widget--peek:focus-within { bottom: 3.9rem; }
       .class-webring-widget__miniature { height: 8.5rem; width: 8.5rem; }
       .class-webring-widget__circle--mini {
         height: 2rem;
         margin: -1rem 0 0 -1rem;
         width: 2rem;
       }
-      .class-webring-widget__circles { inset: 4.5rem 1rem 6rem; }
-      .class-webring-widget__circle--large {
-        font-size: 1.55rem;
-        height: clamp(3.4rem, 15vw, 4.6rem);
-        margin: calc(clamp(3.4rem, 15vw, 4.6rem) / -2) 0 0 calc(clamp(3.4rem, 15vw, 4.6rem) / -2);
-        width: clamp(3.4rem, 15vw, 4.6rem);
-      }
-      .class-webring-widget__expanded-center { max-width: 58vw; }
-      .class-webring-widget__expanded-center strong {
-        font-size: clamp(2.2rem, 14vw, 4rem);
-      }
-      .class-webring-widget__expanded-center small { font-size: .52rem; }
-      .class-webring-widget__nav { bottom: .75rem; }
     }
     @media (prefers-reduced-motion: reduce) {
-      .class-webring-widget--peek { transition: none; }
-      .class-webring-widget__orbit,
-      .class-webring-widget__disc,
       .class-webring-widget__world,
       .class-webring-widget__mini-orbit,
       .class-webring-widget__circle { animation: none; }
@@ -786,11 +600,7 @@ if (!document.querySelector('[data-class-webring-widget]')) {
   document.head.append(style);
   document.body.append(widget);
   widget.dataset.projectCount = '0';
-  if (variant === 'expandable') {
-    renderExpandable();
-  } else {
-    renderPeek();
-  }
+  renderExpandable();
 
   if (isRegistryPage) {
     window.dispatchEvent(new Event(registryDataRequestEvent));

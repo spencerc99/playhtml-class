@@ -43,8 +43,6 @@ When the **World Wide Web** was young, it was conceived as a distributed system 
 
 [![A recreation of the first website in an early line-mode browser](https://home.cern/wp-content/uploads/2026/05/Screenshot-World-Wide-Web-project-small-2-1024x619.png)](https://info.cern.ch/)
 
-_[The first website](https://info.cern.ch/) explained the Web itself and linked to browsers, servers, software, and other online information. [Browse CERN’s reconstruction.](https://info.cern.ch/)_
-
 This is why some servers were designed to return `index.html` when someone visits a directory, and if no index file exsits, the server may generate a directory listing. For example, if you visit `https://example.com/public/`, the server may return `https://example.com/public/index.html` if it exists. If not, it may return a list of files in that directory:
 
 ```text
@@ -57,11 +55,11 @@ reading-list.pdf
 
 One of the most important aspects of the early Web was the [hyperlink](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a), which made connecting and linking resources possiblebut. However, it did not guarantee visibility. Someone had to discover a page, decide it mattered, and link to it. Therefore, many websites were isolated and difficult to find.
 
-[Yahoo emerged in 1994 as **Jerry and David’s Guide to the World Wide Web**.](https://web.stanford.edu/class/e145/2007_fall/materials/Yahoo_1995_STVPCase.pdf) It was initially a human-curated directory rather than a modern crawler-based search engine.
+[Yahoo emerged in 1994.](https://web.stanford.edu/class/e145/2007_fall/materials/Yahoo_1995_STVPCase.pdf) It was initially a human-curated directory rather than a modern crawler-based search engine.
 
-[![Yahoo in 1994, organized as a hierarchy of categories](https://www.webdesignmuseum.org/uploaded/timeline/yahoo/yahoo-1994.png)](https://www.webdesignmuseum.org/gallery/yahoo-1994)
+[![Yahoo in 1994, organized as a hierarchy of categories](/images/yahoo-1994.png)](https://www.webdesignmuseum.org/gallery/yahoo-1994)
 
-_Yahoo presented the Web as categories such as Art, Business, Computers, and Politics. [View the archived interface.](https://www.webdesignmuseum.org/gallery/yahoo-1994)_
+Yahoo presented the Web as categories such as Art, Business, Computers, and Politics. [View the archived interface.](https://www.webdesignmuseum.org/gallery/yahoo-1994)
 
 Directories and search engines solved discovery by creating centralized maps of the Web. This made navigation easier, but also concentrated power: directories decided what belonged in each category, while search engines decided what appeared first.
 
@@ -79,7 +77,7 @@ Unlike a search engine, a web ring made curation explicit. Joining a web ring me
 
 A contemporary example is the [XXIIVV Webring](https://github.com/xxiivv/webring), which connects artists’ and developers’ hand-built personal websites.
 
-### Let's create a web ring together!
+## Let's create a web ring together!
 
 The easiest way to create a web ring is to have a page that contains links to all the other sites in the ring. Each site in the ring would have a link back to the main page, creating a circular structure.
 
@@ -96,88 +94,99 @@ However, this is not as visually interesting or dynamic as we would like it to b
 ></script>
 ```
 
-3. Each site is displayed with its favicon. The embed tries the site's own `/favicon.ico`, then a favicon cache, the submitted circle image, and finally the project's emoji. This fallback order also supports sites whose icon is not stored at the traditional path.
+3. Each site is displayed with its favicon. The embed first looks for every icon declared in the site's `<link rel="icon">` tags. It then tries conventional `.ico`, `.png`, `.jpg`, `.jpeg`, `.gif`, `.svg`, and Apple touch-icon paths, followed by a favicon cache, the submitted circle image, and finally the project's emoji.
 
-### Verify the live registry
+### What's a favicon?
 
-Test the complete data path before class:
+A **favicon** is a small icon that represents a website. It is typically displayed in the browser's address bar, next to the page title in tabs, and in bookmarks. Favicons help users quickly identify and navigate to their favorite websites.
 
-1. Open the [`/showcase`](/showcase) submission form and the hidden [`/webring-demo`](/webring-demo) in separate windows.
-2. Submit a temporary project with a real public URL. It should appear in the Showcase and both embed variants without refreshing.
-3. Edit its title or URL under **Your submissions**. Every open ring should update.
-4. Choose **Remove** and confirm. The project should disappear from every open ring.
-5. Inspect the embed element in DevTools. Its `data-project-count` attribute should match the number of valid registry entries.
+In our web ring, we use favicons to represent each site. A site can declare the exact icon it wants:
 
-For extra console output while debugging, add `data-debug="true"` to the script tag. Every registry update will log its source and valid project count.
+```html
+<link rel="icon" href="/images/my-tiny-chair.png" type="image/png" />
+```
 
-The canonical registry is the shared element `class.playhtml.fun/showcase#student-projects`. While submissions are open it exports read-write access. After class, change `PROJECT_REGISTRY_PERMISSIONS` in `ProjectSubmissions.tsx` from `read-write` to `read-only` to freeze the registry.
+The script will prefer that declared URL whenever it can read the site's HTML.
 
-### Let's also create a shared space!
+There is one browser limitation: JavaScript may display a cross-origin image, but it may not read a cross-origin HTML page unless that page opts into CORS. When CORS blocks the HTML request, the static embed cannot inspect its `<link>` tags. That is why the conventional filenames and favicon cache remain necessary fallbacks. Reading every declaration regardless of CORS would require a server-side favicon resolver or proxy.
 
-### The one idea to teach
+You can use ICO, PNG, JPG, GIF, or SVG. Declaring the icon in your HTML is more reliable than depending only on a conventional filename:
+
+```html
+<link rel="icon" href="/favicon.ico" type="image/x-icon" />
+```
+
+## What's Next?
+
+This is the last week of class! We want to make sure you have time to reflect on your experience and share some thoughts with us. Before we say goodbye, there are a couple of things we would like to share with you:
+
+### Physical Showcase
+
+SFPC is organizing a public summer showcase at the National Academy of Design in Midtown Manhattan from **August 20–22**, with a public reception on **August 21**. This is an opportunity to present work developed in our class alongside projects from other SFPC courses.
+
+The showcase can include websites, interactive projects, videos, writing, images, performances, printed matter, or physical objects. SFPC will provide our class with a display desk, and a limited number of Windows computer terminals and shared projection equipment are also available. **Digital work and project information are due August 3.** Physical work can be dropped off on **August 18, from 10am–6pm**, and must be picked up on **August 24 or 25**.
+
+Please let us know soon if you would like to participate, especially if your project involves a performance, sound, projection, unusual installation, or other technical requirements.
+
+### Reflection Form
+
+We will dedicate 15 minutes of our class time to collecting feedback from students, please take a moment to fill out the [reflection form](https://orienting.sfpc.study/is-where-we/reflect-together/final-reflections.html) now. Your feedback is important to us and will help us improve the class for future students.
+
+
+### QA & Other Resources
+
+Here are some resources that may be helpful as you continue to develop your projects:
+
+This is the final chance for you
+
+- What's next? (45 mins):
+  - Physical Showcase (5 mins)
+  - Reflection Form (15 mins)
+  - QA & Other Resources (20 mins)
+
+## Let's also create a shared space!
+
+The Showcase is not only a list of links. Every submission creates a live object in one shared room. It begins as a red stool, but its owner can change its HTML and CSS from the class site.
 
 PlayHTML [shared elements](https://playhtml.fun/docs/advanced/shared-elements/) have:
 
-- a **source** on the participant's site
-- a **consumer** in the class Showcase
-- the same PlayHTML capability on both sides
+- a **source** with a permanent `id` and `shared`
+- a **consumer** that points to `domain/path#id` with `data-source`
+- matching capabilities on both elements
 
 They share state, but they do not need the same HTML, image, CSS, or layout.
 
-The documentation can be reduced to three rules:
+For our class ring, the direction is:
 
-1. A source has a stable `id`, `shared`, and one or more PlayHTML capabilities.
-2. A consumer points to `domain/optional-path#elementId` with `data-source`.
-3. Every capability you want to share must exist on both source and consumer. Their tags, children, classes, and styling may be completely different.
-
-Here is the basic example from the PlayHTML docs:
-
-```html
-<!-- Source on thissite.com -->
-<div id="couch" shared can-move>🛋️</div>
-
-<!-- Consumer on anothersite.com -->
-<div data-source="thissite.com#couch" can-move>🪑</div>
+```text
+your submission
+      ↓
+class.playhtml.fun creates a permanent source object
+      ↓
+your own website can subscribe to that object
 ```
 
-The source is a couch and the consumer is a chair. Their markup looks different, but their `can-move` position is shared.
+### 1. Submit the three required fields
 
-Our ring follows the same pattern:
+The form clearly marks every input. Only these are required:
 
-```html
-<!-- Source on the participant's site -->
-<img id="my-ring-charm" shared can-toggle src="/lamp.png" alt="A lamp" />
+1. Your name
+2. Project title
+3. A complete `https://` or `http://` project URL
 
-<!-- Consumer created safely by the class Showcase -->
-<img
-  data-source="student.example#my-ring-charm"
-  can-toggle
-  src="https://student.example/circle.png"
-  alt=""
-/>
+The invitation, fallback emoji, glow color, and thumbnail image URL are optional. There is no category field, source URL field, capability menu, or ID field to invent.
+
+### 2. Receive a permanent shared ID
+
+When the submission is created, the class site generates a unique ID such as:
+
+```text
+bench-night-garden-a1b2c3d4
 ```
 
-The **circle image submitted in the form is the consumer element**. The participant keeps complete control over the source element and code on their own site.
+The ID belongs to that submission, cannot be edited, and is never reused by another entry. It is visible under **Your submissions**, in the object's detail card, and in the object editor.
 
-### 1. Match the source capabilities
-
-The capability is the kind of state shared between the two sites. It is not the visual style.
-
-| Capability   | Shared state        | Participant can customize                          |
-| ------------ | ------------------- | -------------------------------------------------- |
-| `can-toggle` | on or off           | colors, images, visibility, sound, local animation |
-| `can-spin`   | rotation            | what spins and what the rotation means             |
-| `can-grow`   | scale               | what grows and how the surrounding page responds   |
-| `can-hover`  | live hover presence | what responds when someone hovers either copy      |
-| `can-move`   | dragged position    | the object, its appearance, and its surroundings   |
-
-For example, two students can both use `can-toggle`: one might light a lamp while another reveals a secret garden. The shared contract is the same; the effect is not. The form asks for the capability because the Showcase must put that matching attribute on the circle consumer—not to prescribe the participant's design.
-
-PlayHTML itself also supports `can-mirror`, `can-duplicate`, and custom `can-play`. We do not infer those from a submission because they carry DOM structure, duplication targets, or a custom data schema and renderer. Participants may use them freely on their own sites. Bringing them into the Showcase requires a specific, reviewed adapter rather than executing submitted code.
-
-### 2. Add a source to your site
-
-This is the smallest complete toggle example:
+The class playground publishes this source:
 
 ```html
 <img
@@ -260,26 +269,10 @@ The shared charm connects one element to the Showcase. This separate embed displ
 <script
   type="module"
   src="https://class.playhtml.fun/class-webring.js"
-  data-variant="peek"
 ></script>
 ```
 
-After deployment, the script lives at [`/class-webring.js`](/class-webring.js). It derives the Showcase registry from the domain serving the script and subscribes read-only.
-
-Choose either visual treatment:
-
-- `data-variant="peek"` keeps a small piece of the ring in the bottom-right corner. Hovering or focusing it spins the image orbit into view. This is the class-site default.
-- `data-variant="expandable"` restores the larger button and fullscreen image field. It is titled **Benches for the Internet** and does not display a project count.
-
-For the expandable option, change only the attribute:
-
-```html
-<script
-  type="module"
-  src="https://class.playhtml.fun/class-webring.js"
-  data-variant="expandable"
-></script>
-```
+After deployment, the script lives at [`/class-webring.js`](/class-webring.js). It derives the Showcase registry from the domain serving the script and subscribes read-only. The ring starts closed as a small orbit labeled **Benches for the Internet**. Selecting the label opens the fullscreen image field; the close button returns it to the small orbit.
 
 The class app chooses the script URL automatically. During local development it loads `/class-webring.js` from the current development origin. A production build loads the canonical script above from `class.playhtml.fun`. The resolver lives in `src/lib/classWebringScript.ts`, so previewing and deploying do not require hand-editing a URL.
 
@@ -292,24 +285,4 @@ For a separate staging deployment, use that deployment's origin instead:
 ></script>
 ```
 
-Visit the hidden [`/webring-demo`](/webring-demo) route to see a pretend independent website load this exact script. The demo uses sample circles only when the real registry is empty.
-
-### Teaching plan (25–30 minutes)
-
-**5 minutes — Source and consumer.** Show the couch/chair example. Ask what is the same and what is different.
-
-**5 minutes — Customize one toggle.** Demonstrate the lamp source and change only its `.toggled` CSS to show that capability and visual effect are separate.
-
-**10 minutes — Make and publish.** Each participant chooses a charm, adds a capability, and deploys it.
-
-**5 minutes — Submit and connect.** Add the exact URL, ID, and matching capability to the form.
-
-**5 minutes — Test in pairs.** Open the source and Showcase side by side and interact in both directions.
-
-**5 minutes — Install the directory.** Paste the one-tag ring embed into one participant site and visit a circle in its orbit.
-
-Questions for the group:
-
-- What state did you choose to let travel between sites?
-- How does the same shared state take on a different meaning in each design?
-- What should remain under the control of each independent site?
+Visit the hidden [`/webring-demo`](/webring-demo) route to see a pretend independent website load this exact script. The demo always uses 30 sample links, so you can inspect a crowded ring without changing the real registry.

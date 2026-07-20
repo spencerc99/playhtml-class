@@ -25,7 +25,6 @@ export function ClassWebringEmbed() {
     script.id = EMBED_SCRIPT_ID;
     script.type = 'module';
     script.src = getClassWebringScriptUrl();
-    script.dataset.variant = 'peek';
     document.body.append(script);
   }, [isLoading, location.pathname]);
 

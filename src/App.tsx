@@ -6,6 +6,7 @@ import { Route, Routes, useLocation } from 'react-router';
 import { ClassWebringEmbed } from './components/ClassWebringEmbed';
 import Nav from './Nav';
 import Home from './pages/Home';
+import Playground from './pages/Playground';
 import Showcase from './pages/Showcase';
 import WebringDemo from './pages/WebringDemo';
 import Week from './pages/Week';
@@ -37,6 +38,8 @@ function DocumentTitle() {
 
     if (location.pathname === '/showcase') {
       pageTitle = `Showcase | ${APP_TITLE}`;
+    } else if (location.pathname === '/playground') {
+      pageTitle = `Benches for the Internet | ${APP_TITLE}`;
     } else if (location.pathname === '/webring-demo') {
       pageTitle = `Web Ring Embed Demo | ${APP_TITLE}`;
     } else if (location.pathname === '/3d') {
@@ -66,15 +69,19 @@ function ScrollToTop() {
 }
 
 export default function App() {
+  const location = useLocation();
+  const isPlayground = location.pathname === '/playground';
+
   return (
     <>
       <DocumentTitle />
       <ScrollToTop />
-      <Nav />
-      <ClassWebringEmbed />
+      {isPlayground ? null : <Nav />}
+      {isPlayground ? null : <ClassWebringEmbed />}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/3d" element={<ThreeDBenchPage />} />
+        <Route path="/playground" element={<Playground />} />
         <Route path="/showcase" element={<Showcase />} />
         <Route path="/webring-demo" element={<WebringDemo />} />
         <Route path="/week/:weekNumber" element={<Week />} />
