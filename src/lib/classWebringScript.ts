@@ -1,7 +1,8 @@
 // ABOUTME: Resolves the class web-ring embed to the local dev server or public site.
 // ABOUTME: Keeps preview and production consumers on the same script-loading path.
 
-const PRODUCTION_WEBRING_SCRIPT = 'https://class.playhtml.fun/class-webring.js';
+const PRODUCTION_WEBRING_SCRIPT =
+  'https://class.playhtml.fun/class-webring.js?v=small-ring-images';
 
 export function getClassWebringScriptUrl(): string {
   if (import.meta.env.DEV) {

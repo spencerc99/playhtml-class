@@ -1,0 +1,5 @@
+# ABOUTME: Sets browser cache behavior for public class-site assets.
+# ABOUTME: Keeps the external web-ring embed synchronized with its current rendering logic.
+
+/class-webring.js
+  Cache-Control: public, max-age=0, must-revalidate
