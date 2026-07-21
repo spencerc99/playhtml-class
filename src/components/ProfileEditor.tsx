@@ -2,6 +2,7 @@
 // ABOUTME: playhtml's PlayerIdentity (localStorage + extension + live cursor).
 
 import { usePlayContext } from '@playhtml/react';
+import { colorToHex } from '../lib/color';
 
 const DEFAULT_COLOR = '#e00000';
 
@@ -16,31 +17,19 @@ function getCursorGlobal(): CursorGlobal | undefined {
   return (window as unknown as { cursors?: CursorGlobal }).cursors;
 }
 
-// <input type="color"> only accepts #rrggbb, but a cursor color may be any CSS
-// color string — hsl() for the auto-generated anon identity, hex from the
-// extension. Resolve whatever it is to hex via the browser's own color parser so
-// the picker always reflects the visitor's actual current color.
-function toHex(color: string): string | null {
-  if (/^#[0-9a-fA-F]{6}$/.test(color)) {
-    return color.toLowerCase();
+function setCursorName(name: string): void {
+  const cursors = getCursorGlobal();
+  if (cursors) {
+    cursors.name = name;
   }
-  const ctx = document.createElement('canvas').getContext('2d');
-  if (!ctx) {
-    return null;
+}
+
+function setCursorColor(color: string): void {
+  const cursors = getCursorGlobal();
+  // playhtml rejects an empty color; only write real values.
+  if (cursors && color) {
+    cursors.color = color;
   }
-  // Probe with two sentinels: an invalid color leaves fillStyle unchanged, so if
-  // both probes yield the same result the input was genuinely parsed (not stuck
-  // on a sentinel).
-  ctx.fillStyle = '#000000';
-  ctx.fillStyle = color;
-  const first = ctx.fillStyle;
-  ctx.fillStyle = '#ffffff';
-  ctx.fillStyle = color;
-  const second = ctx.fillStyle;
-  if (first !== second) {
-    return null;
-  }
-  return /^#[0-9a-f]{6}$/.test(first) ? first : null;
 }
 
 interface ProfileEditorProps {
@@ -61,22 +50,7 @@ export function ProfileEditor({
   const name = cursors.name ?? '';
   // Show the visitor's actual current color (extension hex or anon hsl default),
   // converted to hex for the picker; only fall back if it can't be parsed.
-  const color = (cursors.color && toHex(cursors.color)) || DEFAULT_COLOR;
-
-  const setName = (next: string) => {
-    const global = getCursorGlobal();
-    if (global) {
-      global.name = next;
-    }
-  };
-
-  const setColor = (next: string) => {
-    const global = getCursorGlobal();
-    // playhtml rejects an empty color; only write real values.
-    if (global && next) {
-      global.color = next;
-    }
-  };
+  const color = (cursors.color && colorToHex(cursors.color)) || DEFAULT_COLOR;
 
   return (
     <div className="profile-editor">
@@ -88,7 +62,7 @@ export function ProfileEditor({
           value={name}
           placeholder="who are you?"
           autoFocus={autoFocusName}
-          onChange={(event) => setName(event.target.value)}
+          onChange={(event) => setCursorName(event.target.value)}
         />
       </label>
 
@@ -98,7 +72,7 @@ export function ProfileEditor({
           type="color"
           className="profile-editor__color"
           value={color}
-          onChange={(event) => setColor(event.target.value)}
+          onChange={(event) => setCursorColor(event.target.value)}
         />
       </label>
     </div>

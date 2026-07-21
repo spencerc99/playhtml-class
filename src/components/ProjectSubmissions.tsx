@@ -14,6 +14,7 @@ import {
   type FormEvent,
   type RefObject,
 } from 'react';
+import { colorToHex } from '../lib/color';
 import {
   createBuiltInProjects,
   createBuiltInReservedIds,
@@ -175,12 +176,15 @@ export const ProjectSubmissions = withSharedState<
     const { pid: playerId } = usePlayerIdentity();
     const builtInsSeeded = useRef(false);
     const nameEdited = useRef(false);
+    const accentColorEdited = useRef(false);
+    const profileAccentColor =
+      (cursors.color && colorToHex(cursors.color)) || DEFAULT_ACCENT_COLOR;
     const [name, setName] = useState(() => cursors.name?.trim() ?? '');
     const [title, setTitle] = useState('');
     const [url, setUrl] = useState('');
     const [description, setDescription] = useState('');
     const [emoji, setEmoji] = useState('🪑');
-    const [accentColor, setAccentColor] = useState(DEFAULT_ACCENT_COLOR);
+    const [accentColor, setAccentColor] = useState(profileAccentColor);
     const [imageUrl, setImageUrl] = useState('');
     const [editingProjectId, setEditingProjectId] = useState<string | null>(
       null,
@@ -194,6 +198,12 @@ export const ProjectSubmissions = withSharedState<
         setName(profileName);
       }
     }, [cursors.name]);
+
+    useEffect(() => {
+      if (!accentColorEdited.current) {
+        setAccentColor(profileAccentColor);
+      }
+    }, [profileAccentColor]);
 
     useEffect(() => {
       if (variant !== 'showcase' || !hasSynced || builtInsSeeded.current)
@@ -378,7 +388,8 @@ export const ProjectSubmissions = withSharedState<
       setUrl('');
       setDescription('');
       setEmoji('🪑');
-      setAccentColor(DEFAULT_ACCENT_COLOR);
+      accentColorEdited.current = false;
+      setAccentColor(profileAccentColor);
       setImageUrl('');
       setEditingProjectId(null);
       setStatus({
@@ -391,13 +402,14 @@ export const ProjectSubmissions = withSharedState<
 
     const editProject = (project: ProjectSubmission) => {
       nameEdited.current = true;
+      accentColorEdited.current = true;
       setEditingProjectId(project.id);
       setName(project.name);
       setTitle(project.title);
       setUrl(project.url);
       setDescription(project.description ?? '');
       setEmoji(project.emoji ?? '🪑');
-      setAccentColor(project.accentColor ?? DEFAULT_ACCENT_COLOR);
+      setAccentColor(project.accentColor ?? profileAccentColor);
       setImageUrl(project.imageUrl ?? '');
       setStatus(null);
       document.querySelector('#submit-project')?.scrollIntoView({
@@ -432,7 +444,8 @@ export const ProjectSubmissions = withSharedState<
       setUrl('');
       setDescription('');
       setEmoji('🪑');
-      setAccentColor(DEFAULT_ACCENT_COLOR);
+      accentColorEdited.current = false;
+      setAccentColor(profileAccentColor);
       setImageUrl('');
       setStatus(null);
     };
@@ -597,7 +610,10 @@ export const ProjectSubmissions = withSharedState<
                   className="project-submissions__color"
                   type="color"
                   value={accentColor}
-                  onChange={(event) => setAccentColor(event.target.value)}
+                  onChange={(event) => {
+                    accentColorEdited.current = true;
+                    setAccentColor(event.target.value);
+                  }}
                 />
               </label>
               <label className="project-submissions__field project-submissions__field--image">
