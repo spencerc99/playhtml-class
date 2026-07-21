@@ -185,6 +185,10 @@ export function createProjectAppearanceSharedObject(
   width: 100%;
 }
 
+#${sharedId} .starter-project-appearance:has(.starter-project-icon) > span {
+  display: none;
+}
+
 #${sharedId}:hover,
 #${sharedId}:focus-visible {
   filter: drop-shadow(0 0.9em 0.7em color-mix(in srgb, ${accentColor} 55%, transparent));

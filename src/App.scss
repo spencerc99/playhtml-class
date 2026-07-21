@@ -1071,6 +1071,12 @@ a:hover {
   object-fit: contain !important;
 }
 
+.project-webring__node-markup
+  .starter-project-appearance:has(.starter-project-icon)
+  > span {
+  display: none;
+}
+
 .project-webring__node-label {
   appearance: none;
   background: rgba(255, 255, 255, 0.9);

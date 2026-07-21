@@ -131,7 +131,6 @@ function ProjectAppearancePreview({
         className="project-submissions__generated-icon"
         style={{ '--preview-accent': accentColor } as CSSProperties}
       >
-        <span aria-hidden="true">{emoji.trim() || '🪑'}</span>
         {imageSource ? (
           <img
             key={imageSource}
@@ -140,7 +139,9 @@ function ProjectAppearancePreview({
             referrerPolicy="no-referrer"
             onError={() => setSourceIndex((current) => current + 1)}
           />
-        ) : null}
+        ) : (
+          <span aria-hidden="true">{emoji.trim() || '🪑'}</span>
+        )}
       </div>
       <div>
         <h3>{title.trim() || 'Your project'} in the ring</h3>

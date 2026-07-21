@@ -327,13 +327,16 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     return link;
   }
 
-  function appendProjectImage(container, project) {
+  function appendProjectImage(container, project, fallback) {
     const image = document.createElement('img');
     image.alt = '';
     image.decoding = 'async';
     image.loading = 'lazy';
     image.referrerPolicy = 'no-referrer';
     container.append(image);
+    image.addEventListener('load', () => {
+      fallback.hidden = true;
+    });
 
     const declaredIcons = project.demo
       ? Promise.resolve([])
@@ -383,7 +386,7 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     fallback.textContent = project.emoji;
     link.append(fallback);
 
-    appendProjectImage(link, project);
+    appendProjectImage(link, project, fallback);
 
     const tooltip = document.createElement('em');
     tooltip.textContent = project.title;
