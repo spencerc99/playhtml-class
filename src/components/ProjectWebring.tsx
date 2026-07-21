@@ -481,7 +481,9 @@ export function ProjectWebring({
   const ownsSelected = Boolean(
     !embedded &&
     selected &&
-    (selectedIsBuiltIn || (playerId && selected.submittedBy === playerId)),
+    !selectedIsBuiltIn &&
+    playerId &&
+    selected.submittedBy === playerId,
   );
   const canEditSelected = ownsSelected && Boolean(onUpdateProject);
   const webringSizing = ringSizing(safeRingProjects.length);

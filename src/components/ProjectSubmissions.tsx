@@ -330,11 +330,8 @@ export const ProjectSubmissions = withSharedState<
       ? projects.filter((project) => project.submittedBy === playerId)
       : [];
     const editableProjects = adminMode
-      ? projects
-      : projects.filter(
-          (project) =>
-            isBuiltInProjectId(project.id) || project.submittedBy === playerId,
-        );
+      ? projects.filter((project) => !isBuiltInProjectId(project.id))
+      : projects.filter((project) => project.submittedBy === playerId);
     const managedProjects = adminMode
       ? projects.filter((project) => !isBuiltInProjectId(project.id))
       : myProjects;
@@ -543,8 +540,9 @@ export const ProjectSubmissions = withSharedState<
         const project = draft.projects[projectId];
         if (
           !project ||
-          (!isBuiltInProjectId(projectId) &&
-            (!playerId || project.submittedBy !== playerId))
+          isBuiltInProjectId(projectId) ||
+          !playerId ||
+          project.submittedBy !== playerId
         )
           return;
 
