@@ -114,7 +114,7 @@ function ProjectAppearancePreview({
 }) {
   const faviconUrl = projectFaviconUrl(url);
   const normalizedImageUrl = normalizeProjectUrl(imageUrl) ?? undefined;
-  const imageSources = [faviconUrl, normalizedImageUrl].filter(
+  const imageSources = [normalizedImageUrl, faviconUrl].filter(
     (source, index, sources): source is string =>
       Boolean(source) && sources.indexOf(source) === index,
   );
@@ -147,7 +147,7 @@ function ProjectAppearancePreview({
       <div>
         <h3>{title.trim() || 'Your project'} in the ring</h3>
         <p>
-          This preview follows the same favicon, ring icon, then emoji order as
+          This preview follows the same ring icon, favicon, then emoji order as
           the widget. Submitting also creates this as an editable shared object
           in the full-screen room.
         </p>
@@ -595,8 +595,8 @@ export const ProjectSubmissions = withSharedState<
                 Ring appearance
               </legend>
               <p className="project-submissions__appearance-copy">
-                The ring tries your site&apos;s favicon first, then the ring
-                icon URL. The emoji only appears if neither image loads.
+                The ring tries the ring icon URL first, then your site&apos;s
+                favicon. The emoji only appears if neither image loads.
               </p>
               <div className="project-submissions__field project-submissions__field--emoji">
                 <span className="project-submissions__label">

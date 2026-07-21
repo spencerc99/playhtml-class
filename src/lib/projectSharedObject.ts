@@ -150,11 +150,11 @@ export function createProjectAppearanceSharedObject(
       ? appearance.accentColor
       : '#f05a47';
   const images = [
-    imageUrl
-      ? `<img class="starter-project-icon" src="${escapeHtml(imageUrl)}" alt="" onerror="this.remove()" />`
-      : '',
     faviconUrl
       ? `<img class="starter-project-icon" src="${escapeHtml(faviconUrl)}" alt="" onerror="this.remove()" />`
+      : '',
+    imageUrl
+      ? `<img class="starter-project-icon" src="${escapeHtml(imageUrl)}" alt="" onerror="this.remove()" />`
       : '',
   ].join('');
 

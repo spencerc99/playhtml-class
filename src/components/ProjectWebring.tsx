@@ -96,6 +96,24 @@ function safeColor(value: unknown, fallback: string): string {
     : fallback;
 }
 
+function prioritizeProjectImage(html: string, imageUrl: string): string {
+  const template = document.createElement('template');
+  template.innerHTML = html;
+  const appearance = template.content.querySelector(
+    '.starter-project-appearance',
+  );
+  const image = [
+    ...(appearance?.querySelectorAll('.starter-project-icon') ?? []),
+  ].find((candidate) => candidate.getAttribute('src') === imageUrl);
+
+  if (!appearance || !image || image === appearance.lastElementChild) {
+    return html;
+  }
+
+  appearance.append(image);
+  return template.innerHTML;
+}
+
 function safeProjects(projects: RingProject[]): RingProject[] {
   return projects.flatMap((project, index) => {
     if (!project || typeof project !== 'object') return [];
@@ -105,6 +123,7 @@ function safeProjects(projects: RingProject[]): RingProject[] {
     if (!url || !title) return [];
 
     const id = safeText(project.id, 100, `project-${index}`);
+    const imageUrl = safeHttpUrl(project.imageUrl);
 
     const normalizedSharedObject = normalizeProjectSharedObject(
       project.sharedObject,
@@ -122,17 +141,25 @@ function safeProjects(projects: RingProject[]): RingProject[] {
             ),
           }
         : normalizedSharedObject;
+    const prioritizedSharedObject =
+      imageUrl &&
+      starterSharedObject.html.includes('starter-project-appearance')
+        ? {
+            ...starterSharedObject,
+            html: prioritizeProjectImage(starterSharedObject.html, imageUrl),
+          }
+        : starterSharedObject;
     const sharedObject =
       !isBuiltInProjectId(id) &&
-      starterSharedObject.html === DEFAULT_SHARED_OBJECT_HTML
-        ? createProjectAppearanceSharedObject(starterSharedObject.id, {
+      prioritizedSharedObject.html === DEFAULT_SHARED_OBJECT_HTML
+        ? createProjectAppearanceSharedObject(prioritizedSharedObject.id, {
             accentColor: project.accentColor,
             emoji: project.emoji,
-            imageUrl: project.imageUrl,
+            imageUrl: imageUrl ?? undefined,
             title,
             url,
           })
-        : starterSharedObject;
+        : prioritizedSharedObject;
 
     return [
       {
@@ -147,7 +174,7 @@ function safeProjects(projects: RingProject[]): RingProject[] {
           project.accentColor,
           FALLBACK_COLORS[index % FALLBACK_COLORS.length],
         ),
-        imageUrl: safeHttpUrl(project.imageUrl) ?? undefined,
+        imageUrl: imageUrl ?? undefined,
         submittedAt:
           typeof project.submittedAt === 'number' ? project.submittedAt : index,
         submittedBy: safeText(project.submittedBy, 180) || undefined,

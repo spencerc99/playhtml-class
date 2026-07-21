@@ -351,9 +351,9 @@ if (!document.querySelector('[data-class-webring-widget]')) {
           : project.id === 'builtin-we-were-online'
             ? [project.imageUrl]
             : [
+                project.imageUrl,
                 ...declaredIconUrls,
                 ...(project.faviconUrls ?? []),
-                project.imageUrl,
               ]
       ).filter(
         (source, index, sources) => source && sources.indexOf(source) === index,
