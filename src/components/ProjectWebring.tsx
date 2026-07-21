@@ -97,6 +97,55 @@ function safeColor(value: unknown, fallback: string): string {
     : fallback;
 }
 
+function relativeLuminance([red, green, blue]: [
+  number,
+  number,
+  number,
+]): number {
+  const linearChannels = [red, green, blue].map((channel) => {
+    const value = channel / 255;
+    return value <= 0.040_45
+      ? value / 12.92
+      : Math.pow((value + 0.055) / 1.055, 2.4);
+  });
+
+  return (
+    linearChannels[0] * 0.2126 +
+    linearChannels[1] * 0.7152 +
+    linearChannels[2] * 0.0722
+  );
+}
+
+function contrastSafeAccent(accent: string): string {
+  const channels: [number, number, number] = [
+    Number.parseInt(accent.slice(1, 3), 16),
+    Number.parseInt(accent.slice(3, 5), 16),
+    Number.parseInt(accent.slice(5, 7), 16),
+  ];
+
+  if (1.05 / (relativeLuminance(channels) + 0.05) >= 4.5) return accent;
+
+  let lowerScale = 0;
+  let upperScale = 1;
+  for (let iteration = 0; iteration < 8; iteration += 1) {
+    const scale = (lowerScale + upperScale) / 2;
+    const contrast =
+      1.05 /
+      (relativeLuminance(
+        channels.map((channel) => channel * scale) as [number, number, number],
+      ) +
+        0.05);
+
+    if (contrast >= 4.5) lowerScale = scale;
+    else upperScale = scale;
+  }
+
+  return `#${channels
+    .map((channel) => Math.round(channel * lowerScale))
+    .map((channel) => channel.toString(16).padStart(2, '0'))
+    .join('')}`;
+}
+
 function prioritizeProjectImage(html: string, imageUrl: string): string {
   const template = document.createElement('template');
   template.innerHTML = html;
@@ -220,17 +269,24 @@ function orbitPosition(index: number, total: number): CSSProperties {
     Math.PI / 2 +
     angleOffset;
   const outerRadius = 46;
-  const innerRadius = Math.max(18, outerRadius - (orbitCount - 1) * 13);
-  const radius =
-    orbitCount === 1
-      ? outerRadius
-      : outerRadius -
-        (orbitIndex / (orbitCount - 1)) * (outerRadius - innerRadius);
+  const orbitProgress = orbitCount === 1 ? 0 : orbitIndex / (orbitCount - 1);
+  const horizontalInnerRadius = Math.max(
+    32,
+    outerRadius - (orbitCount - 1) * 13,
+  );
+  const verticalInnerRadius = Math.max(38, outerRadius - (orbitCount - 1) * 13);
+  const horizontalRadius =
+    outerRadius - orbitProgress * (outerRadius - horizontalInnerRadius);
+  const verticalRadius =
+    outerRadius - orbitProgress * (outerRadius - verticalInnerRadius);
 
   return {
-    '--ring-x': `${50 + Math.cos(angle) * radius}%`,
-    '--ring-y': `${50 + Math.sin(angle) * radius}%`,
+    '--ring-x': `${50 + Math.cos(angle) * horizontalRadius}%`,
+    '--ring-y': `${50 + Math.sin(angle) * verticalRadius}%`,
     '--ring-delay': `${index * -0.12}s`,
+    '--ring-label-bottom':
+      Math.sin(angle) > 0 ? 'calc(100% + 0.35rem)' : 'auto',
+    '--ring-label-top': Math.sin(angle) > 0 ? 'auto' : 'calc(100% + 0.35rem)',
   } as CSSProperties;
 }
 
@@ -240,7 +296,9 @@ function ringSizing(total: number): CSSProperties {
   const mobileMinimum = Math.max(2.75, 5 * density);
 
   return {
+    '--ring-emoji-size': `clamp(${(desktopMinimum * 0.68).toFixed(2)}rem, ${(8.16 * density).toFixed(2)}vw, ${(7.48 * density).toFixed(2)}rem)`,
     '--ring-label-width': `${Math.max(3.5, 8 * density).toFixed(2)}rem`,
+    '--ring-mobile-emoji-size': `clamp(${(mobileMinimum * 0.68).toFixed(2)}rem, ${(14.96 * density).toFixed(2)}vw, ${(5.1 * density).toFixed(2)}rem)`,
     '--ring-mobile-label-width': `${Math.max(3.25, 5 * density).toFixed(2)}rem`,
     '--ring-mobile-node-size': `clamp(${mobileMinimum.toFixed(2)}rem, ${(22 * density).toFixed(2)}vw, ${(7.5 * density).toFixed(2)}rem)`,
     '--ring-node-size': `clamp(${desktopMinimum.toFixed(2)}rem, ${(12 * density).toFixed(2)}vw, ${(11 * density).toFixed(2)}rem)`,
@@ -605,6 +663,7 @@ export function ProjectWebring({
                     const nodeStyle = {
                       ...orbitPosition(index, safeRingProjects.length),
                       '--ring-accent': accent,
+                      '--ring-ui-accent': contrastSafeAccent(accent),
                     } as CSSProperties;
 
                     return (
@@ -642,6 +701,9 @@ export function ProjectWebring({
                       style={
                         {
                           '--ring-accent': selected.accentColor ?? '#e00000',
+                          '--ring-ui-accent': contrastSafeAccent(
+                            selected.accentColor ?? '#e00000',
+                          ),
                         } as CSSProperties
                       }
                     >

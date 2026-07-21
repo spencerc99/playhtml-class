@@ -1010,14 +1010,11 @@ a:hover {
   align-items: center;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  left: var(--ring-x);
+  left: calc(var(--ring-x) - var(--ring-node-size) / 2);
   position: absolute;
-  top: var(--ring-y);
-  transform: translate(-50%, -50%);
+  top: calc(var(--ring-y) - var(--ring-node-size) / 2);
   transition:
     left 0.55s cubic-bezier(0.2, 0.8, 0.2, 1),
-    opacity 0.3s ease,
     top 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
@@ -1039,10 +1036,11 @@ a:hover {
 .project-webring__node:hover,
 .project-webring__node:focus-visible {
   outline: none;
+  z-index: 1;
 }
 
 .project-webring__item.is-selected .project-webring__node {
-  outline: 2px dashed var(--ring-accent);
+  outline: 2px dashed var(--ring-ui-accent);
   outline-offset: 0.45rem;
 }
 
@@ -1071,6 +1069,11 @@ a:hover {
   object-fit: contain !important;
 }
 
+.project-webring__node-markup .starter-project-appearance > span {
+  font-size: var(--ring-emoji-size) !important;
+  line-height: 1;
+}
+
 .project-webring__node-markup
   .starter-project-appearance:has(.starter-project-icon)
   > span {
@@ -1080,6 +1083,7 @@ a:hover {
 .project-webring__node-label {
   appearance: none;
   background: rgba(255, 255, 255, 0.9);
+  bottom: var(--ring-label-bottom);
   border: 0;
   border-radius: 999px;
   color: #5e403b;
@@ -1091,25 +1095,35 @@ a:hover {
   max-width: var(--ring-label-width);
   overflow: hidden;
   padding: 0.3rem 0.5rem;
+  position: absolute;
+  left: 50%;
   text-overflow: ellipsis;
   text-transform: uppercase;
   transition:
     background 160ms ease,
     transform 160ms ease;
+  top: var(--ring-label-top);
+  transform: translateX(-50%);
   white-space: nowrap;
+  z-index: 2;
 }
 
 .project-webring__node-label:hover {
   background: #ffffff;
-  transform: translateY(-0.08rem);
+  transform: translate(-50%, -0.08rem);
 }
 
 .project-webring__node-label:focus-visible {
-  outline: 2px solid var(--ring-accent);
+  outline: 2px solid var(--ring-ui-accent);
   outline-offset: 2px;
 }
 
-.project-webring--expanded .project-webring__item:not(.is-selected) {
+.project-webring--expanded
+  .project-webring__item:not(.is-selected)
+  .project-webring__node,
+.project-webring--expanded
+  .project-webring__item:not(.is-selected)
+  .project-webring__node-label {
   opacity: 0.58;
 }
 
@@ -1119,9 +1133,15 @@ a:hover {
   justify-content: center;
   max-height: min(58svh, 34rem);
   max-width: min(46vw, 34rem);
+  pointer-events: none;
   position: relative;
   width: 100%;
   z-index: 3;
+}
+
+.project-webring__welcome a,
+.project-webring__detail {
+  pointer-events: auto;
 }
 
 .project-webring--dense .project-webring__center {
@@ -1240,7 +1260,7 @@ a:hover {
 .project-webring__detail {
   animation: ring-detail-in 0.36s cubic-bezier(0.2, 0.8, 0.2, 1);
   background: rgba(255, 255, 255, 0.96);
-  border: 3px solid var(--ring-accent);
+  border: 3px solid var(--ring-ui-accent);
   border-radius: 48% 52% 45% 55% / 48% 43% 57% 52%;
   box-shadow: 10px 13px 0
     color-mix(in srgb, var(--ring-accent) 24%, transparent);
@@ -1268,7 +1288,7 @@ a:hover {
 }
 
 .project-webring__detail h2 {
-  color: var(--ring-accent);
+  color: var(--ring-ui-accent);
   font-size: clamp(2rem, 5vw, 4.3rem);
   line-height: 0.88;
   margin: 0;
@@ -1285,7 +1305,7 @@ a:hover {
 }
 
 .project-webring__detail > a {
-  background: var(--ring-accent);
+  background: var(--ring-ui-accent);
   border-radius: 999px;
   color: #fff;
   display: inline-flex;
@@ -1300,9 +1320,9 @@ a:hover {
 
 .project-webring__edit-object {
   background: transparent;
-  border: 1px solid var(--ring-accent);
+  border: 1px solid var(--ring-ui-accent);
   border-radius: 999px;
-  color: var(--ring-accent);
+  color: var(--ring-ui-accent);
   cursor: pointer;
   font-family: var(--font-display);
   font-size: 0.75rem;
@@ -1313,7 +1333,7 @@ a:hover {
 .project-webring__owner-controls {
   box-sizing: border-box;
   background: color-mix(in srgb, var(--ring-accent) 7%, white);
-  border: 1px dashed color-mix(in srgb, var(--ring-accent) 42%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--ring-ui-accent) 42%, transparent);
   border-radius: 0.85rem;
   margin: 0.9rem auto 0;
   max-width: 22rem;
@@ -1335,7 +1355,7 @@ a:hover {
 }
 
 .project-webring__owner-label strong {
-  color: var(--ring-accent);
+  color: var(--ring-ui-accent);
   font-weight: 400;
 }
 
@@ -1367,9 +1387,9 @@ a:hover {
 .project-webring__owner-controls .project-webring__edit-details {
   appearance: none;
   background: transparent;
-  border: 1px solid var(--ring-accent);
+  border: 1px solid var(--ring-ui-accent);
   border-radius: 999px;
-  color: var(--ring-accent);
+  color: var(--ring-ui-accent);
   cursor: pointer;
   display: inline-flex;
   font-family: var(--font-display);
@@ -1391,9 +1411,9 @@ a:hover {
 .project-webring__close {
   align-items: center;
   background: #fff;
-  border: 2px solid var(--ring-accent);
+  border: 2px solid var(--ring-ui-accent);
   border-radius: 50%;
-  color: var(--ring-accent);
+  color: var(--ring-ui-accent);
   cursor: pointer;
   display: flex;
   font-size: 1.4rem;
@@ -2529,10 +2549,19 @@ a:hover {
     width: var(--ring-mobile-node-size);
   }
 
+  .project-webring__item {
+    left: calc(var(--ring-x) - var(--ring-mobile-node-size) / 2);
+    top: calc(var(--ring-y) - var(--ring-mobile-node-size) / 2);
+  }
+
   .project-webring__node-label {
     font-size: 0.5rem;
     max-width: var(--ring-mobile-label-width);
     padding: 0.24rem 0.38rem;
+  }
+
+  .project-webring__node-markup .starter-project-appearance > span {
+    font-size: var(--ring-mobile-emoji-size) !important;
   }
 
   .project-webring__center {
