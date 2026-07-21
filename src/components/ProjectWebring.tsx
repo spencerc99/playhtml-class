@@ -53,6 +53,7 @@ interface ProjectWebringProps {
   ) => void;
   playerId?: string;
   projects: RingProject[];
+  sourceObjects?: boolean;
 }
 
 type SharedObjectCode = Pick<ProjectSharedObject, 'css' | 'html'>;
@@ -192,6 +193,10 @@ function projectHostname(projectUrl: string): string {
   }
 }
 
+function projectObjectDataSource(sharedId: string): string {
+  return `${window.location.host}/playground#${sharedId}`;
+}
+
 function orbitPosition(index: number, total: number): CSSProperties {
   const maxPerOrbit = 16;
   const orbitCount = Math.ceil(total / maxPerOrbit);
@@ -255,9 +260,11 @@ function ObjectMarkup({ html }: { html: string }) {
 function ObjectNode({
   demo,
   project,
+  sourceObject,
 }: {
   demo: boolean;
   project: RingProject;
+  sourceObject: boolean;
 }) {
   const sharedObject = project.sharedObject!;
   const [isToggled, setIsToggled] = useState(false);
@@ -332,11 +339,19 @@ function ObjectNode({
       <style>{sharedObject.css}</style>
       {demo ? (
         node
-      ) : (
+      ) : sourceObject ? (
         <CanPlayElement<Record<string, unknown>>
           defaultData={{}}
           id={sharedObject.id}
           shared="read-write"
+        >
+          {() => node}
+        </CanPlayElement>
+      ) : (
+        <CanPlayElement<Record<string, unknown>>
+          dataSource={projectObjectDataSource(sharedObject.id)}
+          defaultData={{}}
+          id={sharedObject.id}
         >
           {() => node}
         </CanPlayElement>
@@ -353,6 +368,7 @@ export function ProjectWebring({
   onUpdateProject,
   playerId,
   projects,
+  sourceObjects = false,
 }: ProjectWebringProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
@@ -599,7 +615,11 @@ export function ProjectWebring({
                         key={project.id}
                         style={nodeStyle}
                       >
-                        <ObjectNode demo={demo} project={project} />
+                        <ObjectNode
+                          demo={demo}
+                          project={project}
+                          sourceObject={sourceObjects}
+                        />
                         <button
                           aria-controls="project-webring-detail"
                           aria-expanded={selectedId === project.id}

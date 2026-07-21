@@ -7,12 +7,18 @@ export interface ProjectSharedObject {
   id: string;
 }
 
-interface ProjectAppearance {
+export interface ProjectAppearance {
   accentColor?: string;
   emoji?: string;
   imageUrl?: string;
   title: string;
   url: string;
+}
+
+function projectAccentColor(accentColor: unknown): string {
+  return typeof accentColor === 'string' && /^#[\da-f]{6}$/i.test(accentColor)
+    ? accentColor
+    : '#f05a47';
 }
 
 export interface BuiltInRingProject {
@@ -144,11 +150,7 @@ export function createProjectAppearanceSharedObject(
   const faviconUrl = projectFaviconUrl(appearance.url);
   const imageUrl = safeHttpUrl(appearance.imageUrl);
   const title = escapeHtml(appearance.title.slice(0, 120));
-  const accentColor =
-    typeof appearance.accentColor === 'string' &&
-    /^#[\da-f]{6}$/i.test(appearance.accentColor)
-      ? appearance.accentColor
-      : '#f05a47';
+  const accentColor = projectAccentColor(appearance.accentColor);
   const images = [
     faviconUrl
       ? `<img class="starter-project-icon" src="${escapeHtml(faviconUrl)}" alt="" onerror="this.remove()" />`
@@ -199,6 +201,62 @@ export function createProjectAppearanceSharedObject(
   filter: drop-shadow(0 0 1.15em color-mix(in srgb, ${accentColor} 72%, transparent));
   transform: rotate(-9deg) scale(1.14);
 }`,
+  };
+}
+
+export function updateProjectAppearanceSharedObject(
+  sharedObject: ProjectSharedObject,
+  previousAppearance: ProjectAppearance,
+  nextAppearance: ProjectAppearance,
+): ProjectSharedObject {
+  const currentTemplate = document.createElement('template');
+  currentTemplate.innerHTML = sharedObject.html;
+  const currentAppearance = currentTemplate.content.querySelector(
+    '.starter-project-appearance',
+  );
+  if (!currentAppearance) return sharedObject;
+
+  const nextSharedObject = createProjectAppearanceSharedObject(
+    sharedObject.id,
+    nextAppearance,
+  );
+  const nextTemplate = document.createElement('template');
+  nextTemplate.innerHTML = nextSharedObject.html;
+  const nextStarterAppearance = nextTemplate.content.querySelector(
+    '.starter-project-appearance',
+  );
+  if (!nextStarterAppearance) return sharedObject;
+
+  const currentEmoji = currentAppearance.querySelector(
+    ':scope > span[aria-hidden="true"]',
+  );
+  const nextEmoji = nextStarterAppearance.querySelector(
+    ':scope > span[aria-hidden="true"]',
+  );
+  if (currentEmoji && nextEmoji) {
+    currentEmoji.textContent = nextEmoji.textContent;
+  }
+
+  currentAppearance.setAttribute(
+    'aria-label',
+    nextStarterAppearance.getAttribute('aria-label') ?? '',
+  );
+  currentAppearance
+    .querySelectorAll(':scope > .starter-project-icon')
+    .forEach((image) => image.remove());
+  nextStarterAppearance
+    .querySelectorAll(':scope > .starter-project-icon')
+    .forEach((image) => currentAppearance.append(image.cloneNode(true)));
+
+  const previousAccentColor = projectAccentColor(
+    previousAppearance.accentColor,
+  );
+  const nextAccentColor = projectAccentColor(nextAppearance.accentColor);
+
+  return {
+    ...sharedObject,
+    html: currentTemplate.innerHTML,
+    css: sharedObject.css.replaceAll(previousAccentColor, nextAccentColor),
   };
 }
 

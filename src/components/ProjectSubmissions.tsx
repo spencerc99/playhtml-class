@@ -26,6 +26,7 @@ import {
   normalizeProjectSharedObject,
   projectFaviconUrl,
   sharedObjectConsumerSnippet,
+  updateProjectAppearanceSharedObject,
   type ProjectSharedObject,
 } from '../lib/projectSharedObject';
 import { ProjectEmojiPicker } from './ProjectEmojiPicker';
@@ -353,17 +354,29 @@ export const ProjectSubmissions = withSharedState<
         existingSharedObject?.id ??
         createSharedObjectId(trimmedTitle, unavailableSharedIds);
       const normalizedEmoji = emoji.trim().slice(0, MAX_EMOJI_LENGTH) || '🪑';
+      const nextAppearance = {
+        accentColor,
+        emoji: normalizedEmoji,
+        imageUrl: normalizedImageUrl ?? undefined,
+        title: trimmedTitle,
+        url: normalizedUrl,
+      };
       const sharedObject =
         existingSharedObject &&
+        existingProject &&
         existingSharedObject.html !== DEFAULT_SHARED_OBJECT_HTML
-          ? existingSharedObject
-          : createProjectAppearanceSharedObject(sharedId, {
-              accentColor,
-              emoji: normalizedEmoji,
-              imageUrl: normalizedImageUrl ?? undefined,
-              title: trimmedTitle,
-              url: normalizedUrl,
-            });
+          ? updateProjectAppearanceSharedObject(
+              existingSharedObject,
+              {
+                accentColor: existingProject.accentColor,
+                emoji: existingProject.emoji,
+                imageUrl: existingProject.imageUrl,
+                title: existingProject.title,
+                url: existingProject.url,
+              },
+              nextAppearance,
+            )
+          : createProjectAppearanceSharedObject(sharedId, nextAppearance);
       const submission: ProjectSubmission = {
         id: projectId,
         name: trimmedName.slice(0, MAX_NAME_LENGTH),
