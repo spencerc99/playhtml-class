@@ -287,15 +287,6 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     return request;
   }
 
-  function cachedFaviconUrl(projectUrl) {
-    try {
-      const { hostname } = new URL(projectUrl);
-      return `https://icons.duckduckgo.com/ip3/${encodeURIComponent(hostname)}.ico`;
-    } catch {
-      return null;
-    }
-  }
-
   function sanitizeProjects(data) {
     const records = data?.projects;
     if (!records || typeof records !== 'object') return [];
@@ -315,7 +306,6 @@ if (!document.querySelector('[data-class-webring-widget]')) {
             url,
             emoji: safeText(project.emoji, 12, '🌱'),
             faviconUrls: conventionalFaviconUrls(url),
-            cachedFaviconUrl: cachedFaviconUrl(url),
             imageUrl: safeUrl(project.imageUrl),
             accentColor: safeColor(project.accentColor, '#274b9e'),
             submittedAt:
@@ -360,7 +350,6 @@ if (!document.querySelector('[data-class-webring-widget]')) {
             : [
                 ...declaredIconUrls,
                 ...(project.faviconUrls ?? []),
-                project.cachedFaviconUrl,
                 project.imageUrl,
               ]
       ).filter(

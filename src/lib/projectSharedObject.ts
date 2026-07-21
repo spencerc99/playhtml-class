@@ -67,8 +67,7 @@ export function projectFaviconUrl(projectUrl: string): string | undefined {
   const normalizedUrl = safeHttpUrl(projectUrl);
   if (!normalizedUrl) return undefined;
 
-  const { hostname } = new URL(normalizedUrl);
-  return `https://icons.duckduckgo.com/ip3/${encodeURIComponent(hostname)}.ico`;
+  return new URL('/favicon.ico', normalizedUrl).href;
 }
 
 function slugify(value: string): string {

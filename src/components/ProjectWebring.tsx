@@ -19,6 +19,7 @@ import {
   defaultSharedObjectCss,
   isBuiltInProjectId,
   normalizeProjectSharedObject,
+  projectFaviconUrl,
   sharedObjectConsumerSnippet,
   type ProjectSharedObject,
 } from '../lib/projectSharedObject';
@@ -109,17 +110,29 @@ function safeProjects(projects: RingProject[]): RingProject[] {
       project.sharedObject,
       id,
     );
+    const faviconUrl = projectFaviconUrl(url);
+    const starterSharedObject =
+      faviconUrl &&
+      normalizedSharedObject.html.includes('starter-project-appearance')
+        ? {
+            ...normalizedSharedObject,
+            html: normalizedSharedObject.html.replaceAll(
+              /https:\/\/icons\.duckduckgo\.com\/ip3\/[^\s"'<>]+\.ico/g,
+              faviconUrl,
+            ),
+          }
+        : normalizedSharedObject;
     const sharedObject =
       !isBuiltInProjectId(id) &&
-      normalizedSharedObject.html === DEFAULT_SHARED_OBJECT_HTML
-        ? createProjectAppearanceSharedObject(normalizedSharedObject.id, {
+      starterSharedObject.html === DEFAULT_SHARED_OBJECT_HTML
+        ? createProjectAppearanceSharedObject(starterSharedObject.id, {
             accentColor: project.accentColor,
             emoji: project.emoji,
             imageUrl: project.imageUrl,
             title,
             url,
           })
-        : normalizedSharedObject;
+        : starterSharedObject;
 
     return [
       {
