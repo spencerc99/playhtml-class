@@ -1,5 +1,5 @@
 // ABOUTME: Domain-accessible student project submission form backed by a
-// ABOUTME: canonical PlayHTML shared element rendered on the Showcase page.
+// ABOUTME: Showcase route that publishes the registry and project objects.
 
 import {
   usePlayContext,
@@ -507,6 +507,7 @@ export const ProjectSubmissions = withSharedState<
               onUpdateProject={updateProjectObject}
               playerId={playerId}
               projects={projects}
+              sourceObjects
             />
           </div>
         ) : null}

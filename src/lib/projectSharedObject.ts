@@ -429,7 +429,7 @@ export function normalizeProjectSharedObject(
 }
 
 export function sharedObjectDataSource(sharedId: string): string {
-  return `class.playhtml.fun/playground#${sharedId}`;
+  return `class.playhtml.fun/showcase#${sharedId}`;
 }
 
 export function sharedObjectConsumerSnippet(sharedId: string): string {

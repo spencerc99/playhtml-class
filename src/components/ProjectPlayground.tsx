@@ -142,7 +142,6 @@ export const ProjectPlayground = withSharedState<
           onUpdateProject={demo ? undefined : updateProject}
           playerId={playerId}
           projects={projects}
-          sourceObjects={!demo}
         />
       </div>
     );

@@ -1,5 +1,5 @@
 // ABOUTME: Full-viewport playground of class-hosted, participant-editable objects.
-// ABOUTME: Every object publishes can-toggle and can-play state from a stable ID.
+// ABOUTME: Projects render as sources or consumers using stable shared IDs.
 
 import { CanPlayElement, playhtml } from '@playhtml/react';
 import { TagType } from 'playhtml';
@@ -194,7 +194,7 @@ function projectHostname(projectUrl: string): string {
 }
 
 function projectObjectDataSource(sharedId: string): string {
-  return `${window.location.host}/playground#${sharedId}`;
+  return `${window.location.host}/showcase#${sharedId}`;
 }
 
 function orbitPosition(index: number, total: number): CSSProperties {

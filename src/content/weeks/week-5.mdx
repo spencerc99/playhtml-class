@@ -152,7 +152,7 @@ This is the smallest complete toggle example:
 ```html
 <div
   id="your-permanent-id"
-  data-source="class.playhtml.fun/playground#your-permanent-id"
+  data-source="class.playhtml.fun/showcase#your-permanent-id"
   can-toggle
 >
   <img src="/lamp.png" alt="Turn the lamp on or off" />
@@ -177,7 +177,7 @@ This is the smallest complete toggle example:
 </script>
 ```
 
-Replace both instances of `your-permanent-id` with the permanent shared ID shown after you submit. Keep `data-source` on your site; the class playground already owns the `shared` source.
+Replace both instances of `your-permanent-id` with the permanent shared ID shown after you submit. Keep `data-source` on your site; the class Showcase owns the `shared` source, and the playground reads from it.
 
 You can continue editing the HTML, images, CSS, and scripts on your site after joining the ring. Update your submission when its project details, public URL, or thumbnail change.
 
@@ -191,7 +191,7 @@ You can continue editing the HTML, images, CSS, and scripts on your site after j
 If it does not connect, check:
 
 - Did you replace both instances of `your-permanent-id` with the ID from your submission?
-- Does `data-source` still point to `class.playhtml.fun/playground#` followed by that exact ID?
+- Does `data-source` still point to `class.playhtml.fun/showcase#` followed by that exact ID?
 - Do source and consumer use the same capability?
 - Did you leave `shared` off the consumer on your site?
 - Does the page initialize PlayHTML once?

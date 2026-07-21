@@ -4,18 +4,20 @@ Date: 2026-07-20
 
 ## Decision
 
-The class project system has two distinct kinds of persistent PlayHTML data, and each has one canonical route:
+The class project system has two kinds of persistent PlayHTML data with one canonical route:
 
 - `/showcase#student-projects` owns the project registry. Submission forms on week pages and the full-screen playground consume this registry through `data-source`.
-- `/playground#<project-shared-id>` owns each individual project's interactive object state. The showcase consumes these objects through `data-source` instead of declaring duplicate `shared` elements.
+- `/showcase#<project-shared-id>` owns each individual project's interactive object state. The full-screen playground and participant sites consume these objects through `data-source`.
 
-The registry remains on `/showcase` because that is the live persisted room containing current submissions. Moving it would require an explicit data migration and would risk splitting or losing existing project records.
+The Showcase is the single source of truth for both which projects exist and how their objects are currently behaving. The registry remains there because it is the live persisted room containing current submissions. Moving it would require an explicit data migration and would risk splitting or losing existing project records.
 
-## Why the object source belongs on `/playground`
+## Route responsibilities
 
-Connection snippets already point participant sites at `class.playhtml.fun/playground#<project-shared-id>`. Making `/playground` authoritative aligns the public connection code, the full-screen experience, and cross-site state under one source.
+`/showcase` publishes the registry and project objects. `/playground` consumes both and renders the immersive full-screen webring used by the expanded widget. It remains able to edit project appearance by writing to the Showcase registry, but it does not publish an independent copy of any project object.
 
-Previously, both `/showcase` and `/playground` declared every project object with `shared="read-write"`. Identical element IDs on different paths create separate persisted states, so toggling the showcase object did not update the playground object. The showcase now mounts a writable `data-source` consumer pointing to the playground source. Existing playground object state wins; the duplicate showcase state is no longer used.
+Connection snippets point participant sites at `class.playhtml.fun/showcase#<project-shared-id>`. This gives every project one public source URL and makes both compact and full-screen presentations consumers of the same canonical data.
+
+Declaring the same project object with `shared="read-write"` on multiple paths creates separate persisted states. Only the Showcase may publish these objects. The independent object state previously stored under `/playground` is no longer used; this does not affect project records or appearance data stored in the Showcase registry.
 
 ## Project appearance edits
 
@@ -34,5 +36,6 @@ Custom HTML that no longer contains `.starter-project-appearance` is left untouc
 
 - Never mount the same project object as a `shared` source on more than one route.
 - Registry writes continue through `student-projects`, regardless of which form route initiated them.
-- Project connection snippets continue to use `/playground#<project-shared-id>`.
+- Project connection snippets use `/showcase#<project-shared-id>`.
+- `/playground` is a presentation and editing surface, including when embedded by the expanded widget; it is not a shared-element source.
 - Optional metadata must remain valid without being required for submission.
