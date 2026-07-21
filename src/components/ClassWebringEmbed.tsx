@@ -16,7 +16,7 @@ export function ClassWebringEmbed() {
     location.pathname === '/playground' ||
     location.pathname === '/webring-demo';
   const registryMode =
-    location.pathname === '/showcase'
+    location.pathname === '/showcase' || location.pathname.startsWith('/week/')
       ? 'local'
       : embedHidden
         ? 'disabled'
