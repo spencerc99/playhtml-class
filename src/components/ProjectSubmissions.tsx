@@ -2,10 +2,12 @@
 // ABOUTME: Showcase route that publishes the registry and project objects.
 
 import {
+  playhtml,
   usePlayContext,
   usePlayerIdentity,
   withSharedState,
 } from '@playhtml/react';
+import { TagType } from 'playhtml';
 import {
   useEffect,
   useRef,
@@ -57,7 +59,12 @@ interface ProjectSubmissionsProps {
 
 interface SubmitStatus {
   message: string;
-  tone: 'error' | 'success';
+  tone: 'error' | 'pending' | 'success';
+}
+
+interface PendingSubmission {
+  submission: ProjectSubmission;
+  wasEditing: boolean;
 }
 
 const PROJECTS_ELEMENT_ID = 'student-projects';
@@ -70,6 +77,8 @@ const MAX_TITLE_LENGTH = 120;
 const MAX_DESCRIPTION_LENGTH = 240;
 const MAX_EMOJI_LENGTH = 12;
 const DEFAULT_ACCENT_COLOR = '#f05a47';
+const SUBMISSION_CONFIRMATION_DELAY_MS = 1500;
+const SUBMISSION_CONFIRMATION_TIMEOUT_MS = 5000;
 const SUBMISSION_DATE_FORMAT = new Intl.DateTimeFormat(undefined, {
   dateStyle: 'medium',
   timeStyle: 'short',
@@ -98,6 +107,33 @@ function normalizeProjectUrl(value: string): string | null {
   } catch {
     return null;
   }
+}
+
+function projectRegistryElementIsReady(element: HTMLElement | null): boolean {
+  if (!element || element.hasAttribute('data-source-read-only')) return false;
+
+  const handler = playhtml.elementHandlers
+    .get(TagType.CanPlay)
+    ?.get(PROJECTS_ELEMENT_ID);
+  return handler?.element === element;
+}
+
+function submissionMatches(
+  stored: ProjectSubmission | undefined,
+  expected: ProjectSubmission,
+): boolean {
+  return (
+    stored?.id === expected.id &&
+    stored.name === expected.name &&
+    stored.submittedBy === expected.submittedBy &&
+    stored.title === expected.title &&
+    stored.url === expected.url &&
+    stored.description === expected.description &&
+    stored.emoji === expected.emoji &&
+    stored.accentColor === expected.accentColor &&
+    stored.imageUrl === expected.imageUrl &&
+    stored.submittedAt === expected.submittedAt
+  );
 }
 
 function ProjectAppearancePreview({
@@ -190,7 +226,28 @@ export const ProjectSubmissions = withSharedState<
     const [editingProjectId, setEditingProjectId] = useState<string | null>(
       null,
     );
+    const [registryElementReady, setRegistryElementReady] = useState(false);
+    const [pendingSubmission, setPendingSubmission] =
+      useState<PendingSubmission | null>(null);
     const [status, setStatus] = useState<SubmitStatus | null>(null);
+
+    useEffect(() => {
+      let readinessCheck = 0;
+
+      const checkRegistryElement = () => {
+        const ready =
+          hasSynced &&
+          projectRegistryElementIsReady(ref.current as HTMLElement);
+        setRegistryElementReady(ready);
+
+        if (!ready) {
+          readinessCheck = window.setTimeout(checkRegistryElement, 100);
+        }
+      };
+
+      checkRegistryElement();
+      return () => window.clearTimeout(readinessCheck);
+    }, [hasSynced, ref, variant]);
 
     useEffect(() => {
       const profileName = cursors.name?.trim();
@@ -281,9 +338,56 @@ export const ProjectSubmissions = withSharedState<
     const managedProjects = adminMode
       ? projects.filter((project) => !isBuiltInProjectId(project.id))
       : myProjects;
+    const pendingStoredProject = pendingSubmission
+      ? data.projects?.[pendingSubmission.submission.id]
+      : undefined;
+    const pendingSubmissionIsStored = pendingSubmission
+      ? submissionMatches(pendingStoredProject, pendingSubmission.submission)
+      : false;
+
+    useEffect(() => {
+      if (!pendingSubmission || !pendingSubmissionIsStored) return;
+
+      const confirmation = window.setTimeout(() => {
+        setTitle('');
+        setUrl('');
+        setDescription('');
+        setEmoji('🪑');
+        accentColorEdited.current = false;
+        setAccentColor(profileAccentColor);
+        setImageUrl('');
+        setEditingProjectId(null);
+        setStatus({
+          message: pendingSubmission.wasEditing
+            ? 'Saved — your ring entry has been updated.'
+            : 'Submitted — your project is live in the ring. Select it above to customize its HTML and CSS.',
+          tone: 'success',
+        });
+        setPendingSubmission(null);
+      }, SUBMISSION_CONFIRMATION_DELAY_MS);
+
+      return () => window.clearTimeout(confirmation);
+    }, [pendingSubmission, pendingSubmissionIsStored, profileAccentColor]);
+
+    useEffect(() => {
+      if (!pendingSubmission) return;
+
+      const failure = window.setTimeout(() => {
+        setPendingSubmission(null);
+        setStatus({
+          message:
+            'Could not confirm this submission in the shared showcase. Your form has been kept — please try again.',
+          tone: 'error',
+        });
+      }, SUBMISSION_CONFIRMATION_TIMEOUT_MS);
+
+      return () => window.clearTimeout(failure);
+    }, [pendingSubmission]);
 
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
+
+      if (pendingSubmission) return;
 
       const trimmedName = name.trim();
       const trimmedTitle = title.trim();
@@ -317,9 +421,15 @@ export const ProjectSubmissions = withSharedState<
         return;
       }
 
-      if (!hasSynced || !playerId) {
+      if (
+        !registryElementReady ||
+        !projectRegistryElementIsReady(ref.current as HTMLElement) ||
+        !playerId
+      ) {
+        setRegistryElementReady(false);
         setStatus({
-          message: 'Your PlayHTML identity is still loading. Try again.',
+          message:
+            'The shared project list is still connecting. Try again in a moment.',
           tone: 'error',
         });
         return;
@@ -392,24 +502,18 @@ export const ProjectSubmissions = withSharedState<
         submittedAt: existingProject?.submittedAt ?? Date.now(),
       };
 
+      setPendingSubmission({
+        submission,
+        wasEditing: Boolean(existingProject),
+      });
+      setStatus({
+        message: 'Saving to the shared showcase…',
+        tone: 'pending',
+      });
       setData((draft) => {
         draft.projects[submission.id] = submission;
         draft.reservedSharedIds ??= {};
         draft.reservedSharedIds[sharedObject.id] = true;
-      });
-      setTitle('');
-      setUrl('');
-      setDescription('');
-      setEmoji('🪑');
-      accentColorEdited.current = false;
-      setAccentColor(profileAccentColor);
-      setImageUrl('');
-      setEditingProjectId(null);
-      setStatus({
-        message: existingProject
-          ? 'Saved — your ring entry has been updated.'
-          : 'Submitted — your project is live in the ring. Select it above to customize its HTML and CSS.',
-        tone: 'success',
       });
     };
 
@@ -659,21 +763,28 @@ export const ProjectSubmissions = withSharedState<
             <div className="project-submissions__actions">
               <button
                 className="project-submissions__submit"
-                disabled={!hasSynced || !playerId}
+                disabled={
+                  !registryElementReady ||
+                  !playerId ||
+                  Boolean(pendingSubmission)
+                }
                 type="submit"
               >
-                {!hasSynced || !playerId
+                {!registryElementReady || !playerId
                   ? 'Connecting…'
-                  : editingProjectId
-                    ? 'Save changes'
-                    : 'Submit project'}{' '}
-                {hasSynced && playerId ? (
+                  : pendingSubmission
+                    ? 'Saving…'
+                    : editingProjectId
+                      ? 'Save changes'
+                      : 'Submit project'}{' '}
+                {registryElementReady && playerId && !pendingSubmission ? (
                   <span aria-hidden="true">→</span>
                 ) : null}
               </button>
               {editingProjectId ? (
                 <button
                   className="project-submissions__cancel"
+                  disabled={Boolean(pendingSubmission)}
                   type="button"
                   onClick={cancelEditing}
                 >
