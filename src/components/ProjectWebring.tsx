@@ -34,6 +34,7 @@ export interface RingProject {
   name: string;
   ringLabel?: string;
   sharedObject?: ProjectSharedObject;
+  starterVersion?: number;
   submittedAt: number;
   submittedBy?: string;
   title: string;
@@ -42,13 +43,14 @@ export interface RingProject {
 
 interface ProjectWebringProps {
   demo?: boolean;
+  embedded?: boolean;
   hasSynced: boolean;
+  onEditProjectDetails?: (project: RingProject) => void;
   onUpdateProject?: (
     projectId: string,
     patch: Partial<Pick<ProjectSharedObject, 'css' | 'html'>>,
   ) => void;
   playerId?: string;
-  pluginEmbed?: boolean;
   projects: RingProject[];
 }
 
@@ -305,10 +307,11 @@ function ObjectNode({
 
 export function ProjectWebring({
   demo = false,
+  embedded = false,
   hasSynced,
+  onEditProjectDetails,
   onUpdateProject,
   playerId,
-  pluginEmbed = false,
   projects,
 }: ProjectWebringProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -358,8 +361,13 @@ export function ProjectWebring({
     previewOverride.html === editorDraft.html &&
     previewOverride.css === editorDraft.css,
   );
+  const selectedIsBuiltIn = Boolean(
+    selected && isBuiltInProjectId(selected.id),
+  );
   const ownsSelected = Boolean(
-    !pluginEmbed && selected && playerId && selected.submittedBy === playerId,
+    !embedded &&
+    selected &&
+    (selectedIsBuiltIn || (playerId && selected.submittedBy === playerId)),
   );
   const canEditSelected = ownsSelected && Boolean(onUpdateProject);
   const webringSizing = ringSizing(safeRingProjects.length);
@@ -599,8 +607,14 @@ export function ProjectWebring({
                       {ownsSelected ? (
                         <div className="project-webring__owner-controls">
                           <p className="project-webring__owner-label">
-                            <strong>Owner controls</strong>
-                            <span>Only visible to you</span>
+                            <strong>
+                              {selectedIsBuiltIn
+                                ? 'Class controls'
+                                : 'Owner controls'}
+                            </strong>
+                            {selectedIsBuiltIn ? null : (
+                              <span>Only visible to you</span>
+                            )}
                           </p>
                           <div>
                             {canEditSelected ? (
@@ -612,13 +626,22 @@ export function ProjectWebring({
                                 Edit object HTML + CSS
                               </button>
                             ) : null}
-                            <a
-                              className="project-webring__edit-details"
-                              href="/showcase#your-submissions"
-                              target="_top"
-                            >
-                              Edit project details
-                            </a>
+                            {onEditProjectDetails ? (
+                              <button
+                                className="project-webring__edit-details"
+                                type="button"
+                                onClick={() => onEditProjectDetails(selected)}
+                              >
+                                Edit project details
+                              </button>
+                            ) : selectedIsBuiltIn ? null : (
+                              <a
+                                className="project-webring__edit-details"
+                                href="/showcase#your-submissions"
+                              >
+                                Edit project details
+                              </a>
+                            )}
                           </div>
                         </div>
                       ) : null}

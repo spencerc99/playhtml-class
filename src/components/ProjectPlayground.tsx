@@ -7,6 +7,7 @@ import {
   createBuiltInReservedIds,
   DEFAULT_SHARED_OBJECT_HTML,
   defaultSharedObjectCss,
+  isBuiltInProjectId,
   mergeBuiltInProjects,
   normalizeProjectSharedObject,
   type ProjectSharedObject,
@@ -20,7 +21,7 @@ interface ProjectRegistryData {
 
 interface ProjectPlaygroundProps {
   demo?: boolean;
-  pluginEmbed?: boolean;
+  embedded?: boolean;
 }
 
 const DEMO_NAMES = [
@@ -96,7 +97,7 @@ export const ProjectPlayground = withSharedState<
     id: demo ? 'demo-projects' : 'playground-projects',
     ...(demo ? {} : { dataSource: projectDataSource() }),
   }),
-  ({ data, setData, ref }, { demo = false, pluginEmbed = false }) => {
+  ({ data, setData, ref }, { demo = false, embedded = false }) => {
     const { getMyPlayerIdentity, hasSynced } = usePlayContext();
     const playerId =
       getMyPlayerIdentity()?.publicKey ??
@@ -112,11 +113,16 @@ export const ProjectPlayground = withSharedState<
       projectId: string,
       patch: Partial<Pick<ProjectSharedObject, 'css' | 'html'>>,
     ) => {
-      if (!playerId || demo) return;
+      if (demo || embedded) return;
 
       setData((draft) => {
         const project = draft.projects[projectId];
-        if (!project || project.submittedBy !== playerId) return;
+        if (
+          !project ||
+          (!isBuiltInProjectId(projectId) &&
+            (!playerId || project.submittedBy !== playerId))
+        )
+          return;
         project.sharedObject = {
           ...normalizeProjectSharedObject(project.sharedObject, project.id),
           ...patch,
@@ -131,10 +137,10 @@ export const ProjectPlayground = withSharedState<
       >
         <ProjectWebring
           demo={demo}
+          embedded={embedded}
           hasSynced={demo || hasSynced}
           onUpdateProject={demo ? undefined : updateProject}
           playerId={playerId}
-          pluginEmbed={pluginEmbed}
           projects={projects}
         />
       </div>

@@ -923,14 +923,6 @@ a:hover {
   margin-top: 0;
 }
 
-.project-playground-frame {
-  background: #f8efe3;
-  border: 0;
-  display: block;
-  height: 100svh;
-  width: 100%;
-}
-
 .project-playground-page,
 .project-playground {
   height: 100svh;
@@ -1283,6 +1275,7 @@ a:hover {
   line-height: 1.5;
   margin: 1rem auto;
   max-width: 24rem;
+  text-wrap: balance;
 }
 
 .project-webring__detail > a {
@@ -1312,12 +1305,15 @@ a:hover {
 }
 
 .project-webring__owner-controls {
+  box-sizing: border-box;
   background: color-mix(in srgb, var(--ring-accent) 7%, white);
   border: 1px dashed color-mix(in srgb, var(--ring-accent) 42%, transparent);
   border-radius: 0.85rem;
   margin: 0.9rem auto 0;
   max-width: 22rem;
+  min-width: 0;
   padding: 0.7rem;
+  width: 100%;
 }
 
 .project-webring__owner-label {
@@ -1345,16 +1341,30 @@ a:hover {
 .project-webring__owner-controls > div {
   align-items: center;
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 0.45rem;
   justify-content: center;
 }
 
-.project-webring__owner-controls a.project-webring__edit-details {
+.project-webring__owner-controls > div > * {
+  box-sizing: border-box;
+  justify-content: center;
+  line-height: 1.2;
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-align: center;
+  white-space: normal;
+  width: 100%;
+}
+
+.project-webring__owner-controls .project-webring__edit-details {
+  appearance: none;
   background: transparent;
   border: 1px solid var(--ring-accent);
   border-radius: 999px;
   color: var(--ring-accent);
+  cursor: pointer;
   display: inline-flex;
   font-family: var(--font-display);
   font-size: 0.7rem;

@@ -25,10 +25,10 @@ import {
   normalizeProjectSharedObject,
   projectFaviconUrl,
   sharedObjectConsumerSnippet,
+  type ProjectSharedObject,
 } from '../lib/projectSharedObject';
 import { ProjectEmojiPicker } from './ProjectEmojiPicker';
-import { ProjectPlaygroundFrame } from './ProjectPlaygroundFrame';
-import { type RingProject } from './ProjectWebring';
+import { ProjectWebring, type RingProject } from './ProjectWebring';
 
 interface ProjectSubmission extends RingProject {
   id: string;
@@ -172,7 +172,7 @@ export const ProjectSubmissions = withSharedState<
   ({ data, setData, ref }, { adminMode = false, variant }) => {
     const { cursors, hasSynced } = usePlayContext();
     const { pid: playerId } = usePlayerIdentity();
-    const builtInRegistryPrepared = useRef(false);
+    const builtInsSeeded = useRef(false);
     const nameEdited = useRef(false);
     const [name, setName] = useState(() => cursors.name?.trim() ?? '');
     const [title, setTitle] = useState('');
@@ -195,25 +195,19 @@ export const ProjectSubmissions = withSharedState<
     }, [cursors.name]);
 
     useEffect(() => {
-      if (
-        variant !== 'showcase' ||
-        !hasSynced ||
-        builtInRegistryPrepared.current
-      )
+      if (variant !== 'showcase' || !hasSynced || builtInsSeeded.current)
         return;
 
-      builtInRegistryPrepared.current = true;
+      builtInsSeeded.current = true;
       setData((draft) => {
-        const builtInProjects = createBuiltInProjects();
-
-        for (const id of Object.keys(draft.projects)) {
-          if (id.startsWith('builtin-')) {
-            delete draft.projects[id];
-          }
-        }
-
         draft.reservedSharedIds ??= {};
-        for (const project of Object.values(builtInProjects)) {
+        for (const [id, project] of Object.entries(createBuiltInProjects())) {
+          if (
+            !draft.projects[id] ||
+            draft.projects[id].starterVersion !== project.starterVersion
+          ) {
+            draft.projects[id] = project;
+          }
           draft.reservedSharedIds[project.sharedObject.id] = true;
         }
       });
@@ -266,6 +260,12 @@ export const ProjectSubmissions = withSharedState<
     const myProjects = playerId
       ? projects.filter((project) => project.submittedBy === playerId)
       : [];
+    const editableProjects = adminMode
+      ? projects
+      : projects.filter(
+          (project) =>
+            isBuiltInProjectId(project.id) || project.submittedBy === playerId,
+        );
     const managedProjects = adminMode
       ? projects.filter((project) => !isBuiltInProjectId(project.id))
       : myProjects;
@@ -314,7 +314,7 @@ export const ProjectSubmissions = withSharedState<
       }
 
       const existingProject = editingProjectId
-        ? managedProjects.find((project) => project.id === editingProjectId)
+        ? editableProjects.find((project) => project.id === editingProjectId)
         : undefined;
       if (editingProjectId && !existingProject) {
         setStatus({
@@ -363,6 +363,7 @@ export const ProjectSubmissions = withSharedState<
         emoji: normalizedEmoji,
         accentColor,
         imageUrl: normalizedImageUrl ?? undefined,
+        starterVersion: existingProject?.starterVersion,
         sharedObject,
         submittedAt: existingProject?.submittedAt ?? Date.now(),
       };
@@ -401,6 +402,26 @@ export const ProjectSubmissions = withSharedState<
       document.querySelector('#submit-project')?.scrollIntoView({
         behavior: 'smooth',
         block: 'start',
+      });
+    };
+
+    const updateProjectObject = (
+      projectId: string,
+      patch: Partial<Pick<ProjectSharedObject, 'css' | 'html'>>,
+    ) => {
+      setData((draft) => {
+        const project = draft.projects[projectId];
+        if (
+          !project ||
+          (!isBuiltInProjectId(projectId) &&
+            (!playerId || project.submittedBy !== playerId))
+        )
+          return;
+
+        project.sharedObject = {
+          ...normalizeProjectSharedObject(project.sharedObject, project.id),
+          ...patch,
+        };
       });
     };
 
@@ -451,7 +472,17 @@ export const ProjectSubmissions = withSharedState<
         id={PROJECTS_ELEMENT_ID}
         className={`project-submissions project-submissions--${variant}`}
       >
-        {variant === 'showcase' ? <ProjectPlaygroundFrame /> : null}
+        {variant === 'showcase' ? (
+          <div className="project-playground">
+            <ProjectWebring
+              hasSynced={hasSynced}
+              onEditProjectDetails={editProject}
+              onUpdateProject={updateProjectObject}
+              playerId={playerId}
+              projects={projects}
+            />
+          </div>
+        ) : null}
 
         <div className="project-submissions__form-panel" id="submit-project">
           <div className="project-submissions__intro">

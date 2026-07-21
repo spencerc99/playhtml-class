@@ -7,11 +7,11 @@ export default function Playground() {
   const { search } = useLocation();
   const parameters = new URLSearchParams(search);
   const demo = parameters.get('demo') === 'true';
-  const pluginEmbed = parameters.get('embed') === 'plugin';
+  const embedded = window.self !== window.top;
 
   return (
     <main className="project-playground-page">
-      <ProjectPlayground demo={demo} pluginEmbed={pluginEmbed} />
+      <ProjectPlayground demo={demo} embedded={embedded} />
     </main>
   );
 }

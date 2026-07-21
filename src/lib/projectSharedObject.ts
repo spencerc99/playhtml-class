@@ -24,6 +24,7 @@ export interface BuiltInRingProject {
   name: string;
   ringLabel: string;
   sharedObject: ProjectSharedObject;
+  starterVersion: number;
   submittedAt: number;
   title: string;
   url: string;
@@ -231,6 +232,7 @@ const PLAYHTML_SHARED_OBJECT_HTML =
 
 const WE_WERE_ONLINE_ACCENT_COLOR = '#806a52';
 const PLAYHTML_ACCENT_COLOR = '#ffad42';
+const BUILT_IN_STARTER_VERSION = 9;
 
 const BUILT_IN_PROJECT_DEFINITIONS = [
   {
@@ -298,6 +300,7 @@ export function createBuiltInProjects(): Record<string, BuiltInRingProject> {
         emoji: project.emoji,
         accentColor: project.accentColor,
         imageUrl: 'imageUrl' in project ? project.imageUrl : undefined,
+        starterVersion: BUILT_IN_STARTER_VERSION,
         submittedAt: project.submittedAt,
         sharedObject: {
           id: project.sharedId,
@@ -309,17 +312,24 @@ export function createBuiltInProjects(): Record<string, BuiltInRingProject> {
   );
 }
 
-export function mergeBuiltInProjects<T>(
+export function mergeBuiltInProjects<T extends { starterVersion?: number }>(
   projects: Record<string, T> | undefined,
 ): Record<string, BuiltInRingProject | T> {
   const builtIns = createBuiltInProjects();
-  const currentProjects = Object.fromEntries(
-    Object.entries(projects ?? {}).filter(([id]) => !id.startsWith('builtin-')),
-  );
-  return {
+  const merged: Record<string, BuiltInRingProject | T> = {
     ...builtIns,
-    ...currentProjects,
+    ...(projects ?? {}),
   };
+
+  for (const [id, builtIn] of Object.entries(builtIns)) {
+    const saved = projects?.[id];
+
+    if (!saved || saved.starterVersion !== builtIn.starterVersion) {
+      merged[id] = builtIn;
+    }
+  }
+
+  return merged;
 }
 
 export function createBuiltInReservedIds(): Record<string, true> {
