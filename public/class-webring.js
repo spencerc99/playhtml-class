@@ -32,6 +32,7 @@ if (!document.querySelector('[data-class-webring-widget]')) {
   const receivesLocalRegistryData =
     window.location.host === registryLocation &&
     Boolean(document.getElementById('student-projects'));
+  let registryMode = receivesLocalRegistryData ? 'local' : 'remote';
   const demoMode = scriptElement?.dataset.demo === 'true';
   if (demoMode) playgroundUrl.searchParams.set('demo', 'true');
   const debugMode = scriptElement?.dataset.debug === 'true';
@@ -39,6 +40,7 @@ if (!document.querySelector('[data-class-webring-widget]')) {
   const widget = document.createElement('aside');
   const registryDataEvent = 'class-webring:registry-data';
   const registryDataRequestEvent = 'class-webring:request-data';
+  const registryModeEvent = 'class-webring:registry-mode';
   const declaredIconCache = new Map();
   const maximumCompactProjects = 7;
   let expanded = false;
@@ -899,7 +901,17 @@ if (!document.querySelector('[data-class-webring-widget]')) {
   };
   window.addEventListener(registryDataEvent, handleLocalRegistryData);
 
-  if (!receivesLocalRegistryData) {
+  function disconnectRemoteRegistry() {
+    if (widget.hasAttribute('can-play')) {
+      playhtml?.removePlayElement(widget);
+    }
+
+    widget.removeAttribute('can-play');
+    widget.removeAttribute('data-source');
+    widget.removeAttribute('data-source-read-only');
+  }
+
+  function prepareRemoteRegistry() {
     widget.setAttribute('can-play', '');
     widget.setAttribute('data-source', dataSource);
     widget.setAttribute('data-source-read-only', '');
@@ -907,16 +919,9 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     widget.updateElement = ({ data }) => updateProjects(data, 'PlayHTML');
   }
 
-  document.head.append(style);
-  document.body.append(widget);
-  widget.dataset.projectCount = String(
-    demoMode ? demoProjects.length : starterProjects.length,
-  );
-  renderExpandable();
+  async function connectRemoteRegistry() {
+    prepareRemoteRegistry();
 
-  if (receivesLocalRegistryData) {
-    window.dispatchEvent(new Event(registryDataRequestEvent));
-  } else {
     if (!playhtml) {
       const importedModule = await import('https://unpkg.com/playhtml');
       playhtml = window.playhtml ?? importedModule.playhtml;
@@ -927,5 +932,46 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     } else {
       await playhtml.init();
     }
+  }
+
+  const handleRegistryMode = (event) => {
+    const nextMode = event.detail?.mode;
+    if (
+      nextMode !== 'disabled' &&
+      nextMode !== 'local' &&
+      nextMode !== 'remote'
+    ) {
+      return;
+    }
+    if (nextMode === registryMode) return;
+
+    registryMode = nextMode;
+    if (registryMode === 'remote') {
+      void connectRemoteRegistry();
+      return;
+    }
+
+    disconnectRemoteRegistry();
+    if (registryMode === 'local') {
+      window.dispatchEvent(new Event(registryDataRequestEvent));
+    }
+  };
+  window.addEventListener(registryModeEvent, handleRegistryMode);
+
+  if (registryMode === 'remote') {
+    prepareRemoteRegistry();
+  }
+
+  document.head.append(style);
+  document.body.append(widget);
+  widget.dataset.projectCount = String(
+    demoMode ? demoProjects.length : starterProjects.length,
+  );
+  renderExpandable();
+
+  if (registryMode === 'local') {
+    window.dispatchEvent(new Event(registryDataRequestEvent));
+  } else {
+    await connectRemoteRegistry();
   }
 }
