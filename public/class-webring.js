@@ -486,7 +486,10 @@ if (!document.querySelector('[data-class-webring-widget]')) {
         poolCount.textContent = `+${waitingProjects.length}`;
         const poolLabel = document.createElement('span');
         poolLabel.textContent = 'others';
-        projectPool.append(poolCount, poolLabel);
+        const poolVisual = document.createElement('div');
+        poolVisual.className = 'class-webring-widget__pool-visual';
+        poolVisual.append(poolCount, poolLabel);
+        projectPool.append(poolVisual);
         positionCompactElement(projectPool, poolSlotIndex, slotCount);
         miniOrbit.append(projectPool);
       }
@@ -790,8 +793,15 @@ if (!document.querySelector('[data-class-webring-widget]')) {
       width: 2.65rem;
     }
     .class-webring-widget__pool {
-      align-items: center;
       animation: class-webring-counter-spin var(--class-webring-orbit-duration) linear infinite;
+      height: 2.85rem;
+      margin: -1.425rem 0 0 -1.425rem;
+      pointer-events: none;
+      position: absolute;
+      width: 2.85rem;
+    }
+    .class-webring-widget__pool-visual {
+      align-items: center;
       background: rgba(255,255,255,.9);
       border: 2px dashed rgba(224,0,0,.55);
       border-radius: 50%;
@@ -799,12 +809,9 @@ if (!document.querySelector('[data-class-webring-widget]')) {
       color: #e00000;
       display: flex;
       flex-direction: column;
-      height: 2.85rem;
+      height: 100%;
       justify-content: center;
-      margin: -1.425rem 0 0 -1.425rem;
-      pointer-events: none;
-      position: absolute;
-      width: 2.85rem;
+      width: 100%;
     }
     .class-webring-widget__pool strong {
       font-size: .78rem;
@@ -819,10 +826,11 @@ if (!document.querySelector('[data-class-webring-widget]')) {
       text-transform: uppercase;
     }
     .class-webring-widget__mini-orbit.is-swapping,
-    .class-webring-widget__mini-orbit.is-swapping .class-webring-widget__circle--mini {
+    .class-webring-widget__mini-orbit.is-swapping .class-webring-widget__circle--mini,
+    .class-webring-widget__mini-orbit.is-swapping .class-webring-widget__pool {
       animation-play-state: paused;
     }
-    .class-webring-widget__pool.is-receiving {
+    .class-webring-widget__pool.is-receiving .class-webring-widget__pool-visual {
       animation: class-webring-pool-pulse 1.8s ease-in-out both;
     }
     .class-webring-widget__circle img {
@@ -881,7 +889,9 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     @media (prefers-reduced-motion: reduce) {
       .class-webring-widget__world,
       .class-webring-widget__mini-orbit,
-      .class-webring-widget__circle { animation: none; }
+      .class-webring-widget__circle,
+      .class-webring-widget__pool,
+      .class-webring-widget__pool-visual { animation: none; }
     }
   `;
 
