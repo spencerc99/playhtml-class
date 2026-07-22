@@ -620,6 +620,7 @@ export function ProjectWebring({
         safeRingProjects.length > 24 ? ' project-webring--dense' : ''
       }`}
       aria-label="Class project playground"
+      aria-busy={!hasSynced}
     >
       <div className="project-webring__viewport">
         <div
@@ -643,16 +644,27 @@ export function ProjectWebring({
             }
           >
             <div className="project-webring__wash" aria-hidden="true" />
-            {safeRingProjects.length === 0 ? (
+            {!hasSynced ? (
+              <div
+                className="project-webring__empty project-webring__loading"
+                role="status"
+              >
+                <div className="project-webring__loading-visual">
+                  <img src="/red-stool.png" alt="" />
+                  <span aria-hidden="true" />
+                  <span aria-hidden="true" />
+                  <span aria-hidden="true" />
+                </div>
+                <h2>Gathering the stools…</h2>
+                <p>Loading the shared class collection from PlayHTML.</p>
+              </div>
+            ) : safeRingProjects.length === 0 ? (
               <div className="project-webring__empty">
                 <img src="/red-stool.png" alt="" />
-                <h2>
-                  {hasSynced ? 'Take the first seat' : 'Gathering the stools…'}
-                </h2>
+                <h2>Take the first seat</h2>
                 <p>
-                  {hasSynced
-                    ? 'The first submission will place a red stool in this shared room.'
-                    : 'Connecting to the shared class collection.'}
+                  The first submission will place a red stool in this shared
+                  room.
                 </p>
               </div>
             ) : (
@@ -819,7 +831,7 @@ export function ProjectWebring({
         </div>
       </div>
 
-      {safeRingProjects.length > 0 ? (
+      {hasSynced && safeRingProjects.length > 0 ? (
         <div className="project-webring__zoom" aria-label="Playground zoom">
           <button
             aria-label="Zoom out"

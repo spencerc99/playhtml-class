@@ -108,6 +108,14 @@ export const ProjectPlayground = withSharedState<
         : undefined,
     );
     const projects = demo ? DEMO_PROJECTS : Object.values(projectRecord);
+    const registryHasLoaded =
+      demo ||
+      (hasSynced &&
+        Boolean(
+          data.projects &&
+          typeof data.projects === 'object' &&
+          Object.keys(data.projects).length,
+        ));
 
     const updateProject = (
       projectId: string,
@@ -138,7 +146,7 @@ export const ProjectPlayground = withSharedState<
         <ProjectWebring
           demo={demo}
           embedded={embedded}
-          hasSynced={demo || hasSynced}
+          hasSynced={registryHasLoaded}
           onUpdateProject={demo ? undefined : updateProject}
           playerId={playerId}
           projects={projects}

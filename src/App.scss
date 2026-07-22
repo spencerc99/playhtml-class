@@ -1440,6 +1440,41 @@ a:hover {
   width: min(9rem, 45vw);
 }
 
+.project-webring__loading-visual {
+  height: min(11rem, 50vw);
+  margin: 0 auto;
+  position: relative;
+  width: min(11rem, 50vw);
+}
+
+.project-webring__loading-visual img {
+  left: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 62%;
+}
+
+.project-webring__loading-visual span {
+  animation: ring-loading-orbit 1.5s ease-in-out infinite;
+  background: var(--red);
+  border-radius: 50%;
+  height: 0.65rem;
+  left: calc(50% - 0.325rem);
+  position: absolute;
+  top: calc(50% - 0.325rem);
+  transform: rotate(0deg) translateY(-5rem);
+  width: 0.65rem;
+}
+
+.project-webring__loading-visual span:nth-of-type(2) {
+  animation-delay: -0.5s;
+}
+
+.project-webring__loading-visual span:nth-of-type(3) {
+  animation-delay: -1s;
+}
+
 .project-webring__empty h2 {
   color: var(--red);
   font-size: clamp(2.6rem, 8vw, 5rem);
@@ -1787,6 +1822,23 @@ a:hover {
   }
   50% {
     margin-top: 0.35rem;
+  }
+}
+
+@keyframes ring-loading-orbit {
+  0% {
+    opacity: 0.25;
+    transform: rotate(0deg) translateY(-5rem) scale(0.7);
+  }
+
+  50% {
+    opacity: 1;
+    transform: rotate(180deg) translateY(-5rem) scale(1);
+  }
+
+  100% {
+    opacity: 0.25;
+    transform: rotate(360deg) translateY(-5rem) scale(0.7);
   }
 }
 
@@ -2707,7 +2759,8 @@ a:hover {
 @media (prefers-reduced-motion: reduce) {
   .project-webring__item,
   .project-webring__node,
-  .project-webring__detail {
+  .project-webring__detail,
+  .project-webring__loading-visual span {
     animation: none;
     transition: none;
   }
