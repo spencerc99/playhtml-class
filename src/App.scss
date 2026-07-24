@@ -1008,6 +1008,8 @@ a:hover {
 
 .project-webring__item {
   align-items: center;
+  animation: ring-drift var(--ring-drift-duration) var(--ring-drift-delay)
+    ease-in-out infinite alternate;
   display: flex;
   flex-direction: column;
   left: calc(var(--ring-x) - var(--ring-node-size) / 2);
@@ -1016,6 +1018,13 @@ a:hover {
   transition:
     left 0.55s cubic-bezier(0.2, 0.8, 0.2, 1),
     top 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.project-webring__item:hover,
+.project-webring__item:focus-within,
+.project-webring__item.is-selected {
+  animation-play-state: paused;
+  z-index: 4;
 }
 
 .project-webring__node {
@@ -1842,6 +1851,12 @@ a:hover {
   }
 }
 
+@keyframes ring-drift {
+  to {
+    transform: translate(var(--ring-drift-x), var(--ring-drift-y));
+  }
+}
+
 @keyframes ring-detail-in {
   from {
     opacity: 0;
@@ -2618,7 +2633,7 @@ a:hover {
 
   .project-webring__center {
     max-height: 58svh;
-    max-width: min(66vw, 24rem);
+    max-width: min(58vw, 24rem);
   }
 
   .project-webring--dense .project-webring__center {

@@ -246,62 +246,113 @@ function projectObjectDataSource(sharedId: string): string {
   return `${window.location.host}/showcase#${sharedId}`;
 }
 
+interface OrbitTrack {
+  horizontalRadius: number;
+  itemCount: number;
+  verticalRadius: number;
+}
+
+function orbitTracks(total: number): OrbitTrack[] {
+  const orbitCount = Math.min(3, Math.ceil(total / 16));
+  const outerRadius = 48;
+  const horizontalInnerRadius = orbitCount === 1 ? outerRadius : 31;
+  const verticalInnerRadius = orbitCount === 1 ? outerRadius : 36;
+  const tracks = Array.from({ length: orbitCount }, (_, index) => {
+    const progress = orbitCount === 1 ? 0 : index / (orbitCount - 1);
+    const horizontalRadius =
+      outerRadius - progress * (outerRadius - horizontalInnerRadius);
+    const verticalRadius =
+      outerRadius - progress * (outerRadius - verticalInnerRadius);
+
+    return {
+      horizontalRadius,
+      itemCount: 0,
+      verticalRadius,
+    };
+  });
+  const weights = tracks.map(
+    (track) => (track.horizontalRadius + track.verticalRadius) / 2,
+  );
+  const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+  const rawCounts = weights.map((weight) => (total * weight) / totalWeight);
+
+  for (const [index, rawCount] of rawCounts.entries()) {
+    tracks[index].itemCount = Math.floor(rawCount);
+  }
+
+  const assignedCount = tracks.reduce((sum, track) => sum + track.itemCount, 0);
+  const remainderOrder = rawCounts
+    .map((rawCount, index) => ({
+      fraction: rawCount - Math.floor(rawCount),
+      index,
+    }))
+    .sort(
+      (left, right) =>
+        right.fraction - left.fraction || left.index - right.index,
+    );
+
+  for (let index = 0; index < total - assignedCount; index += 1) {
+    tracks[remainderOrder[index].index].itemCount += 1;
+  }
+
+  if (tracks.length === 2 && tracks[0].itemCount > 17) {
+    const overflow = tracks[0].itemCount - 17;
+    tracks[0].itemCount -= overflow;
+    tracks[1].itemCount += overflow;
+  }
+
+  return tracks;
+}
+
 function orbitPosition(index: number, total: number): CSSProperties {
-  const maxPerOrbit = 16;
-  const orbitCount = Math.ceil(total / maxPerOrbit);
-  const minimumItemsPerOrbit = Math.floor(total / orbitCount);
-  const largerOrbitCount = total % orbitCount;
+  const tracks = orbitTracks(total);
   let itemsBeforeOrbit = 0;
   let orbitIndex = 0;
-  let itemsInOrbit = 0;
+  let track = tracks[0];
 
-  for (; orbitIndex < orbitCount; orbitIndex += 1) {
-    itemsInOrbit =
-      minimumItemsPerOrbit + (orbitIndex < largerOrbitCount ? 1 : 0);
-    if (index < itemsBeforeOrbit + itemsInOrbit) break;
-    itemsBeforeOrbit += itemsInOrbit;
+  for (; orbitIndex < tracks.length; orbitIndex += 1) {
+    track = tracks[orbitIndex];
+    if (index < itemsBeforeOrbit + track.itemCount) break;
+    itemsBeforeOrbit += track.itemCount;
   }
 
   const itemIndex = index - itemsBeforeOrbit;
-  const angleOffset = orbitIndex % 2 === 0 ? 0 : Math.PI / itemsInOrbit;
+  const angleOffset = orbitIndex === 0 ? 0 : Math.PI / track.itemCount;
   const angle =
-    (itemIndex / Math.max(itemsInOrbit, 1)) * Math.PI * 2 -
+    (itemIndex / Math.max(track.itemCount, 1)) * Math.PI * 2 -
     Math.PI / 2 +
     angleOffset;
-  const outerRadius = 46;
-  const orbitProgress = orbitCount === 1 ? 0 : orbitIndex / (orbitCount - 1);
-  const horizontalInnerRadius = Math.max(
-    32,
-    outerRadius - (orbitCount - 1) * 13,
-  );
-  const verticalInnerRadius = Math.max(38, outerRadius - (orbitCount - 1) * 13);
-  const horizontalRadius =
-    outerRadius - orbitProgress * (outerRadius - horizontalInnerRadius);
-  const verticalRadius =
-    outerRadius - orbitProgress * (outerRadius - verticalInnerRadius);
+  const driftDirection = index % 2 === 0 ? 1 : -1;
+  const driftDistance = 4 + (index % 5);
+  const driftX = -Math.sin(angle) * driftDistance * driftDirection;
+  const driftY = Math.cos(angle) * driftDistance * driftDirection;
+  const isLowerHalf = Math.sin(angle) > 0;
 
   return {
-    '--ring-x': `${50 + Math.cos(angle) * horizontalRadius}%`,
-    '--ring-y': `${50 + Math.sin(angle) * verticalRadius}%`,
+    '--ring-x': `${50 + Math.cos(angle) * track.horizontalRadius}%`,
+    '--ring-y': `${50 + Math.sin(angle) * track.verticalRadius}%`,
     '--ring-delay': `${index * -0.12}s`,
-    '--ring-label-bottom':
-      Math.sin(angle) > 0 ? 'calc(100% + 0.35rem)' : 'auto',
-    '--ring-label-top': Math.sin(angle) > 0 ? 'auto' : 'calc(100% + 0.35rem)',
+    '--ring-drift-delay': `${index * -0.73}s`,
+    '--ring-drift-duration': `${11 + (index % 6) * 0.9}s`,
+    '--ring-drift-x': `${driftX.toFixed(2)}px`,
+    '--ring-drift-y': `${driftY.toFixed(2)}px`,
+    '--ring-label-bottom': isLowerHalf ? 'auto' : 'calc(100% + 0.35rem)',
+    '--ring-label-top': isLowerHalf ? 'calc(100% + 0.35rem)' : 'auto',
   } as CSSProperties;
 }
 
 function ringSizing(total: number): CSSProperties {
   const density = Math.max(0.42, Math.min(1, 17 / Math.max(total, 1)));
   const desktopMinimum = Math.max(3, 5.75 * density);
-  const mobileMinimum = Math.max(2.75, 5 * density);
+  const mobileMinimum = Math.max(2.25, 3.25 * density);
 
   return {
     '--ring-emoji-size': `clamp(${(desktopMinimum * 0.68).toFixed(2)}rem, ${(8.16 * density).toFixed(2)}vw, ${(7.48 * density).toFixed(2)}rem)`,
     '--ring-label-width': `${Math.max(3.5, 8 * density).toFixed(2)}rem`,
     '--ring-mobile-emoji-size': `clamp(${(mobileMinimum * 0.68).toFixed(2)}rem, ${(14.96 * density).toFixed(2)}vw, ${(5.1 * density).toFixed(2)}rem)`,
     '--ring-mobile-label-width': `${Math.max(3.25, 5 * density).toFixed(2)}rem`,
-    '--ring-mobile-node-size': `clamp(${mobileMinimum.toFixed(2)}rem, ${(22 * density).toFixed(2)}vw, ${(7.5 * density).toFixed(2)}rem)`,
-    '--ring-node-size': `clamp(${desktopMinimum.toFixed(2)}rem, ${(12 * density).toFixed(2)}vw, ${(11 * density).toFixed(2)}rem)`,
+    '--ring-mobile-node-size': `clamp(${mobileMinimum.toFixed(2)}rem, ${(15 * density).toFixed(2)}vw, ${(5 * density).toFixed(2)}rem)`,
+    '--ring-node-size': `clamp(${desktopMinimum.toFixed(2)}rem, ${(7.5 * density).toFixed(2)}vw, ${(8.5 * density).toFixed(2)}rem)`,
   } as CSSProperties;
 }
 
