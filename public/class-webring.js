@@ -787,7 +787,7 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     }
     .class-webring-widget__circle--mini {
       animation: class-webring-counter-spin var(--class-webring-orbit-duration) linear infinite;
-      font-size: 1rem;
+      --class-webring-visual-size: 2.12rem;
       height: 2.65rem;
       margin: -1.325rem 0 0 -1.325rem;
       width: 2.65rem;
@@ -834,11 +834,17 @@ if (!document.querySelector('[data-class-webring-widget]')) {
       animation: class-webring-pool-pulse 1.8s ease-in-out both;
     }
     .class-webring-widget__circle img {
-      height: 100%;
-      inset: 0;
+      height: var(--class-webring-visual-size);
+      left: 50%;
       object-fit: contain;
       position: absolute;
-      width: 100%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: var(--class-webring-visual-size);
+    }
+    .class-webring-widget__circle > span {
+      font-size: var(--class-webring-visual-size);
+      line-height: 1;
     }
     .class-webring-widget__circle em {
       background: rgba(255,255,255,.92);
@@ -876,6 +882,7 @@ if (!document.querySelector('[data-class-webring-widget]')) {
     @media (max-width: 520px) {
       .class-webring-widget__miniature { height: 12.5rem; width: 12.5rem; }
       .class-webring-widget__circle--mini {
+        --class-webring-visual-size: 1.88rem;
         height: 2.35rem;
         margin: -1.175rem 0 0 -1.175rem;
         width: 2.35rem;

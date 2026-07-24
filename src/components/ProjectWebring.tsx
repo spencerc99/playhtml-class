@@ -322,20 +322,12 @@ function orbitPosition(index: number, total: number): CSSProperties {
     (itemIndex / Math.max(track.itemCount, 1)) * Math.PI * 2 -
     Math.PI / 2 +
     angleOffset;
-  const driftDirection = index % 2 === 0 ? 1 : -1;
-  const driftDistance = 4 + (index % 5);
-  const driftX = -Math.sin(angle) * driftDistance * driftDirection;
-  const driftY = Math.cos(angle) * driftDistance * driftDirection;
   const isLowerHalf = Math.sin(angle) > 0;
 
   return {
     '--ring-x': `${50 + Math.cos(angle) * track.horizontalRadius}%`,
     '--ring-y': `${50 + Math.sin(angle) * track.verticalRadius}%`,
     '--ring-delay': `${index * -0.12}s`,
-    '--ring-drift-delay': `${index * -0.73}s`,
-    '--ring-drift-duration': `${11 + (index % 6) * 0.9}s`,
-    '--ring-drift-x': `${driftX.toFixed(2)}px`,
-    '--ring-drift-y': `${driftY.toFixed(2)}px`,
     '--ring-label-bottom': isLowerHalf ? 'auto' : 'calc(100% + 0.35rem)',
     '--ring-label-top': isLowerHalf ? 'calc(100% + 0.35rem)' : 'auto',
   } as CSSProperties;
@@ -347,10 +339,8 @@ function ringSizing(total: number): CSSProperties {
   const mobileMinimum = Math.max(2.25, 3.25 * density);
 
   return {
-    '--ring-emoji-size': `clamp(${(desktopMinimum * 0.68).toFixed(2)}rem, ${(8.16 * density).toFixed(2)}vw, ${(7.48 * density).toFixed(2)}rem)`,
-    '--ring-label-width': `${Math.max(3.5, 8 * density).toFixed(2)}rem`,
-    '--ring-mobile-emoji-size': `clamp(${(mobileMinimum * 0.68).toFixed(2)}rem, ${(14.96 * density).toFixed(2)}vw, ${(5.1 * density).toFixed(2)}rem)`,
-    '--ring-mobile-label-width': `${Math.max(3.25, 5 * density).toFixed(2)}rem`,
+    '--ring-label-width': `${Math.max(7, 12 * density).toFixed(2)}rem`,
+    '--ring-mobile-label-width': `${Math.max(4.5, 5.25 * density).toFixed(2)}rem`,
     '--ring-mobile-node-size': `clamp(${mobileMinimum.toFixed(2)}rem, ${(15 * density).toFixed(2)}vw, ${(5 * density).toFixed(2)}rem)`,
     '--ring-node-size': `clamp(${desktopMinimum.toFixed(2)}rem, ${(7.5 * density).toFixed(2)}vw, ${(8.5 * density).toFixed(2)}rem)`,
   } as CSSProperties;
@@ -749,6 +739,7 @@ export function ProjectWebring({
                           aria-expanded={selectedId === project.id}
                           className="project-webring__node-label"
                           onClick={() => setSelectedId(project.id)}
+                          title={project.ringLabel ?? project.title}
                           type="button"
                         >
                           {project.ringLabel ?? project.title}
