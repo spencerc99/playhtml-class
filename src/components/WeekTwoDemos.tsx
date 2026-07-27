@@ -1,9 +1,8 @@
 // ABOUTME: Live week 2 demos for can-mirror, basic JS, and a can-play preview.
 
 import { useCallback } from 'react';
+import { configureBunnyDemo } from './bunnyDemo';
 import { LiveHtmlDemo } from './LiveHtmlDemo';
-
-const BUNNY_SRC = '/pixel-bunny.png';
 
 export function ButtonClickDemo() {
   const onMount = useCallback((container: HTMLDivElement) => {
@@ -47,39 +46,7 @@ export function ButtonClickDemo() {
 }
 
 export function BunnyMirrorDemo() {
-  const onMount = useCallback((container: HTMLDivElement) => {
-    const pen = container.querySelector<HTMLDivElement>('#bunny-pen');
-    const cloneButton =
-      container.querySelector<HTMLButtonElement>('#clone-bunny');
-    const removeButton =
-      container.querySelector<HTMLButtonElement>('#remove-bunny');
-
-    if (!pen || !cloneButton || !removeButton) {
-      return;
-    }
-
-    const handleClone = () => {
-      // can-mirror watches the pen's child list, so appending here
-      // syncs new bunnies to everyone else.
-      const bunny = document.createElement('img');
-      bunny.id = `bunny-${pen.children.length}`;
-      bunny.src = BUNNY_SRC;
-      bunny.alt = '';
-      pen.append(bunny);
-    };
-
-    // Removing the last bunny mirrors out to everyone too, so clone/remove
-    // stay in sync across visitors.
-    const handleRemove = () => pen.lastElementChild?.remove();
-
-    cloneButton.addEventListener('click', handleClone);
-    removeButton.addEventListener('click', handleRemove);
-
-    return () => {
-      cloneButton.removeEventListener('click', handleClone);
-      removeButton.removeEventListener('click', handleRemove);
-    };
-  }, []);
+  const configure = useCallback(configureBunnyDemo, []);
 
   return (
     <LiveHtmlDemo
@@ -106,7 +73,16 @@ export function BunnyMirrorDemo() {
     font-size: 0.9rem;
     padding: 0.5rem 0.85rem;
   }
-  #bunny-pen {
+  #clone-bunny:disabled,
+  #remove-bunny:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+  [data-bunny-count] {
+    align-self: center;
+    font-size: 0.85rem;
+  }
+  [data-bunny-pen] {
     display: flex;
     flex-direction: row;
     gap: 0.5rem;
@@ -115,24 +91,25 @@ export function BunnyMirrorDemo() {
     overflow-x: auto;
     padding-bottom: 0.25rem;
   }
-  #bunny-pen img {
+  [data-bunny-pen] img {
     flex-shrink: 0;
     height: 4rem;
     object-fit: contain;
     width: 4rem;
   }
 </style>
-<div class="demo-bunny-mirror">
+<div can-play id="bunny-demo" class="demo-bunny-mirror">
   <div class="demo-bunny-row">
     <div class="demo-bunny-buttons">
-      <button id="clone-bunny" type="button">clone bunny</button>
-      <button id="remove-bunny" type="button">remove bunny</button>
+      <button id="clone-bunny" data-bunny-action="clone" type="button">clone bunny</button>
+      <button id="remove-bunny" data-bunny-action="remove" type="button">remove bunny</button>
+      <span data-bunny-count></span>
     </div>
-    <div can-mirror id="bunny-pen"></div>
+    <div data-bunny-pen></div>
   </div>
 </div>
 `}
-      onMount={onMount}
+      configure={configure}
     />
   );
 }

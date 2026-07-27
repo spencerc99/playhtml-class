@@ -232,39 +232,59 @@ button.addEventListener('click', () => {
 
 </CodeDemo>
 
-#### syncing the children (add or remove elements)
+#### syncing a bounded collection
 
-This can be useful for creating shared text areas, collaborative drawing spaces, or any other element that you want to keep in sync across clients. It also keeps the _children_ of an element in sync as you add and remove them.
+Generated lists need a small data model so simultaneous edits do not copy the entire DOM into shared state. This bunny pen shares one number, starts with 10 bunnies, and never grows past 10. Each browser renders the bunny images from that count.
 
 <CodeDemo demo={<BunnyMirrorDemo />} inline>
 
 ```html
-<button id="clone-bunny">clone bunny</button>
-<button id="remove-bunny">remove bunny</button>
-<div can-mirror id="bunny-pen"></div>
+<div can-play id="bunny-demo">
+  <button data-bunny-action="clone">clone bunny</button>
+  <button data-bunny-action="remove">remove bunny</button>
+  <span data-bunny-count></span>
+  <div data-bunny-pen></div>
+</div>
 ```
 
 ```javascript
-const pen = document.getElementById('bunny-pen');
-const btnClone = document.getElementById('clone-bunny');
+const demo = document.getElementById('bunny-demo');
 
-btnClone.onclick = () => {
-  const bunny = document.createElement('img');
-  bunny.id = 'bunny-' + pen.children.length;
-  bunny.src = '/pixel-bunny.png';
-  pen.appendChild(bunny);
+demo.defaultData = { count: 10 };
+
+demo.updateElement = ({ element, data }) => {
+  const pen = element.querySelector('[data-bunny-pen]');
+  const count = element.querySelector('[data-bunny-count]');
+  const cloneButton = element.querySelector('[data-bunny-action="clone"]');
+  const removeButton = element.querySelector('[data-bunny-action="remove"]');
+  const bunnies = Array.from({ length: data.count }, () => {
+    const bunny = document.createElement('img');
+    bunny.src = '/pixel-bunny.png';
+    bunny.alt = '';
+    return bunny;
+  });
+  pen.replaceChildren(...bunnies);
+  count.textContent = `${data.count} / 10 bunnies`;
+  cloneButton.disabled = data.count === 10;
+  removeButton.disabled = data.count === 0;
 };
 
-btnRemove.onclick = () => {
-  pen.lastChild.remove();
+demo.onClick = (event, { setData }) => {
+  const action = event.target.closest('[data-bunny-action]')?.dataset
+    .bunnyAction;
+
+  setData((data) => {
+    if (action === 'clone' && data.count < 10) data.count += 1;
+    if (action === 'remove' && data.count > 0) data.count -= 1;
+  });
 };
 ```
 
 </CodeDemo>
 
-Check out the full playground for can-mirror [here](https://playhtml.fun/docs/advanced/mirror-playground/).
+This is a first look at `can-play`: the data stays small and bounded, while `updateElement` turns it into whatever DOM you want. We will dig into that API next week.
 
-`can-mirror` is the right tool when the DOM is the shared state: whatever's on your screen should be on everyone's screen, with no logic in between.
+For inputs, attributes, and small child lists where the DOM itself is the shared state, `can-mirror` still gives you the least-code path. Check out the full playground [here](https://playhtml.fun/docs/advanced/mirror-playground/).
 
 When you need more flexibility, `can-play` allows you to define how an element should behave based on the data you're saving. The complex part is that you have to think about and define your data up front. In return, you have the expressiveness to do anything in response to what someone does. We'll cover this next week but feel free to peek and poke around on the docs if you want to try it out now.
 

@@ -9,18 +9,19 @@ const PLAYHTML_SELECTOR =
 
 interface LiveHtmlDemoProps {
   html: string;
+  configure?: (container: HTMLDivElement) => void;
   onMount?: (container: HTMLDivElement) => void | (() => void);
 }
 
-export function LiveHtmlDemo({ html, onMount }: LiveHtmlDemoProps) {
+export function LiveHtmlDemo({ html, configure, onMount }: LiveHtmlDemoProps) {
   return (
     <DemoBoundary>
-      <LiveHtmlDemoRunner html={html} onMount={onMount} />
+      <LiveHtmlDemoRunner html={html} configure={configure} onMount={onMount} />
     </DemoBoundary>
   );
 }
 
-function LiveHtmlDemoRunner({ html, onMount }: LiveHtmlDemoProps) {
+function LiveHtmlDemoRunner({ html, configure, onMount }: LiveHtmlDemoProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -31,6 +32,7 @@ function LiveHtmlDemoRunner({ html, onMount }: LiveHtmlDemoProps) {
     }
 
     container.innerHTML = html;
+    configure?.(container);
     const playElements = Array.from(
       container.querySelectorAll<HTMLElement>(PLAYHTML_SELECTOR),
     );
@@ -56,7 +58,7 @@ function LiveHtmlDemoRunner({ html, onMount }: LiveHtmlDemoProps) {
       });
       container.innerHTML = '';
     };
-  }, [html, onMount]);
+  }, [configure, html, onMount]);
 
   return <div ref={containerRef} className="live-html-demo" />;
 }
