@@ -32,7 +32,11 @@ import {
   type ProjectSharedObject,
 } from '../lib/projectSharedObject';
 import { ProjectEmojiPicker } from './ProjectEmojiPicker';
-import { ProjectWebring, type RingProject } from './ProjectWebring';
+import {
+  ProjectWebring,
+  type RingProject,
+  type ToggleEffect,
+} from './ProjectWebring';
 
 interface ProjectSubmission extends RingProject {
   id: string;
@@ -77,6 +81,7 @@ const MAX_TITLE_LENGTH = 120;
 const MAX_DESCRIPTION_LENGTH = 240;
 const MAX_EMOJI_LENGTH = 12;
 const DEFAULT_ACCENT_COLOR = '#f05a47';
+const DEFAULT_TOGGLE_EFFECT: ToggleEffect = 'tilt';
 const SUBMISSION_CONFIRMATION_DELAY_MS = 1500;
 const SUBMISSION_CONFIRMATION_TIMEOUT_MS = 5000;
 const SUBMISSION_DATE_FORMAT = new Intl.DateTimeFormat(undefined, {
@@ -132,6 +137,7 @@ function submissionMatches(
     stored.emoji === expected.emoji &&
     stored.accentColor === expected.accentColor &&
     stored.imageUrl === expected.imageUrl &&
+    stored.toggleEffect === expected.toggleEffect &&
     stored.submittedAt === expected.submittedAt
   );
 }
@@ -141,12 +147,14 @@ function ProjectAppearancePreview({
   emoji,
   imageUrl,
   title,
+  toggleEffect,
   url,
 }: {
   accentColor: string;
   emoji: string;
   imageUrl: string;
   title: string;
+  toggleEffect: ToggleEffect;
   url: string;
 }) {
   const faviconUrl = projectFaviconUrl(url);
@@ -156,6 +164,7 @@ function ProjectAppearancePreview({
       Boolean(source) && sources.indexOf(source) === index,
   );
   const [sourceIndex, setSourceIndex] = useState(0);
+  const [isToggled, setIsToggled] = useState(false);
 
   useEffect(() => {
     setSourceIndex(0);
@@ -165,9 +174,13 @@ function ProjectAppearancePreview({
 
   return (
     <div className="project-submissions__generated">
-      <div
-        className="project-submissions__generated-icon"
+      <button
+        aria-label={`Preview the ${toggleEffect} toggle effect`}
+        aria-pressed={isToggled}
+        className={`project-submissions__generated-icon project-submissions__generated-icon--toggle-${toggleEffect}${isToggled ? ' is-toggled' : ''}`}
+        onClick={() => setIsToggled((current) => !current)}
         style={{ '--preview-accent': accentColor } as CSSProperties}
+        type="button"
       >
         {imageSource ? (
           <img
@@ -180,13 +193,12 @@ function ProjectAppearancePreview({
         ) : (
           <span aria-hidden="true">{emoji.trim() || '🪑'}</span>
         )}
-      </div>
+      </button>
       <div>
         <h3>{title.trim() || 'Your project'} in the ring</h3>
         <p>
           This preview follows the same ring icon, favicon, then emoji order as
-          the widget. Submitting also creates this as an editable shared object
-          in the full-screen room.
+          the widget. Click it to try the {toggleEffect} toggle effect.
         </p>
       </div>
     </div>
@@ -223,6 +235,9 @@ export const ProjectSubmissions = withSharedState<
     const [emoji, setEmoji] = useState('🪑');
     const [accentColor, setAccentColor] = useState(profileAccentColor);
     const [imageUrl, setImageUrl] = useState('');
+    const [toggleEffect, setToggleEffect] = useState<ToggleEffect>(
+      DEFAULT_TOGGLE_EFFECT,
+    );
     const [editingProjectId, setEditingProjectId] = useState<string | null>(
       null,
     );
@@ -353,6 +368,7 @@ export const ProjectSubmissions = withSharedState<
         accentColorEdited.current = false;
         setAccentColor(profileAccentColor);
         setImageUrl('');
+        setToggleEffect(DEFAULT_TOGGLE_EFFECT);
         setEditingProjectId(null);
         setStatus({
           message: pendingSubmission.wasEditing
@@ -494,6 +510,7 @@ export const ProjectSubmissions = withSharedState<
         emoji: normalizedEmoji,
         accentColor,
         imageUrl: normalizedImageUrl ?? undefined,
+        toggleEffect,
         starterVersion: existingProject?.starterVersion,
         sharedObject,
         submittedAt: existingProject?.submittedAt ?? Date.now(),
@@ -525,6 +542,7 @@ export const ProjectSubmissions = withSharedState<
       setEmoji(project.emoji ?? '🪑');
       setAccentColor(project.accentColor ?? profileAccentColor);
       setImageUrl(project.imageUrl ?? '');
+      setToggleEffect(project.toggleEffect ?? DEFAULT_TOGGLE_EFFECT);
       setStatus(null);
       document.querySelector('#submit-project')?.scrollIntoView({
         behavior: 'smooth',
@@ -562,6 +580,7 @@ export const ProjectSubmissions = withSharedState<
       accentColorEdited.current = false;
       setAccentColor(profileAccentColor);
       setImageUrl('');
+      setToggleEffect(DEFAULT_TOGGLE_EFFECT);
       setStatus(null);
     };
 
@@ -748,6 +767,22 @@ export const ProjectSubmissions = withSharedState<
                   }}
                 />
               </label>
+              <label className="project-submissions__field project-submissions__field--effect">
+                <span className="project-submissions__label">Click effect</span>
+                <select
+                  className="project-submissions__input project-submissions__select"
+                  value={toggleEffect}
+                  onChange={(event) => {
+                    setToggleEffect(event.target.value as ToggleEffect);
+                    setStatus(null);
+                  }}
+                >
+                  <option value="tilt">Tilt</option>
+                  <option value="spin">Spin</option>
+                  <option value="bounce">Bounce</option>
+                  <option value="glow">Glow</option>
+                </select>
+              </label>
             </fieldset>
 
             <ProjectAppearancePreview
@@ -755,6 +790,7 @@ export const ProjectSubmissions = withSharedState<
               emoji={emoji}
               imageUrl={imageUrl}
               title={title}
+              toggleEffect={toggleEffect}
               url={url}
             />
 

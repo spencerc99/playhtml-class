@@ -1024,6 +1024,20 @@ a:hover {
   z-index: 4;
 }
 
+.project-webring__drifter {
+  animation: ring-drift var(--ring-drift-duration) var(--ring-drift-delay)
+    linear infinite;
+  height: var(--ring-node-size);
+  position: relative;
+  width: var(--ring-node-size);
+}
+
+.project-webring__drifter:hover,
+.project-webring__drifter:focus-within,
+.project-webring--expanded .project-webring__drifter {
+  animation-play-state: paused;
+}
+
 .project-webring__node {
   align-items: center;
   animation: ring-float 4.6s var(--ring-delay) ease-in-out infinite;
@@ -1055,7 +1069,33 @@ a:hover {
   display: flex;
   height: 72%;
   justify-content: center;
+  transform-origin: center;
+  transition:
+    filter 300ms ease,
+    transform 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
   width: 72%;
+}
+
+.project-webring__node--toggle-tilt.toggled .project-webring__node-markup {
+  transform: rotate(-13deg) scale(1.16);
+}
+
+.project-webring__node--toggle-spin.toggled .project-webring__node-markup {
+  animation: ring-toggle-spin 720ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.project-webring__node--toggle-bounce.toggled .project-webring__node-markup {
+  animation: ring-toggle-bounce 680ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.project-webring__node--toggle-glow.toggled .project-webring__node-markup {
+  filter: drop-shadow(
+      0 0 0.45rem color-mix(in srgb, var(--ring-accent) 94%, white)
+    )
+    drop-shadow(
+      0 0 1.15rem color-mix(in srgb, var(--ring-accent) 72%, transparent)
+    );
+  transform: scale(1.12);
 }
 
 .project-webring__node-markup > * {
@@ -1164,7 +1204,15 @@ a:hover {
   max-width: min(26vw, 19rem);
 }
 
+.project-webring--multi-orbit .project-webring__center {
+  max-width: min(28vw, 20rem);
+}
+
 .project-webring--dense .project-webring__welcome h1 {
+  font-size: clamp(2rem, 4vw, 4.5rem);
+}
+
+.project-webring--multi-orbit .project-webring__welcome h1 {
   font-size: clamp(2rem, 4vw, 4.5rem);
 }
 
@@ -1841,6 +1889,49 @@ a:hover {
   }
 }
 
+@keyframes ring-drift {
+  0%,
+  100% {
+    transform: translate(var(--ring-drift-x), 0);
+  }
+  25% {
+    transform: translate(0, var(--ring-drift-y));
+  }
+  50% {
+    transform: translate(calc(0rem - var(--ring-drift-x)), 0);
+  }
+  75% {
+    transform: translate(0, calc(0rem - var(--ring-drift-y)));
+  }
+}
+
+@keyframes ring-toggle-spin {
+  0% {
+    transform: rotate(0) scale(1);
+  }
+  64% {
+    transform: rotate(390deg) scale(1.18);
+  }
+  100% {
+    transform: rotate(360deg) scale(1.1);
+  }
+}
+
+@keyframes ring-toggle-bounce {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  38% {
+    transform: translateY(-18%) scale(1.08, 0.94);
+  }
+  68% {
+    transform: translateY(4%) scale(0.94, 1.08);
+  }
+  100% {
+    transform: translateY(0) scale(1.08);
+  }
+}
+
 @keyframes ring-loading-orbit {
   0% {
     opacity: 0.25;
@@ -2117,7 +2208,7 @@ a:hover {
   display: grid;
   gap: 1rem;
   grid-column: 1 / -1;
-  grid-template-columns: 0.4fr 0.45fr minmax(0, 2fr);
+  grid-template-columns: 0.55fr 0.55fr minmax(0, 1.1fr) minmax(8rem, 0.8fr);
   margin: 0.25rem 0 0;
   padding: 1rem;
 }
@@ -2251,16 +2342,54 @@ a:hover {
 }
 
 .project-submissions__generated-icon {
+  appearance: none;
   align-items: center;
   aspect-ratio: 1;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
   filter: drop-shadow(
     0 0 0.65rem color-mix(in srgb, var(--preview-accent) 30%, transparent)
   );
   display: flex;
   font-size: 2rem;
   justify-content: center;
+  padding: 0;
   position: relative;
+  transform-origin: center;
+  transition:
+    filter 300ms ease,
+    transform 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
   width: 100%;
+}
+
+.project-submissions__generated-icon:focus-visible {
+  border-radius: 0.7rem;
+  outline: 2px dashed var(--preview-accent);
+  outline-offset: 0.25rem;
+}
+
+.project-submissions__generated-icon--toggle-tilt.is-toggled {
+  transform: rotate(-13deg) scale(1.16);
+}
+
+.project-submissions__generated-icon--toggle-spin.is-toggled {
+  animation: ring-toggle-spin 720ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.project-submissions__generated-icon--toggle-bounce.is-toggled {
+  animation: ring-toggle-bounce 680ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.project-submissions__generated-icon--toggle-glow.is-toggled {
+  filter: drop-shadow(
+      0 0 0.4rem color-mix(in srgb, var(--preview-accent) 94%, white)
+    )
+    drop-shadow(
+      0 0 0.9rem color-mix(in srgb, var(--preview-accent) 72%, transparent)
+    );
+  transform: scale(1.12);
 }
 
 .project-submissions__generated-icon img {
@@ -2609,7 +2738,7 @@ a:hover {
   }
 
   .project-webring__orbit {
-    inset: 4.5rem 1.35rem 6.5rem;
+    inset: 4.5rem 2rem 6.5rem;
   }
 
   .project-webring__node {
@@ -2620,6 +2749,11 @@ a:hover {
   .project-webring__item {
     left: calc(var(--ring-x) - var(--ring-mobile-node-size) / 2);
     top: calc(var(--ring-y) - var(--ring-mobile-node-size) / 2);
+  }
+
+  .project-webring__drifter {
+    height: var(--ring-mobile-node-size);
+    width: var(--ring-mobile-node-size);
   }
 
   .project-webring__node-label {
@@ -2639,6 +2773,25 @@ a:hover {
 
   .project-webring--dense .project-webring__center {
     max-width: min(34vw, 12rem);
+  }
+
+  .project-webring--multi-orbit .project-webring__center {
+    max-width: min(36vw, 10rem);
+  }
+
+  .project-webring--multi-orbit .project-webring__welcome h1 {
+    font-size: clamp(1.45rem, 7vw, 2rem);
+    line-height: 0.82;
+  }
+
+  .project-webring--multi-orbit .project-webring__welcome p {
+    display: none;
+  }
+
+  .project-webring--multi-orbit .project-webring__welcome span {
+    font-size: 0.55rem;
+    line-height: 1.3;
+    margin-top: 0.55rem;
   }
 
   .project-webring__zoom {
@@ -2774,9 +2927,12 @@ a:hover {
 
 @media (prefers-reduced-motion: reduce) {
   .project-webring__item,
+  .project-webring__drifter,
   .project-webring__node,
+  .project-webring__node-markup,
   .project-webring__detail,
-  .project-webring__loading-visual span {
+  .project-webring__loading-visual span,
+  .project-submissions__generated-icon {
     animation: none;
     transition: none;
   }

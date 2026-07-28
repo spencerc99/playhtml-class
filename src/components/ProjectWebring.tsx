@@ -39,8 +39,11 @@ export interface RingProject {
   submittedAt: number;
   submittedBy?: string;
   title: string;
+  toggleEffect?: ToggleEffect;
   url: string;
 }
+
+export type ToggleEffect = 'bounce' | 'glow' | 'spin' | 'tilt';
 
 interface ProjectWebringProps {
   demo?: boolean;
@@ -73,6 +76,7 @@ const FALLBACK_COLORS = [
 const MIN_ZOOM = 0.75;
 const MAX_ZOOM = 1.75;
 const ZOOM_STEP = 0.25;
+const TOGGLE_EFFECTS: ToggleEffect[] = ['tilt', 'spin', 'bounce', 'glow'];
 
 function safeHttpUrl(value: unknown): string | null {
   if (typeof value !== 'string') return null;
@@ -95,6 +99,18 @@ function safeColor(value: unknown, fallback: string): string {
   return typeof value === 'string' && /^#[\da-f]{6}$/i.test(value)
     ? value
     : fallback;
+}
+
+function safeToggleEffect(value: unknown, projectId: string): ToggleEffect {
+  if (TOGGLE_EFFECTS.includes(value as ToggleEffect)) {
+    return value as ToggleEffect;
+  }
+
+  let hash = 0;
+  for (const character of projectId) {
+    hash = (hash * 31 + character.codePointAt(0)!) >>> 0;
+  }
+  return TOGGLE_EFFECTS[hash % TOGGLE_EFFECTS.length];
 }
 
 function relativeLuminance([red, green, blue]: [
@@ -229,6 +245,7 @@ function safeProjects(projects: RingProject[]): RingProject[] {
           typeof project.submittedAt === 'number' ? project.submittedAt : index,
         submittedBy: safeText(project.submittedBy, 180) || undefined,
         sharedObject,
+        toggleEffect: safeToggleEffect(project.toggleEffect, id),
       },
     ];
   });
@@ -328,13 +345,17 @@ function orbitPosition(index: number, total: number): CSSProperties {
     '--ring-x': `${50 + Math.cos(angle) * track.horizontalRadius}%`,
     '--ring-y': `${50 + Math.sin(angle) * track.verticalRadius}%`,
     '--ring-delay': `${index * -0.12}s`,
+    '--ring-drift-delay': `${index * -1.7}s`,
+    '--ring-drift-duration': `${18 + (index % 7) * 1.35}s`,
+    '--ring-drift-x': `${0.28 + (index % 4) * 0.07}rem`,
+    '--ring-drift-y': `${0.32 + ((index + 2) % 4) * 0.08}rem`,
     '--ring-label-bottom': isLowerHalf ? 'auto' : 'calc(100% + 0.35rem)',
     '--ring-label-top': isLowerHalf ? 'calc(100% + 0.35rem)' : 'auto',
   } as CSSProperties;
 }
 
 function ringSizing(total: number): CSSProperties {
-  const density = Math.max(0.42, Math.min(1, 17 / Math.max(total, 1)));
+  const density = Math.max(0.42, Math.min(1, 15 / Math.max(total, 1)));
   const desktopMinimum = Math.max(3, 5.75 * density);
   const mobileMinimum = Math.max(2.25, 3.25 * density);
 
@@ -403,7 +424,7 @@ function ObjectNode({
 
   const node = (
     <div
-      className="project-webring__node"
+      className={`project-webring__node project-webring__node--toggle-${project.toggleEffect ?? 'tilt'}`}
       id={sharedObject.id}
       role="button"
       tabIndex={0}
@@ -659,7 +680,7 @@ export function ProjectWebring({
         editing ? ' project-webring--editing' : ''
       }${isPreviewMode ? ' project-webring--previewing' : ''}${
         safeRingProjects.length > 24 ? ' project-webring--dense' : ''
-      }`}
+      }${safeRingProjects.length > 10 ? ' project-webring--multi-orbit' : ''}`}
       aria-label="Class project playground"
       aria-busy={!hasSynced}
     >
@@ -729,21 +750,23 @@ export function ProjectWebring({
                         key={project.id}
                         style={nodeStyle}
                       >
-                        <ObjectNode
-                          demo={demo}
-                          project={project}
-                          sourceObject={sourceObjects}
-                        />
-                        <button
-                          aria-controls="project-webring-detail"
-                          aria-expanded={selectedId === project.id}
-                          className="project-webring__node-label"
-                          onClick={() => setSelectedId(project.id)}
-                          title={project.ringLabel ?? project.title}
-                          type="button"
-                        >
-                          {project.ringLabel ?? project.title}
-                        </button>
+                        <div className="project-webring__drifter">
+                          <ObjectNode
+                            demo={demo}
+                            project={project}
+                            sourceObject={sourceObjects}
+                          />
+                          <button
+                            aria-controls="project-webring-detail"
+                            aria-expanded={selectedId === project.id}
+                            className="project-webring__node-label"
+                            onClick={() => setSelectedId(project.id)}
+                            title={project.ringLabel ?? project.title}
+                            type="button"
+                          >
+                            {project.ringLabel ?? project.title}
+                          </button>
+                        </div>
                       </li>
                     );
                   })}
