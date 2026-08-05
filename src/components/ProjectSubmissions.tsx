@@ -54,6 +54,7 @@ interface ProjectSubmissionData {
 
 interface ProjectSubmissionsProps {
   adminMode?: boolean;
+  showSubmissionForm?: boolean;
   variant: 'form' | 'showcase';
 }
 
@@ -208,7 +209,10 @@ export const ProjectSubmissions = withSharedState<
       ? { shared: PROJECT_REGISTRY_PERMISSIONS }
       : { dataSource: projectDataSource() }),
   }),
-  ({ data, setData, ref }, { adminMode = false, variant }) => {
+  (
+    { data, setData, ref },
+    { adminMode = false, showSubmissionForm = false, variant },
+  ) => {
     const { cursors, hasSynced } = usePlayContext();
     const { pid: playerId } = usePlayerIdentity();
     const builtInsSeeded = useRef(false);
@@ -384,6 +388,7 @@ export const ProjectSubmissions = withSharedState<
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
 
+      if (!showSubmissionForm) return;
       if (pendingSubmission) return;
 
       const trimmedName = name.trim();
@@ -605,7 +610,9 @@ export const ProjectSubmissions = withSharedState<
           <div className="project-playground">
             <ProjectWebring
               hasSynced={hasSynced}
-              onEditProjectDetails={editProject}
+              onEditProjectDetails={
+                showSubmissionForm ? editProject : undefined
+              }
               onUpdateProject={updateProjectObject}
               playerId={playerId}
               projects={projects}
@@ -614,8 +621,17 @@ export const ProjectSubmissions = withSharedState<
           </div>
         ) : null}
 
-        <div className="project-submissions__form-panel" id="submit-project">
-          <div className="project-submissions__intro">
+        <div
+          className="project-submissions__form-panel"
+          hidden={
+            !showSubmissionForm && !adminMode && managedProjects.length === 0
+          }
+          id="submit-project"
+        >
+          <div
+            className="project-submissions__intro"
+            hidden={!showSubmissionForm}
+          >
             <p className="project-submissions__eyebrow">
               {editingProjectId ? 'Keep shaping it' : 'Add to the class'}
             </p>
@@ -631,6 +647,7 @@ export const ProjectSubmissions = withSharedState<
 
           <form
             className="project-submissions__form"
+            hidden={!showSubmissionForm}
             noValidate
             onSubmit={handleSubmit}
           >
@@ -880,15 +897,17 @@ export const ProjectSubmissions = withSharedState<
                           </code>
                         </details>
                         <div className="project-submissions__mine-actions">
-                          <button
-                            className="project-submissions__edit"
-                            type="button"
-                            onClick={() => editProject(project)}
-                          >
-                            {adminMode
-                              ? 'Edit entry'
-                              : 'Edit project + thumbnail'}
-                          </button>
+                          {showSubmissionForm ? (
+                            <button
+                              className="project-submissions__edit"
+                              type="button"
+                              onClick={() => editProject(project)}
+                            >
+                              {adminMode
+                                ? 'Edit entry'
+                                : 'Edit project + thumbnail'}
+                            </button>
+                          ) : null}
                           <button
                             className="project-submissions__remove"
                             type="button"

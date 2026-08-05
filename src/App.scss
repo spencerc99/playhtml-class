@@ -2050,6 +2050,12 @@ a:hover {
   padding: clamp(1.4rem, 4vw, 2.75rem);
 }
 
+.project-submissions__form-panel[hidden],
+.project-submissions__intro[hidden],
+.project-submissions__form[hidden] {
+  display: none;
+}
+
 .project-submissions--showcase .project-submissions__form-panel {
   margin: clamp(4rem, 8vw, 8rem) auto;
   max-width: min(72rem, calc(100% - 2rem));

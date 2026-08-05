@@ -1,5 +1,5 @@
 // ABOUTME: Showcase page hosting the domain-shared student project collection.
-// ABOUTME: Students can submit projects here or from the bottom of week pages.
+// ABOUTME: Displays the submission form only when its query flag is present.
 
 import { useSearchParams } from 'react-router';
 import { ProjectSubmissions } from '../components/ProjectSubmissions';
@@ -11,6 +11,7 @@ export default function Showcase() {
     <main className="showcase-page min-h-screen">
       <ProjectSubmissions
         adminMode={searchParams.has('admin')}
+        showSubmissionForm={searchParams.has('submitShowcase')}
         variant="showcase"
       />
     </main>

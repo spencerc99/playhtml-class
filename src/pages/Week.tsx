@@ -1,14 +1,13 @@
-// ABOUTME: Per-week class page with examples, live crit zone, and assignment
-// ABOUTME: submission area.
+// ABOUTME: Per-week class page with examples, live crit zone, and assignments.
+// ABOUTME: Renders scheduled lesson content and navigation between class weeks.
 
 import { useEffect, useRef, type ComponentType } from 'react';
 import { Link, useParams } from 'react-router';
 import { Attendance } from '../components/Attendance';
 import { FloatingChair } from '../components/FloatingChair';
 import { HomeBeaconOrb } from '../components/HomeBeaconOrb';
-import { ProjectSubmissions } from '../components/ProjectSubmissions';
-import { isWeekUnlocked } from '../weekSchedule';
 import { WEEK_PAGE_CHAIRS } from '../weekPageChairs';
+import { isWeekUnlocked } from '../weekSchedule';
 
 interface WeekContentMeta {
   title?: string;
@@ -275,7 +274,6 @@ export default function Week() {
               </p>
             </section>
           )}
-          <ProjectSubmissions variant="form" />
         </div>
       </div>
     </div>
