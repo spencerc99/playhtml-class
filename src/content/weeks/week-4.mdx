@@ -223,7 +223,7 @@ Same obscurity idea, different shape: a **freeze signing** control is on the pag
   </form>
 </div>
 
-<script>
+<script type="module">
   const PASSWORD = 'bench'; // hardcoded on purpose — soft gate only
   const panel = document.getElementById('moderation');
   panel.classList.toggle(
@@ -377,100 +377,74 @@ playhtml.fun connects to that source while keeping its own lamp image:
 
 ### Webring: is anyone home?
 
-Let's try making an example live webring where each site glows if the host is online.
+Let's make a live webring where each page glows while someone has it open. This is temporary information, so it belongs in presence rather than shared data. Presence disappears when someone disconnects and does not build up stored history.
 
-One shared registry lives inside the webring on this page (`#class-page-presence`). Every other class route connects to it with `data-source` and only updates its own path. Week 4 renders directly from that reactive registry instead of trying to subscribe to a separate source for every route.
-
-Look at the little orb by this week's title — it's writing into that registry. Open `/` or another week in a second tab and watch that page's webring dot light up here.
+Every class route joins the same isolated presence room and publishes its current path. Open `/` or another week in a second tab and watch that page's webring dot light up here.
 
 <CodeDemo demo={<WebringDemo />}>
 
 ```html
-<!-- /week/4: the source and the visible webring -->
+<!-- The visible webring -->
 <style>
-  #class-page-presence [data-path] {
+  #class-page-webring [data-path] {
     opacity: 0.35;
     transition:
       opacity 0.2s ease,
       text-shadow 0.2s ease;
   }
 
-  #class-page-presence [data-path].is-home {
+  #class-page-webring [data-path].is-home {
     opacity: 1;
     text-shadow: 0 0 0.7rem lime;
   }
 </style>
 
-<div id="class-page-presence" shared can-play>
+<div id="class-page-webring">
   <span data-path="/">home</span>
   <span data-path="/week/4">week 4</span>
   <span data-path="/showcase">showcase</span>
 </div>
 
 <script>
-  const webring = document.getElementById('class-page-presence');
-  webring.defaultData = { byPath: {} };
+  await playhtml.ready;
 
-  webring.updateElement = ({ element, data }) => {
-    const now = Date.now();
-    element.querySelectorAll('[data-path]').forEach((dot) => {
-      const lastSeen = data.byPath[dot.dataset.path] ?? 0;
-      dot.classList.toggle('is-home', now - lastSeen < 10000);
+  const room = playhtml.createPresenceRoom('class-page-presence');
+  const webring = document.getElementById('class-page-webring');
+
+  room.presence.setMyPresence('classPage', {
+    path: location.pathname,
+  });
+
+  room.presence.onPresenceChange('classPage', (presences) => {
+    const activePaths = new Set(
+      [...presences.values()]
+        .map((presence) => presence.classPage?.path)
+        .filter(Boolean),
+    );
+
+    webring.querySelectorAll('[data-path]').forEach((dot) => {
+      dot.classList.toggle('is-home', activePaths.has(dot.dataset.path));
     });
-  };
+  });
 
-  webring.onMount = ({ setData, requestUpdate }) => {
-    const pulse = () =>
-      setData((data) => {
-        data.byPath ??= {};
-        data.byPath['/week/4'] = Date.now();
-      });
-
-    pulse();
-    const pulseTimer = setInterval(pulse, 4000);
-    const renderTimer = setInterval(requestUpdate, 1000);
-
-    return () => {
-      clearInterval(pulseTimer);
-      clearInterval(renderTimer);
-    };
-  };
+  addEventListener('pagehide', () => room.destroy(), { once: true });
 </script>
 ```
 
 </CodeDemo>
 
-Every other route uses the same element ID and publishes into the Week 4 source:
+Every other route runs the same presence setup with its own pathname. There is no source page and no `data-source`: the named presence room is the meeting place.
 
 ```html
-<!-- On the home page -->
-<span
-  id="class-page-presence"
-  data-source="class.playhtml.fun/week/4#class-page-presence"
-  can-play
-  hidden
-></span>
-
-<script>
-  const presence = document.getElementById('class-page-presence');
-  presence.defaultData = { byPath: {} };
-  presence.updateElement = () => {};
-
-  presence.onMount = ({ setData }) => {
-    const pulse = () =>
-      setData((data) => {
-        data.byPath ??= {};
-        data.byPath['/'] = Date.now();
-      });
-
-    pulse();
-    const timer = setInterval(pulse, 4000);
-    return () => clearInterval(timer);
-  };
+<script type="module">
+  await playhtml.ready;
+  const room = playhtml.createPresenceRoom('class-page-presence');
+  room.presence.setMyPresence('classPage', { path: location.pathname });
+  addEventListener('pagehide', () => room.destroy(), { once: true });
 </script>
 ```
 
-Every custom `can-play` element gets a unique `id`, `defaultData`, and either `updateElement` or `view` before `playhtml.init()` runs. In a single-page app, also remount or restart the publisher when the pathname changes so its interval cannot keep pulsing the route you just left.
+Use shared data for information that should survive reloads. Use presence for information like “someone is here now.” In a single-page app, update the presence value when the pathname changes and destroy the room when the component unmounts.
 
 ## Assignment / Readings
 

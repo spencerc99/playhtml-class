@@ -1,51 +1,45 @@
-// ABOUTME: Class page presence publisher that pulses each active route into the
-// ABOUTME: shared Week 4 registry and renders the route's title beacon.
+// ABOUTME: Publishes each active class route through ephemeral presence.
+// ABOUTME: Renders a title beacon without adding persistent room history.
 
-import { withSharedState } from '@playhtml/react';
-import { playhtml } from 'playhtml';
-import { useEffect, useState, type CSSProperties, type RefObject } from 'react';
+import { usePresenceRoom } from '@playhtml/react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { useLocation } from 'react-router';
 
-/** How long after the last pulse a page still counts as "someone is here". */
-export const HOME_MS = 10_000;
-const PULSE_MS = 4_000;
-/** Consumers poll so glow turns off without a new sync event. */
-export const BEACON_FRESHNESS_POLL_MS = 1_000;
-
-/** Shared element on /week/4 — other pages write via data-source. */
-export const CLASS_PAGE_PRESENCE_ID = 'class-page-presence';
+const CLASS_PAGE_PRESENCE_ROOM = 'class-page-presence';
+const CLASS_PAGE_PRESENCE_CHANNEL = 'classPage';
 export const CLASS_PAGE_PRESENCE_PATH = '/week/4';
-
-export interface ClassPagePresenceData {
-  byPath: Record<string, number>;
-}
 
 interface OrbPlacement {
   top: string;
   left: string;
 }
 
+interface ClassPagePresenceValue {
+  path: string;
+}
+
 export function normalizePath(pathname: string): string {
   return pathname.replace(/\/$/, '') || '/';
 }
 
-export function isHomeBeaconLive(
-  lastSeen: number,
-  now: number = Date.now(),
-): boolean {
-  return lastSeen > 0 && now - lastSeen < HOME_MS;
-}
+export function activeClassPagePaths(
+  presences: ReadonlyMap<string, Record<string, unknown>>,
+): Set<string> {
+  const paths = new Set<string>();
 
-export function presenceLastSeen(
-  data: ClassPagePresenceData | null | undefined,
-  pathname: string,
-): number {
-  return data?.byPath?.[normalizePath(pathname)] ?? 0;
-}
+  for (const presence of presences.values()) {
+    const value = presence[CLASS_PAGE_PRESENCE_CHANNEL];
+    if (
+      typeof value === 'object' &&
+      value !== null &&
+      'path' in value &&
+      typeof value.path === 'string'
+    ) {
+      paths.add(normalizePath(value.path));
+    }
+  }
 
-/** data-source pointing at the week-4 presence registry. */
-export function classPagePresenceDataSource(): string {
-  return `${window.location.host}${CLASS_PAGE_PRESENCE_PATH}#${CLASS_PAGE_PRESENCE_ID}`;
+  return paths;
 }
 
 function pickPlacement(): OrbPlacement {
@@ -68,123 +62,75 @@ function pickPlacement(): OrbPlacement {
   };
 }
 
-type PresenceDataUpdater = (fn: (draft: ClassPagePresenceData) => void) => void;
-
-function pulsePath(setData: PresenceDataUpdater, pathname: string) {
+export function useClassPagePresence(pathname: string): Set<string> {
+  const room = usePresenceRoom(CLASS_PAGE_PRESENCE_ROOM);
+  const [activePaths, setActivePaths] = useState<Set<string>>(new Set());
   const path = normalizePath(pathname);
-  setData((draft) => {
-    draft.byPath ??= {};
-    draft.byPath[path] = Date.now();
-  });
-}
 
-export function startClassPagePresenceHeartbeat(
-  setData: PresenceDataUpdater,
-  getElement: () => HTMLElement,
-  pathname: string,
-): () => void {
-  let cancelled = false;
-  let pulseId: ReturnType<typeof setInterval> | undefined;
-  let readinessTimer: ReturnType<typeof setTimeout> | undefined;
+  useEffect(() => {
+    if (!room) {
+      setActivePaths(new Set());
+      return;
+    }
 
-  void playhtml.ready.then(() => {
-    const start = () => {
-      if (cancelled) return;
-      if (getElement().getAttribute('aria-busy') === 'true') {
-        readinessTimer = setTimeout(start, 100);
-        return;
-      }
-
-      const pulse = () => pulsePath(setData, pathname);
-      pulse();
-      pulseId = setInterval(pulse, PULSE_MS);
+    const updatePaths = (presences: Map<string, Record<string, unknown>>) => {
+      setActivePaths(activeClassPagePaths(presences));
     };
 
-    start();
-  });
+    const value: ClassPagePresenceValue = { path };
+    room.presence.setMyPresence(CLASS_PAGE_PRESENCE_CHANNEL, value);
+    const unsubscribe = room.presence.onPresenceChange(
+      CLASS_PAGE_PRESENCE_CHANNEL,
+      updatePaths,
+    );
 
-  return () => {
-    cancelled = true;
-    if (readinessTimer) clearTimeout(readinessTimer);
-    if (pulseId) clearInterval(pulseId);
-  };
+    return () => {
+      unsubscribe();
+      room.presence.setMyPresence(CLASS_PAGE_PRESENCE_CHANNEL, null);
+    };
+  }, [path, room]);
+
+  return activePaths;
 }
 
 interface ClassHomeBeaconOrbProps {
   pathname?: string;
 }
 
-const ClassHomeBeaconOrbShared = withSharedState<
-  ClassPagePresenceData,
-  never,
-  { pathname: string }
->(
-  ({ pathname }) => ({
-    defaultData: { byPath: {} },
-    id: CLASS_PAGE_PRESENCE_ID,
-    dataSource: classPagePresenceDataSource(),
-    onMount: ({ setData, getElement }) =>
-      startClassPagePresenceHeartbeat(setData, getElement, pathname),
-  }),
-  ({ data, ref }, { pathname }) => {
-    const [now, setNow] = useState(() => Date.now());
-    const [placement] = useState(pickPlacement);
+function ConnectedHomeBeaconOrb({
+  pathname,
+  placement,
+}: {
+  pathname: string;
+  placement: OrbPlacement;
+}) {
+  const activePaths = useClassPagePresence(pathname);
+  const home = activePaths.has(pathname);
+  const style = {
+    '--orb-top': placement.top,
+    '--orb-left': placement.left,
+  } as CSSProperties;
 
-    useEffect(() => {
-      let cancelled = false;
-
-      void playhtml.handleNavigation().then(() => {
-        const element = ref.current;
-        if (cancelled || !element) return;
-
-        playhtml.removePlayElement(element);
-        playhtml.setupPlayElement(element);
-      });
-
-      return () => {
-        cancelled = true;
-      };
-    }, [pathname, ref]);
-
-    useEffect(() => {
-      const id = window.setInterval(
-        () => setNow(Date.now()),
-        BEACON_FRESHNESS_POLL_MS,
-      );
-      return () => clearInterval(id);
-    }, []);
-
-    const home = isHomeBeaconLive(presenceLastSeen(data, pathname), now);
-    const style = {
-      '--orb-top': placement.top,
-      '--orb-left': placement.left,
-    } as CSSProperties;
-
-    return (
-      <span
-        ref={ref as RefObject<HTMLSpanElement>}
-        className={`home-beacon-orb${home ? ' is-home' : ''}`}
-        style={style}
-        title={
-          home ? 'someone is on this page right now' : 'this page is quiet'
-        }
-        aria-hidden="true"
-      />
-    );
-  },
-);
+  return (
+    <span
+      className={`home-beacon-orb${home ? ' is-home' : ''}`}
+      style={style}
+      title={home ? 'someone is on this page right now' : 'this page is quiet'}
+      aria-hidden="true"
+    />
+  );
+}
 
 export function ClassHomeBeaconOrb(props: ClassHomeBeaconOrbProps) {
   const location = useLocation();
   const pathname = normalizePath(props.pathname ?? location.pathname);
+  const [placement] = useState(pickPlacement);
 
   if (pathname === CLASS_PAGE_PRESENCE_PATH) {
-    const placement = pickPlacement();
     const style = {
       '--orb-top': placement.top,
       '--orb-left': placement.left,
     } as CSSProperties;
-
     return (
       <span
         className="home-beacon-orb is-home"
@@ -195,7 +141,7 @@ export function ClassHomeBeaconOrb(props: ClassHomeBeaconOrbProps) {
     );
   }
 
-  return <ClassHomeBeaconOrbShared key={pathname} pathname={pathname} />;
+  return <ConnectedHomeBeaconOrb pathname={pathname} placement={placement} />;
 }
 
 /** @deprecated Prefer ClassHomeBeaconOrb */

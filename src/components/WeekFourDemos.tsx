@@ -1,19 +1,13 @@
-// ABOUTME: Live week 4 demos — soft admin gates on a guestbook, a shared-element
-// ABOUTME: source, and a webring that treats recent shared heartbeats as "home".
+// ABOUTME: Live week 4 demos for admin gates, shared elements, and presence.
+// ABOUTME: The webring displays active class routes from ephemeral presence.
 
-import { withSharedState } from '@playhtml/react';
 import { html, playhtml, repeat } from 'playhtml';
-import { useEffect, useState, type RefObject } from 'react';
+import { useEffect, useState } from 'react';
 import { CanPlayDemo, type CanPlayInit } from './CanPlayDemo';
 import {
-  BEACON_FRESHNESS_POLL_MS,
-  CLASS_PAGE_PRESENCE_ID,
   CLASS_PAGE_PRESENCE_PATH,
-  isHomeBeaconLive,
   normalizePath,
-  presenceLastSeen,
-  startClassPagePresenceHeartbeat,
-  type ClassPagePresenceData,
+  useClassPagePresence,
 } from './HomeBeaconOrb';
 
 interface Profile {
@@ -396,7 +390,9 @@ function getGuestbookHandle(): {
   try {
     return playhtml.getHandle(WEEK4_GUESTBOOK_ID) as {
       getData?: () => GuestbookData;
-      setData?: (next: GuestbookData | ((draft: GuestbookData) => void)) => void;
+      setData?: (
+        next: GuestbookData | ((draft: GuestbookData) => void),
+      ) => void;
     };
   } catch {
     return null;
@@ -414,7 +410,9 @@ function toggleGuestbookFrozen(): { ok: boolean; frozen?: boolean } {
 }
 
 function syncFreezeButton(element: HTMLElement): void {
-  const button = element.querySelector<HTMLButtonElement>('[data-toggle-freeze]');
+  const button = element.querySelector<HTMLButtonElement>(
+    '[data-toggle-freeze]',
+  );
   if (!button) return;
   const frozen = Boolean(getGuestbookHandle()?.getData?.()?.frozen);
   button.textContent = frozen ? 'unfreeze signing' : 'freeze signing';
@@ -646,10 +644,7 @@ export function SharedLampConsumerDemo() {
   );
 }
 
-// --- Webring: presence registry on this page -----------------------------------
-
-// Week 4 owns one registry and renders directly from its reactive shared data.
-// Other routes push their heartbeat into this source through data-source.
+// --- Webring: class page presence ----------------------------------------------
 
 interface WebringMember {
   id: string;
@@ -673,57 +668,34 @@ function webringMembers(): WebringMember[] {
   ];
 }
 
-export const WebringDemo = withSharedState<ClassPagePresenceData>(
-  {
-    defaultData: { byPath: {} },
-    id: CLASS_PAGE_PRESENCE_ID,
-    shared: 'read-write',
-    onMount: ({ setData, getElement }) =>
-      startClassPagePresenceHeartbeat(
-        setData,
-        getElement,
-        CLASS_PAGE_PRESENCE_PATH,
-      ),
-  },
-  ({ data, ref }) => {
-    const [members] = useState(webringMembers);
-    const [now, setNow] = useState(() => Date.now());
+export function WebringDemo() {
+  const [members] = useState(webringMembers);
+  const activePaths = useClassPagePresence(CLASS_PAGE_PRESENCE_PATH);
 
-    useEffect(() => {
-      const id = window.setInterval(
-        () => setNow(Date.now()),
-        BEACON_FRESHNESS_POLL_MS,
-      );
-      return () => clearInterval(id);
-    }, []);
-
-    return (
-      <div ref={ref as RefObject<HTMLDivElement>} className="week4-webring">
-        <div className="week4-webring__ring">
-          {members.map((member) => {
-            const home = isHomeBeaconLive(
-              presenceLastSeen(data, member.path),
-              now,
-            );
-            return (
-              <div key={member.id} className="week4-webring__slot">
-                <div
-                  className={`week4-webring__orb${home ? ' is-home' : ''}`}
-                  title={normalizePath(member.path)}
-                >
-                  <span className="orb">
-                    <span className="dot" aria-hidden="true" />
-                  </span>
-                  <span className="name">{member.label}</span>
-                </div>
+  return (
+    <div className="week4-webring">
+      <div className="week4-webring__ring">
+        {members.map((member) => {
+          const home = activePaths.has(normalizePath(member.path));
+          return (
+            <div key={member.id} className="week4-webring__slot">
+              <div
+                className={`week4-webring__orb${home ? ' is-home' : ''}`}
+                title={normalizePath(member.path)}
+              >
+                <span className="orb">
+                  <span className="dot" aria-hidden="true" />
+                </span>
+                <span className="name">{member.label}</span>
               </div>
-            );
-          })}
-        </div>
-        <p className="week4-webring__caption">
-          each dot is a class page — glow means someone is there
-        </p>
-        <style>{`
+            </div>
+          );
+        })}
+      </div>
+      <p className="week4-webring__caption">
+        each dot is a class page — glow means someone is there
+      </p>
+      <style>{`
         .week4-webring {
           font-family: var(--font-body);
           width: min(100%, 22rem);
@@ -783,8 +755,7 @@ export const WebringDemo = withSharedState<ClassPagePresenceData>(
           opacity: 0.6;
           text-align: center;
         }
-      `}</style>
-      </div>
-    );
-  },
-);
+        `}</style>
+    </div>
+  );
+}
