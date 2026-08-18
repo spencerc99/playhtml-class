@@ -21,7 +21,7 @@ function makeEntryId(): string {
 
 function formatRelativeTime(fromMs: number, nowMs: number): string {
   const diffMs = Math.max(0, nowMs - fromMs);
-  const minutes = Math.floor(diffMs / 60000);
+  const minutes = Math.floor(diffMs / 60_000);
   if (minutes < 1) return 'just now';
   if (minutes < 60) return `${minutes}m ago`;
   const hours = Math.floor(minutes / 60);

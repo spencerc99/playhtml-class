@@ -37,8 +37,10 @@ use it.
 ## Components
 
 ### ProfileEditor (`src/components/ProfileEditor.tsx`)
+
 Shared name + color editor used in both the nav popover and the inline guestbook
 prompt. Single source of truth.
+
 - Reads current name/color via `usePlayContext()` (`cursors.color`/`cursors.name`).
 - Name: text input. Color: `<input type="color">`.
 - On change: builds a full identity from `getMyPlayerIdentity()` (or
@@ -47,16 +49,20 @@ prompt. Single source of truth.
 - Defensive: if `isProviderMissing`, render nothing (inert). Never throws.
 
 ### ProfilePill (`src/components/ProfilePill.tsx`)
+
 Profile control appended to the existing bottom `Nav`.
+
 - A pill matching the nav's red/white style. Label = the visitor's name (shown in
   their color) once set, else a "set up profile" prompt.
 - Click toggles a popover that opens UPWARD from the pill, containing
   `<ProfileEditor />`. Click-away / Escape closes.
 
 ### Guestbook (`src/components/Guestbook.tsx`)
+
 Inline at the bottom of week 0.
+
 - Entries via `withSharedState({ defaultData: { entries: [] }, id:
-  'week0-guestbook' })`, mirroring playhtml's canonical DocsGuestbook.
+'week0-guestbook' })`, mirroring playhtml's canonical DocsGuestbook.
 - Gating: if no name set (`!cursors.name?.trim()`), render `<ProfileEditor />`
   with a "set your name to sign the guestbook" message — NO post form. Once a name
   exists, show the post form (freeform `<textarea>` + Sign button).

@@ -118,9 +118,7 @@ function CanPlayDemoRunner<T, V = unknown>({
         : shared === 'read-only'
           ? ' shared="read-only"'
           : '';
-    const dataSourceAttr = dataSource
-      ? ` data-source="${dataSource}"`
-      : '';
+    const dataSourceAttr = dataSource ? ` data-source="${dataSource}"` : '';
     const readOnlyAttr =
       dataSource && dataSourceReadOnly ? ' data-source-read-only' : '';
     container.innerHTML = `${styleTag}<div can-play id="${elementId}"${sharedAttr}${dataSourceAttr}${readOnlyAttr}>${skeleton}</div>`;
