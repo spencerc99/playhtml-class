@@ -174,11 +174,16 @@ Same guestbook as last week. Per-row **delete** buttons only appear once admin i
             (entry) => html`
               <li>
                 <b>${entry.name}</b>: ${entry.message}
-                ${admin
-                  ? html`<button type="button" @click=${() => remove(entry.at)}>
-                      delete
-                    </button>`
-                  : null}
+                ${
+                  admin
+                    ? html`<button
+                        type="button"
+                        @click=${() => remove(entry.at)}
+                      >
+                        delete
+                      </button>`
+                    : null
+                }
               </li>
             `,
           )}
