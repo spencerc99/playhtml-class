@@ -298,7 +298,7 @@ Live porch lamp on this page (the source). Beside it, a same-page mirror reads t
   <span class="label">off (shared)</span>
 </div>
 
-<script>
+<script type="module">
   const lamp = document.getElementById('week4-porch-lamp');
   lamp.defaultData = { on: false };
   lamp.updateElement = ({ element, data }) => {
@@ -455,4 +455,4 @@ Use shared data for information that should survive reloads. Use presence for in
 
 - Finalize your site!
   - Try adding a `?admin` or shortcut gate to something you moderate or keep hidden from others
-  - Publish a shared element that others can use to detect & show when someone is on your website! Do something like a home beacon.
+  - Publish ephemeral presence that others can use to show when someone is on your website. Try making a home beacon.

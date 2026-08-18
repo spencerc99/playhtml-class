@@ -31,4 +31,20 @@ describe('activeClassPagePaths', () => {
     expect(source).not.toContain('withSharedState');
     expect(source).not.toContain('setInterval');
   });
+
+  it('teaches page activity with presence instead of shared data', () => {
+    const source = readFileSync(
+      resolve(process.cwd(), 'src/content/weeks/week-4.mdx'),
+      'utf8',
+    );
+    const section = source.slice(
+      source.indexOf('### Webring: is anyone home?'),
+      source.indexOf('## Assignment / Readings'),
+    );
+
+    expect(section).toContain('createPresenceRoom');
+    expect(section).not.toContain('setData');
+    expect(section).not.toContain('shared can-play');
+    expect(section).not.toContain('data-source=');
+  });
 });
