@@ -1,8 +1,11 @@
 // ABOUTME: Verifies the Week 2 bunny demo keeps a bounded shared count.
 // ABOUTME: Exercises its rendered bunnies and clone/remove controls without a server.
 
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { configureBunnyDemo } from './bunnyDemo';
+import { MIRROR_TEXTAREA_MAX_LENGTH } from './WeekTwoDemos';
 
 interface BunnyData {
   count: number;
@@ -48,17 +51,17 @@ describe('Week 2 bunny demo', () => {
 
     expect(demo.querySelectorAll('[data-bunny-pen] img')).toHaveLength(10);
     expect(demo.querySelector('[data-bunny-count]')?.textContent).toBe(
-      '10 / 10 bunnies',
+      '10 / 70 bunnies',
     );
     expect(
       demo.querySelector<HTMLButtonElement>('[data-bunny-action="clone"]')
         ?.disabled,
-    ).toBe(true);
+    ).toBe(false);
   });
 
-  it('keeps clone and remove actions between zero and 10', () => {
+  it('keeps clone and remove actions between zero and 70', () => {
     const demo = createBunnyDemo();
-    const data = { count: 10 };
+    const data = { count: 69 };
     const setData = vi.fn((update: (draft: BunnyData) => void) => update(data));
     const eventData = {
       setData,
@@ -77,16 +80,36 @@ describe('Week 2 bunny demo', () => {
     };
 
     click('clone');
-    expect(data.count).toBe(10);
+    expect(data.count).toBe(70);
+    click('clone');
+    expect(data.count).toBe(70);
 
-    for (let index = 0; index < 12; index += 1) {
+    for (let index = 0; index < 72; index += 1) {
       click('remove');
     }
     expect(data.count).toBe(0);
 
-    for (let index = 0; index < 12; index += 1) {
+    for (let index = 0; index < 72; index += 1) {
       click('clone');
     }
-    expect(data.count).toBe(10);
+    expect(data.count).toBe(70);
+  });
+});
+
+describe('Week 2 mirror textarea', () => {
+  it('caps shared text at 1,000 characters', () => {
+    expect(MIRROR_TEXTAREA_MAX_LENGTH).toBe(1000);
+
+    const demoSource = readFileSync(
+      resolve(process.cwd(), 'src/components/WeekTwoDemos.tsx'),
+      'utf8',
+    );
+    const lessonSource = readFileSync(
+      resolve(process.cwd(), 'src/content/weeks/week-2.mdx'),
+      'utf8',
+    );
+
+    expect(demoSource).toContain('maxlength="${MIRROR_TEXTAREA_MAX_LENGTH}"');
+    expect(lessonSource).toContain('maxlength="1000"');
   });
 });

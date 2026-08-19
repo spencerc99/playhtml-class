@@ -204,7 +204,7 @@ The `can-mirror` attribute is the easiest way to make a custom element collabora
 <CodeDemo demo={<MirrorTextareaDemo />}>
 
 ```html
-<textarea can-mirror id="text-area" rows="4"></textarea>
+<textarea can-mirror id="text-area" maxlength="1000" rows="4"></textarea>
 ```
 
 </CodeDemo>
@@ -234,7 +234,7 @@ button.addEventListener('click', () => {
 
 #### syncing a bounded collection
 
-Generated lists need a small data model so simultaneous edits do not copy the entire DOM into shared state. This bunny pen shares one number, starts with 10 bunnies, and never grows past 10. Each browser renders the bunny images from that count.
+Generated lists need a small data model so simultaneous edits do not copy the entire DOM into shared state. This bunny pen shares one number, starts with 10 bunnies, and never grows past 70. Each browser renders the bunny images from that count.
 
 <CodeDemo demo={<BunnyMirrorDemo />} inline>
 
@@ -264,8 +264,8 @@ demo.updateElement = ({ element, data }) => {
     return bunny;
   });
   pen.replaceChildren(...bunnies);
-  count.textContent = `${data.count} / 10 bunnies`;
-  cloneButton.disabled = data.count === 10;
+  count.textContent = `${data.count} / 70 bunnies`;
+  cloneButton.disabled = data.count === 70;
   removeButton.disabled = data.count === 0;
 };
 
@@ -274,7 +274,7 @@ demo.onClick = (event, { setData }) => {
     .bunnyAction;
 
   setData((data) => {
-    if (action === 'clone' && data.count < 10) data.count += 1;
+    if (action === 'clone' && data.count < 70) data.count += 1;
     if (action === 'remove' && data.count > 0) data.count -= 1;
   });
 };

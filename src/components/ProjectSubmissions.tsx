@@ -85,6 +85,17 @@ const SUBMISSION_DATE_FORMAT = new Intl.DateTimeFormat(undefined, {
   timeStyle: 'short',
 });
 
+export function projectRegistryNeedsBuiltIns(
+  data: ProjectSubmissionData,
+): boolean {
+  return Object.entries(createBuiltInProjects()).some(
+    ([id, project]) =>
+      !data.projects[id] ||
+      data.projects[id].starterVersion !== project.starterVersion ||
+      data.reservedSharedIds?.[project.sharedObject.id] !== true,
+  );
+}
+
 function submissionDate(value: unknown): Date | null {
   if (typeof value !== 'number' || !Number.isFinite(value)) return null;
 
@@ -216,6 +227,8 @@ export const ProjectSubmissions = withSharedState<
     const { cursors, hasSynced } = usePlayContext();
     const { pid: playerId } = usePlayerIdentity();
     const builtInsSeeded = useRef(false);
+    const registryData = useRef(data);
+    registryData.current = data;
     const nameEdited = useRef(false);
     const accentColorEdited = useRef(false);
     const profileAccentColor =
@@ -272,6 +285,8 @@ export const ProjectSubmissions = withSharedState<
         return;
 
       builtInsSeeded.current = true;
+      if (!projectRegistryNeedsBuiltIns(registryData.current)) return;
+
       setData((draft) => {
         draft.reservedSharedIds ??= {};
         for (const [id, project] of Object.entries(createBuiltInProjects())) {
@@ -281,7 +296,9 @@ export const ProjectSubmissions = withSharedState<
           ) {
             draft.projects[id] = project;
           }
-          draft.reservedSharedIds[project.sharedObject.id] = true;
+          if (draft.reservedSharedIds[project.sharedObject.id] !== true) {
+            draft.reservedSharedIds[project.sharedObject.id] = true;
+          }
         }
       });
     }, [hasSynced, setData, variant]);
