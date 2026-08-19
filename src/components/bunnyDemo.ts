@@ -2,7 +2,8 @@
 // ABOUTME: Renders bunny images locally so the shared document stays small.
 
 const BUNNY_SRC = '/pixel-bunny.png';
-const MAX_BUNNIES = 10;
+const INITIAL_BUNNIES = 10;
+const MAX_BUNNIES = 70;
 
 interface BunnyData {
   count: number;
@@ -30,7 +31,7 @@ export function configureBunnyDemo(container: HTMLDivElement) {
     throw new Error('Missing bunny demo element.');
   }
 
-  demo.defaultData = { count: MAX_BUNNIES };
+  demo.defaultData = { count: INITIAL_BUNNIES };
   demo.updateElement = ({ data, element }) => {
     if (
       !Number.isInteger(data.count) ||

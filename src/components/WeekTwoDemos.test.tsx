@@ -51,17 +51,17 @@ describe('Week 2 bunny demo', () => {
 
     expect(demo.querySelectorAll('[data-bunny-pen] img')).toHaveLength(10);
     expect(demo.querySelector('[data-bunny-count]')?.textContent).toBe(
-      '10 / 10 bunnies',
+      '10 / 70 bunnies',
     );
     expect(
       demo.querySelector<HTMLButtonElement>('[data-bunny-action="clone"]')
         ?.disabled,
-    ).toBe(true);
+    ).toBe(false);
   });
 
-  it('keeps clone and remove actions between zero and 10', () => {
+  it('keeps clone and remove actions between zero and 70', () => {
     const demo = createBunnyDemo();
-    const data = { count: 10 };
+    const data = { count: 69 };
     const setData = vi.fn((update: (draft: BunnyData) => void) => update(data));
     const eventData = {
       setData,
@@ -80,17 +80,19 @@ describe('Week 2 bunny demo', () => {
     };
 
     click('clone');
-    expect(data.count).toBe(10);
+    expect(data.count).toBe(70);
+    click('clone');
+    expect(data.count).toBe(70);
 
-    for (let index = 0; index < 12; index += 1) {
+    for (let index = 0; index < 72; index += 1) {
       click('remove');
     }
     expect(data.count).toBe(0);
 
-    for (let index = 0; index < 12; index += 1) {
+    for (let index = 0; index < 72; index += 1) {
       click('clone');
     }
-    expect(data.count).toBe(10);
+    expect(data.count).toBe(70);
   });
 });
 
