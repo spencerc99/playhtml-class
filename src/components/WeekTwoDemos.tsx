@@ -4,6 +4,8 @@ import { useCallback } from 'react';
 import { configureBunnyDemo } from './bunnyDemo';
 import { LiveHtmlDemo } from './LiveHtmlDemo';
 
+export const MIRROR_TEXTAREA_MAX_LENGTH = 1000;
+
 export function ButtonClickDemo() {
   const onMount = useCallback((container: HTMLDivElement) => {
     const button = container.querySelector<HTMLButtonElement>('#my-button');
@@ -130,7 +132,7 @@ export function MirrorTextareaDemo() {
     width: min(100%, 16rem);
   }
 </style>
-<textarea can-mirror id="text-area" rows="4" placeholder="type something shared..."></textarea>
+<textarea can-mirror id="text-area" maxlength="${MIRROR_TEXTAREA_MAX_LENGTH}" rows="4" placeholder="type something shared..."></textarea>
 `}
     />
   );

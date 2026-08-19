@@ -1,8 +1,11 @@
 // ABOUTME: Verifies the Week 2 bunny demo keeps a bounded shared count.
 // ABOUTME: Exercises its rendered bunnies and clone/remove controls without a server.
 
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { configureBunnyDemo } from './bunnyDemo';
+import { MIRROR_TEXTAREA_MAX_LENGTH } from './WeekTwoDemos';
 
 interface BunnyData {
   count: number;
@@ -88,5 +91,23 @@ describe('Week 2 bunny demo', () => {
       click('clone');
     }
     expect(data.count).toBe(10);
+  });
+});
+
+describe('Week 2 mirror textarea', () => {
+  it('caps shared text at 1,000 characters', () => {
+    expect(MIRROR_TEXTAREA_MAX_LENGTH).toBe(1000);
+
+    const demoSource = readFileSync(
+      resolve(process.cwd(), 'src/components/WeekTwoDemos.tsx'),
+      'utf8',
+    );
+    const lessonSource = readFileSync(
+      resolve(process.cwd(), 'src/content/weeks/week-2.mdx'),
+      'utf8',
+    );
+
+    expect(demoSource).toContain('maxlength="${MIRROR_TEXTAREA_MAX_LENGTH}"');
+    expect(lessonSource).toContain('maxlength="1000"');
   });
 });
