@@ -1160,7 +1160,8 @@ a:hover {
   pointer-events: auto;
 }
 
-.project-webring--dense .project-webring__center {
+.project-webring--dense:not(.project-webring--expanded)
+  .project-webring__center {
   max-width: min(26vw, 19rem);
 }
 
@@ -2643,7 +2644,8 @@ a:hover {
     max-width: min(58vw, 24rem);
   }
 
-  .project-webring--dense .project-webring__center {
+  .project-webring--dense:not(.project-webring--expanded)
+    .project-webring__center {
     max-width: min(34vw, 12rem);
   }
 
